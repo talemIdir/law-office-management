@@ -1,9 +1,9 @@
 import { Sequelize } from "sequelize";
 import path from "path";
-import { app } from "electron";
+//import { app } from "electron";
 
 // Initialize SQLite database
-const dbPath = path.join(app.getPath("userData"), "law-office.db");
+const dbPath = path.join(process.cwd(), "law-office.db");
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
@@ -18,7 +18,7 @@ async function initDatabase() {
     console.log("Database connection established successfully.");
 
     // Sync all models
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log("Database synchronized successfully.");
 
     return true;
