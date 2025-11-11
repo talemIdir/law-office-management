@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { createHashRouter, RouterProvider, Link, useLocation, Outlet } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ConfirmDialogProvider } from './components/ConfirmDialog';
@@ -50,41 +50,78 @@ function Sidebar() {
   );
 }
 
-function App() {
+function Layout() {
   return (
-    <HashRouter>
-      <ConfirmDialogProvider>
-        <div className="app-container">
-          <Sidebar />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clients" element={<ClientsPage />} />
-              <Route path="/cases" element={<CasesPage />} />
-              <Route path="/court-sessions" element={<CourtSessionsPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/invoices" element={<InvoicesPage />} />
-              <Route path="/appointments" element={<AppointmentsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Routes>
-          </main>
-        </div>
-        <ToastContainer
-          position="top-left"
-          autoClose={4000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={true}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-      </ConfirmDialogProvider>
-    </HashRouter>
+    <ConfirmDialogProvider>
+      <div className="app-container">
+        <Sidebar />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
+      <ToastContainer
+        position="top-left"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </ConfirmDialogProvider>
   );
+}
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <Dashboard />
+      },
+      {
+        path: 'clients',
+        element: <ClientsPage />
+      },
+      {
+        path: 'cases',
+        element: <CasesPage />
+      },
+      {
+        path: 'court-sessions',
+        element: <CourtSessionsPage />
+      },
+      {
+        path: 'documents',
+        element: <DocumentsPage />
+      },
+      {
+        path: 'invoices',
+        element: <InvoicesPage />
+      },
+      {
+        path: 'appointments',
+        element: <AppointmentsPage />
+      },
+      {
+        path: 'reports',
+        element: <ReportsPage />
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />
+      }
+    ]
+  }
+]);
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;
