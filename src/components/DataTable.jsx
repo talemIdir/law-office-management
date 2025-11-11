@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,18 +6,18 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
 export default function DataTable({
   data,
   columns,
-  searchTerm = '',
-  filterValue = '',
-  filterKey = '',
+  searchTerm = "",
+  filterValue = "",
+  filterKey = "",
   globalFilterFn = null,
   pageSize = 10,
   showPagination = true,
-  emptyMessage = 'لا توجد بيانات'
+  emptyMessage = "لا توجد بيانات",
 }) {
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({
@@ -33,12 +33,12 @@ export default function DataTable({
 
     // Apply search term filter
     if (searchTerm && globalFilterFn) {
-      result = result.filter(item => globalFilterFn(item, searchTerm));
+      result = result.filter((item) => globalFilterFn(item, searchTerm));
     }
 
     // Apply specific filter (like status, type, etc.)
-    if (filterValue && filterKey && filterValue !== 'all') {
-      result = result.filter(item => item[filterKey] === filterValue);
+    if (filterValue && filterKey && filterValue !== "all") {
+      result = result.filter((item) => item[filterKey] === filterValue);
     }
 
     return result;
@@ -73,28 +73,41 @@ export default function DataTable({
       <div className="table-container">
         <table className="table">
           <thead>
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
+                {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                    onClick={
+                      header.column.getCanSort()
+                        ? header.column.getToggleSortingHandler()
+                        : undefined
+                    }
                     style={{
-                      cursor: header.column.getCanSort() ? 'pointer' : 'default',
-                      userSelect: 'none'
+                      cursor: header.column.getCanSort()
+                        ? "pointer"
+                        : "default",
+                      userSelect: "none",
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        justifyContent: "flex-start",
+                      }}
+                    >
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext()
                       )}
                       {header.column.getCanSort() && (
-                        <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                        <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
                           {{
-                            asc: '↑',
-                            desc: '↓',
-                          }[header.column.getIsSorted()] ?? '↕'}
+                            asc: "↑",
+                            desc: "↓",
+                          }[header.column.getIsSorted()] ?? "↕"}
                         </span>
                       )}
                     </div>
@@ -104,9 +117,9 @@ export default function DataTable({
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row) => (
               <tr key={row.id}>
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
@@ -118,21 +131,24 @@ export default function DataTable({
       </div>
 
       {showPagination && filteredData.length > pageSize && (
-        <div className="pagination-container" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '1rem 0',
-          gap: '1rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div
+          className="pagination-container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "1rem 0",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button
               className="btn btn-sm"
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
-              {'<<'}
+              {"<<"}
             </button>
             <button
               className="btn btn-sm"
@@ -153,38 +169,41 @@ export default function DataTable({
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >
-              {'>>'}
+              {">>"}
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.875rem' }}>
-              صفحة {table.getState().pagination.pageIndex + 1} من {table.getPageCount()}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span style={{ fontSize: "0.875rem" }}>
+              صفحة {table.getState().pagination.pageIndex + 1} من{" "}
+              {table.getPageCount()}
             </span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.875rem' }}>الذهاب إلى:</span>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <span style={{ fontSize: "0.875rem" }}>الذهاب إلى:</span>
               <input
                 type="number"
                 defaultValue={table.getState().pagination.pageIndex + 1}
-                onChange={e => {
+                onChange={(e) => {
                   const page = e.target.value ? Number(e.target.value) - 1 : 0;
                   table.setPageIndex(page);
                 }}
                 className="form-input"
-                style={{ width: '4rem' }}
+                style={{ width: "4rem" }}
               />
             </div>
 
             <select
               className="form-select"
               value={table.getState().pagination.pageSize}
-              onChange={e => {
+              onChange={(e) => {
                 table.setPageSize(Number(e.target.value));
               }}
-              style={{ width: 'auto' }}
+              style={{ width: "auto" }}
             >
-              {[10, 20, 30, 50, 100].map(pageSize => (
+              {[10, 20, 30, 50, 100].map((pageSize) => (
                 <option key={pageSize} value={pageSize}>
                   عرض {pageSize}
                 </option>
@@ -192,7 +211,7 @@ export default function DataTable({
             </select>
           </div>
 
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
             إجمالي: {filteredData.length} سجل
           </div>
         </div>
