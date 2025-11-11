@@ -341,9 +341,7 @@ function CasesPage() {
   const loadData = async () => {
     setLoading(true);
     const [casesResult, clientsResult] = await Promise.all([
-      caseAPI.getAll({
-        include: [{ model: "Client", as: "client" }],
-      }),
+      caseAPI.getAll(),
       clientAPI.getAll(),
     ]);
 
@@ -368,7 +366,7 @@ function CasesPage() {
         showSuccess(
           selectedCase
             ? "تم تحديث بيانات القضية بنجاح"
-            : "تم إضافة القضية بنجاح",
+            : "تم إضافة القضية بنجاح"
         );
       } else {
         showError("خطأ: " + result.error);
@@ -561,7 +559,7 @@ function CasesPage() {
         enableSorting: false,
       },
     ],
-    [clients],
+    [clients]
   );
 
   if (loading) {
