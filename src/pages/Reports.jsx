@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getFinancialReport, caseAPI, clientAPI } from '../utils/api';
 import { showError, showWarning } from '../utils/toast';
+import DataTable from '../components/DataTable';
 
 function ReportsPage() {
   const [reportType, setReportType] = useState('financial');
@@ -160,6 +161,101 @@ function ReportsPage() {
     return statuses[status] || status;
   };
 
+  // Column definitions for invoices table
+  const invoicesColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'invoiceNumber',
+        header: 'رقم الفاتورة',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'invoiceDate',
+        header: 'التاريخ',
+        cell: ({ row }) => formatDate(row.original.invoiceDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'totalAmount',
+        header: 'المبلغ',
+        cell: ({ row }) => formatCurrency(row.original.totalAmount),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'paid' ? 'badge-success' : 'badge-warning'
+            }`}
+          >
+            {row.original.status === 'paid' ? 'مدفوعة' : 'غير مدفوعة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+    ],
+    []
+  );
+
+  // Column definitions for cases by type table
+  const casesByTypeColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'type',
+        header: 'نوع القضية',
+        cell: ({ row }) => translateCaseType(row.original.type),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'count',
+        header: 'العدد',
+        cell: ({ row }) => <strong>{row.original.count}</strong>,
+        enableSorting: true,
+      },
+    ],
+    []
+  );
+
+  // Column definitions for cases by status table
+  const casesByStatusColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'status',
+        header: 'حالة القضية',
+        cell: ({ row }) => translateCaseStatus(row.original.status),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'count',
+        header: 'العدد',
+        cell: ({ row }) => <strong>{row.original.count}</strong>,
+        enableSorting: true,
+      },
+    ],
+    []
+  );
+
+  // Column definitions for clients by status table
+  const clientsByStatusColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => translateClientStatus(row.original.status),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'count',
+        header: 'العدد',
+        cell: ({ row }) => <strong>{row.original.count}</strong>,
+        enableSorting: true,
+      },
+    ],
+    []
+  );
+
   return (
     <div>
       <div className="page-header">
@@ -261,42 +357,13 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">تفاصيل الفواتير</h3>
-            {reportData.invoices.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>رقم الفاتورة</th>
-                      <th>التاريخ</th>
-                      <th>المبلغ</th>
-                      <th>الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.invoices.map((invoice) => (
-                      <tr key={invoice.id}>
-                        <td>{invoice.invoiceNumber}</td>
-                        <td>{formatDate(invoice.invoiceDate)}</td>
-                        <td>{formatCurrency(invoice.totalAmount)}</td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
-                            }`}
-                          >
-                            {invoice.status === 'paid' ? 'مدفوعة' : 'غير مدفوعة'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
-                لا توجد فواتير في هذه الفترة
-              </p>
-            )}
+            <DataTable
+              data={reportData.invoices}
+              columns={invoicesColumns}
+              showPagination={true}
+              pageSize={10}
+              emptyMessage="لا توجد فواتير في هذه الفترة"
+            />
           </div>
         </>
       )}
@@ -316,46 +383,22 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">القضايا حسب النوع</h3>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>نوع القضية</th>
-                    <th>العدد</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(reportData.casesByType).map(([type, count]) => (
-                    <tr key={type}>
-                      <td>{translateCaseType(type)}</td>
-                      <td><strong>{count}</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={Object.entries(reportData.casesByType).map(([type, count]) => ({ type, count }))}
+              columns={casesByTypeColumns}
+              showPagination={false}
+              emptyMessage="لا توجد بيانات"
+            />
           </div>
 
           <div className="card">
             <h3 className="card-title">القضايا حسب الحالة</h3>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>حالة القضية</th>
-                    <th>العدد</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(reportData.casesByStatus).map(([status, count]) => (
-                    <tr key={status}>
-                      <td>{translateCaseStatus(status)}</td>
-                      <td><strong>{count}</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={Object.entries(reportData.casesByStatus).map(([status, count]) => ({ status, count }))}
+              columns={casesByStatusColumns}
+              showPagination={false}
+              emptyMessage="لا توجد بيانات"
+            />
           </div>
         </>
       )}
@@ -393,24 +436,12 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">الموكلين حسب الحالة</h3>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>الحالة</th>
-                    <th>العدد</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(reportData.clientsByStatus).map(([status, count]) => (
-                    <tr key={status}>
-                      <td>{translateClientStatus(status)}</td>
-                      <td><strong>{count}</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={Object.entries(reportData.clientsByStatus).map(([status, count]) => ({ status, count }))}
+              columns={clientsByStatusColumns}
+              showPagination={false}
+              emptyMessage="لا توجد بيانات"
+            />
           </div>
         </>
       )}

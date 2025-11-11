@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function PaymentModal({ invoiceId, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -346,6 +347,7 @@ function InvoicesPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const confirm = useConfirm();
 
@@ -462,10 +464,6 @@ function InvoicesPage() {
       : `${client.firstName} ${client.lastName}`;
   };
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    return filterStatus === 'all' || invoice.status === filterStatus;
-  });
-
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('ar-DZ');
   };
@@ -476,6 +474,115 @@ function InvoicesPage() {
       minimumFractionDigits: 2
     }).format(amount) + ' دج';
   };
+
+  const globalFilterFn = (invoice, searchTerm) => {
+    return (
+      invoice.invoiceNumber.includes(searchTerm) ||
+      getClientName(invoice.clientId).includes(searchTerm) ||
+      (invoice.description && invoice.description.includes(searchTerm))
+    );
+  };
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'invoiceNumber',
+        header: 'رقم الفاتورة',
+        cell: ({ row }) => <strong>{row.original.invoiceNumber}</strong>,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'clientId',
+        header: 'الموكل',
+        cell: ({ row }) => getClientName(row.original.clientId),
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'invoiceDate',
+        header: 'التاريخ',
+        cell: ({ row }) => formatDate(row.original.invoiceDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'totalAmount',
+        header: 'المبلغ الإجمالي',
+        cell: ({ row }) => formatCurrency(row.original.totalAmount),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'paidAmount',
+        header: 'المبلغ المدفوع',
+        cell: ({ row }) => formatCurrency(row.original.paidAmount || 0),
+        enableSorting: true,
+      },
+      {
+        id: 'remaining',
+        header: 'المتبقي',
+        cell: ({ row }) => {
+          const remaining = parseFloat(row.original.totalAmount) - parseFloat(row.original.paidAmount || 0);
+          return formatCurrency(remaining);
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'paid'
+                ? 'badge-success'
+                : row.original.status === 'overdue'
+                ? 'badge-danger'
+                : row.original.status === 'partially_paid'
+                ? 'badge-warning'
+                : row.original.status === 'sent'
+                ? 'badge-info'
+                : 'badge-secondary'
+            }`}
+          >
+            {row.original.status === 'draft' && 'مسودة'}
+            {row.original.status === 'sent' && 'مرسلة'}
+            {row.original.status === 'paid' && 'مدفوعة'}
+            {row.original.status === 'partially_paid' && 'مدفوعة جزئياً'}
+            {row.original.status === 'overdue' && 'متأخرة'}
+            {row.original.status === 'cancelled' && 'ملغاة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            {row.original.status !== 'paid' && row.original.status !== 'cancelled' && (
+              <button
+                className="btn btn-sm btn-success"
+                onClick={() => handleAddPayment(row.original.id)}
+              >
+                💵 دفعة
+              </button>
+            )}
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [clients]
+  );
 
   if (loading) {
     return (
@@ -497,6 +604,13 @@ function InvoicesPage() {
 
       <div className="card">
         <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 البحث عن فاتورة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select
             className="form-select"
             style={{ width: '200px' }}
@@ -513,94 +627,21 @@ function InvoicesPage() {
           </select>
         </div>
 
-        {filteredInvoices.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>الموكل</th>
-                  <th>التاريخ</th>
-                  <th>المبلغ الإجمالي</th>
-                  <th>المبلغ المدفوع</th>
-                  <th>المتبقي</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInvoices.map((invoice) => {
-                  const remaining = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount || 0);
-                  return (
-                    <tr key={invoice.id}>
-                      <td><strong>{invoice.invoiceNumber}</strong></td>
-                      <td>{getClientName(invoice.clientId)}</td>
-                      <td>{formatDate(invoice.invoiceDate)}</td>
-                      <td>{formatCurrency(invoice.totalAmount)}</td>
-                      <td>{formatCurrency(invoice.paidAmount || 0)}</td>
-                      <td>{formatCurrency(remaining)}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            invoice.status === 'paid'
-                              ? 'badge-success'
-                              : invoice.status === 'overdue'
-                              ? 'badge-danger'
-                              : invoice.status === 'partially_paid'
-                              ? 'badge-warning'
-                              : invoice.status === 'sent'
-                              ? 'badge-info'
-                              : 'badge-secondary'
-                          }`}
-                        >
-                          {invoice.status === 'draft' && 'مسودة'}
-                          {invoice.status === 'sent' && 'مرسلة'}
-                          {invoice.status === 'paid' && 'مدفوعة'}
-                          {invoice.status === 'partially_paid' && 'مدفوعة جزئياً'}
-                          {invoice.status === 'overdue' && 'متأخرة'}
-                          {invoice.status === 'cancelled' && 'ملغاة'}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-                            <button
-                              className="btn btn-sm btn-success"
-                              onClick={() => handleAddPayment(invoice.id)}
-                            >
-                              💵 دفعة
-                            </button>
-                          )}
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => handleEdit(invoice)}
-                          >
-                            ✏️ تعديل
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(invoice.id)}
-                          >
-                            🗑️ حذف
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">💰</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">لم يتم إضافة أي فواتير بعد</p>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              ➕ إضافة فاتورة جديدة
-            </button>
-          </div>
-        )}
+        <DataTable
+          data={invoices}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== 'all'
+              ? 'لم يتم العثور على فواتير مطابقة للبحث'
+              : 'لم يتم إضافة أي فواتير بعد'
+          }
+        />
       </div>
 
       {showInvoiceModal && (

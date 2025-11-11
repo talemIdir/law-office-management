@@ -686,6 +686,37 @@ p {
   background: #999;
 }
 
+/* Pagination */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.pagination-container .btn-sm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-container input[type="number"] {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.pagination-container .form-select {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {

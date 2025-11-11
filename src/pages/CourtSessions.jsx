@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { courtSessionAPI, caseAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
@@ -213,6 +214,7 @@ function CourtSessionsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const confirm = useConfirm();
@@ -281,12 +283,6 @@ function CourtSessionsPage() {
     setShowModal(true);
   };
 
-  const filteredSessions = sessions.filter((session) => {
-    const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
-    const matchesType = filterType === 'all' || session.sessionType === filterType;
-    return matchesStatus && matchesType;
-  });
-
   const formatDateTime = (date) => {
     return new Date(date).toLocaleString('ar-DZ', {
       year: 'numeric',
@@ -296,6 +292,113 @@ function CourtSessionsPage() {
       minute: '2-digit'
     });
   };
+
+  const globalFilterFn = (session, searchTerm) => {
+    return (
+      (session.court && session.court.includes(searchTerm)) ||
+      (session.courtRoom && session.courtRoom.includes(searchTerm)) ||
+      (session.judge && session.judge.includes(searchTerm)) ||
+      (session.caseId && `#${session.caseId}`.includes(searchTerm))
+    );
+  };
+
+  const filteredByType = useMemo(() => {
+    if (filterType === 'all') return sessions;
+    return sessions.filter(s => s.sessionType === filterType);
+  }, [sessions, filterType]);
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'sessionDate',
+        header: 'التاريخ والوقت',
+        cell: ({ row }) => formatDateTime(row.original.sessionDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'caseId',
+        header: 'رقم القضية',
+        cell: ({ row }) => row.original.caseId ? `#${row.original.caseId}` : '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'sessionType',
+        header: 'النوع',
+        cell: ({ row }) => (
+          <span className="badge badge-info">
+            {row.original.sessionType === 'hearing' && 'جلسة استماع'}
+            {row.original.sessionType === 'verdict' && 'جلسة حكم'}
+            {row.original.sessionType === 'procedural' && 'جلسة إجرائية'}
+            {row.original.sessionType === 'other' && 'أخرى'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'court',
+        header: 'المحكمة',
+        cell: ({ row }) => row.original.court || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'courtRoom',
+        header: 'القاعة',
+        cell: ({ row }) => row.original.courtRoom || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'judge',
+        header: 'القاضي',
+        cell: ({ row }) => row.original.judge || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'scheduled'
+                ? 'badge-warning'
+                : row.original.status === 'completed'
+                ? 'badge-success'
+                : row.original.status === 'postponed'
+                ? 'badge-info'
+                : 'badge-danger'
+            }`}
+          >
+            {row.original.status === 'scheduled' && 'مجدولة'}
+            {row.original.status === 'completed' && 'مكتملة'}
+            {row.original.status === 'postponed' && 'مؤجلة'}
+            {row.original.status === 'cancelled' && 'ملغاة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -317,6 +420,13 @@ function CourtSessionsPage() {
 
       <div className="card">
         <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 البحث عن جلسة..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select
             className="form-select"
             style={{ width: '200px' }}
@@ -343,86 +453,21 @@ function CourtSessionsPage() {
           </select>
         </div>
 
-        {filteredSessions.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>التاريخ والوقت</th>
-                  <th>رقم القضية</th>
-                  <th>النوع</th>
-                  <th>المحكمة</th>
-                  <th>القاعة</th>
-                  <th>القاضي</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSessions.map((session) => (
-                  <tr key={session.id}>
-                    <td>{formatDateTime(session.sessionDate)}</td>
-                    <td>{session.caseId ? `#${session.caseId}` : '-'}</td>
-                    <td>
-                      <span className="badge badge-info">
-                        {session.sessionType === 'hearing' && 'جلسة استماع'}
-                        {session.sessionType === 'verdict' && 'جلسة حكم'}
-                        {session.sessionType === 'procedural' && 'جلسة إجرائية'}
-                        {session.sessionType === 'other' && 'أخرى'}
-                      </span>
-                    </td>
-                    <td>{session.court || '-'}</td>
-                    <td>{session.courtRoom || '-'}</td>
-                    <td>{session.judge || '-'}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          session.status === 'scheduled'
-                            ? 'badge-warning'
-                            : session.status === 'completed'
-                            ? 'badge-success'
-                            : session.status === 'postponed'
-                            ? 'badge-info'
-                            : 'badge-danger'
-                        }`}
-                      >
-                        {session.status === 'scheduled' && 'مجدولة'}
-                        {session.status === 'completed' && 'مكتملة'}
-                        {session.status === 'postponed' && 'مؤجلة'}
-                        {session.status === 'cancelled' && 'ملغاة'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleEdit(session)}
-                        >
-                          ✏️ تعديل
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(session.id)}
-                        >
-                          🗑️ حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">🏛️</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">لم يتم إضافة أي جلسات بعد</p>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              ➕ إضافة جلسة جديدة
-            </button>
-          </div>
-        )}
+        <DataTable
+          data={filteredByType}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== 'all' || filterType !== 'all'
+              ? 'لم يتم العثور على جلسات مطابقة للبحث'
+              : 'لم يتم إضافة أي جلسات بعد'
+          }
+        />
       </div>
 
       {showModal && (

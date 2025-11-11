@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { caseAPI, clientAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -404,18 +405,6 @@ function CasesPage() {
       : `${client.firstName} ${client.lastName}`;
   };
 
-  const filteredCases = cases.filter((caseItem) => {
-    const matchesSearch = searchTerm === '' ||
-      caseItem.caseNumber.includes(searchTerm) ||
-      caseItem.title.includes(searchTerm) ||
-      (caseItem.opposingParty && caseItem.opposingParty.includes(searchTerm));
-
-    const matchesStatus = filterStatus === 'all' || caseItem.status === filterStatus;
-    const matchesType = filterType === 'all' || caseItem.caseType === filterType;
-
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
   const formatDate = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('ar-DZ');
@@ -428,6 +417,140 @@ function CasesPage() {
       minimumFractionDigits: 2
     }).format(amount) + ' دج';
   };
+
+  const globalFilterFn = (caseItem, searchTerm) => {
+    return (
+      caseItem.caseNumber.includes(searchTerm) ||
+      caseItem.title.includes(searchTerm) ||
+      (caseItem.opposingParty && caseItem.opposingParty.includes(searchTerm))
+    );
+  };
+
+  const filteredByType = useMemo(() => {
+    if (filterType === 'all') return cases;
+    return cases.filter(c => c.caseType === filterType);
+  }, [cases, filterType]);
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'caseNumber',
+        header: 'رقم القضية',
+        cell: ({ row }) => <strong>{row.original.caseNumber}</strong>,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'title',
+        header: 'العنوان',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'clientId',
+        header: 'الموكل',
+        cell: ({ row }) => getClientName(row.original.clientId),
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'caseType',
+        header: 'النوع',
+        cell: ({ row }) => (
+          <span className="badge badge-secondary">
+            {row.original.caseType === 'civil' && 'مدني'}
+            {row.original.caseType === 'criminal' && 'جنائي'}
+            {row.original.caseType === 'commercial' && 'تجاري'}
+            {row.original.caseType === 'administrative' && 'إداري'}
+            {row.original.caseType === 'family' && 'أسري'}
+            {row.original.caseType === 'labor' && 'عمالي'}
+            {row.original.caseType === 'other' && 'أخرى'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'court',
+        header: 'المحكمة',
+        cell: ({ row }) => row.original.court || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'won'
+                ? 'badge-success'
+                : row.original.status === 'lost'
+                ? 'badge-danger'
+                : row.original.status === 'in_progress'
+                ? 'badge-info'
+                : row.original.status === 'settled'
+                ? 'badge-success'
+                : 'badge-warning'
+            }`}
+          >
+            {row.original.status === 'open' && 'مفتوحة'}
+            {row.original.status === 'in_progress' && 'قيد المعالجة'}
+            {row.original.status === 'won' && 'كسب'}
+            {row.original.status === 'lost' && 'خسارة'}
+            {row.original.status === 'settled' && 'تسوية'}
+            {row.original.status === 'closed' && 'مغلقة'}
+            {row.original.status === 'appealed' && 'استئناف'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'priority',
+        header: 'الأولوية',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.priority === 'urgent'
+                ? 'badge-danger'
+                : row.original.priority === 'high'
+                ? 'badge-warning'
+                : 'badge-info'
+            }`}
+          >
+            {row.original.priority === 'low' && 'منخفضة'}
+            {row.original.priority === 'medium' && 'متوسطة'}
+            {row.original.priority === 'high' && 'عالية'}
+            {row.original.priority === 'urgent' && 'عاجلة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'amount',
+        header: 'المبلغ',
+        cell: ({ row }) => formatCurrency(row.original.amount),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [clients]
+  );
 
   if (loading) {
     return (
@@ -488,117 +611,21 @@ function CasesPage() {
           </select>
         </div>
 
-        {filteredCases.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>رقم القضية</th>
-                  <th>العنوان</th>
-                  <th>الموكل</th>
-                  <th>النوع</th>
-                  <th>المحكمة</th>
-                  <th>الحالة</th>
-                  <th>الأولوية</th>
-                  <th>المبلغ</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCases.map((caseItem) => (
-                  <tr key={caseItem.id}>
-                    <td><strong>{caseItem.caseNumber}</strong></td>
-                    <td>{caseItem.title}</td>
-                    <td>{getClientName(caseItem.clientId)}</td>
-                    <td>
-                      <span className="badge badge-secondary">
-                        {caseItem.caseType === 'civil' && 'مدني'}
-                        {caseItem.caseType === 'criminal' && 'جنائي'}
-                        {caseItem.caseType === 'commercial' && 'تجاري'}
-                        {caseItem.caseType === 'administrative' && 'إداري'}
-                        {caseItem.caseType === 'family' && 'أسري'}
-                        {caseItem.caseType === 'labor' && 'عمالي'}
-                        {caseItem.caseType === 'other' && 'أخرى'}
-                      </span>
-                    </td>
-                    <td>{caseItem.court || '-'}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          caseItem.status === 'won'
-                            ? 'badge-success'
-                            : caseItem.status === 'lost'
-                            ? 'badge-danger'
-                            : caseItem.status === 'in_progress'
-                            ? 'badge-info'
-                            : caseItem.status === 'settled'
-                            ? 'badge-success'
-                            : 'badge-warning'
-                        }`}
-                      >
-                        {caseItem.status === 'open' && 'مفتوحة'}
-                        {caseItem.status === 'in_progress' && 'قيد المعالجة'}
-                        {caseItem.status === 'won' && 'كسب'}
-                        {caseItem.status === 'lost' && 'خسارة'}
-                        {caseItem.status === 'settled' && 'تسوية'}
-                        {caseItem.status === 'closed' && 'مغلقة'}
-                        {caseItem.status === 'appealed' && 'استئناف'}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          caseItem.priority === 'urgent'
-                            ? 'badge-danger'
-                            : caseItem.priority === 'high'
-                            ? 'badge-warning'
-                            : 'badge-info'
-                        }`}
-                      >
-                        {caseItem.priority === 'low' && 'منخفضة'}
-                        {caseItem.priority === 'medium' && 'متوسطة'}
-                        {caseItem.priority === 'high' && 'عالية'}
-                        {caseItem.priority === 'urgent' && 'عاجلة'}
-                      </span>
-                    </td>
-                    <td>{formatCurrency(caseItem.amount)}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleEdit(caseItem)}
-                        >
-                          ✏️ تعديل
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(caseItem.id)}
-                        >
-                          🗑️ حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">⚖️</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">
-              {searchTerm
-                ? 'لم يتم العثور على قضايا مطابقة للبحث'
-                : 'لم يتم إضافة أي قضايا بعد'}
-            </p>
-            {!searchTerm && (
-              <button className="btn btn-primary" onClick={handleAdd}>
-                ➕ إضافة قضية جديدة
-              </button>
-            )}
-          </div>
-        )}
+        <DataTable
+          data={filteredByType}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== 'all' || filterType !== 'all'
+              ? 'لم يتم العثور على قضايا مطابقة للبحث'
+              : 'لم يتم إضافة أي قضايا بعد'
+          }
+        />
       </div>
 
       {showModal && (

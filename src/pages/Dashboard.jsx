@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getDashboardStats, getUpcomingCourtSessions, getUpcomingAppointments } from '../utils/api';
+import DataTable from '../components/DataTable';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -55,6 +56,127 @@ function Dashboard() {
       minute: '2-digit'
     });
   };
+
+  // Column definitions for court sessions table
+  const courtSessionsColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'sessionDate',
+        header: 'التاريخ',
+        cell: ({ row }) => formatDateTime(row.original.sessionDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'case.title',
+        header: 'القضية',
+        cell: ({ row }) => row.original.case?.title || '-',
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'case.client',
+        header: 'الموكل',
+        cell: ({ row }) => {
+          const client = row.original.case?.client;
+          if (!client) return '-';
+          return client.type === 'company'
+            ? client.companyName
+            : `${client.firstName} ${client.lastName}`;
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'court',
+        header: 'المحكمة',
+        cell: ({ row }) => row.original.court || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'sessionType',
+        header: 'النوع',
+        cell: ({ row }) => {
+          const typeMap = {
+            hearing: 'جلسة استماع',
+            verdict: 'جلسة حكم',
+            procedural: 'جلسة إجرائية',
+            other: 'أخرى'
+          };
+          return <span className="badge badge-info">{typeMap[row.original.sessionType] || row.original.sessionType}</span>;
+        },
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => {
+          const statusMap = {
+            scheduled: 'مجدولة',
+            completed: 'مكتملة',
+            postponed: 'مؤجلة',
+            cancelled: 'ملغاة'
+          };
+          return <span className="badge badge-warning">{statusMap[row.original.status] || row.original.status}</span>;
+        },
+        enableSorting: true,
+      },
+    ],
+    []
+  );
+
+  // Column definitions for appointments table
+  const appointmentsColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'appointmentDate',
+        header: 'التاريخ',
+        cell: ({ row }) => formatDateTime(row.original.appointmentDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'title',
+        header: 'العنوان',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'client',
+        header: 'الموكل',
+        cell: ({ row }) => {
+          const client = row.original.client;
+          if (!client) return '-';
+          return client.type === 'company'
+            ? client.companyName
+            : `${client.firstName} ${client.lastName}`;
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'case.title',
+        header: 'القضية',
+        cell: ({ row }) => row.original.case?.title || '-',
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'appointmentType',
+        header: 'النوع',
+        cell: ({ row }) => {
+          const typeMap = {
+            consultation: 'استشارة',
+            meeting: 'اجتماع',
+            court_session: 'جلسة محكمة',
+            other: 'أخرى'
+          };
+          return <span className="badge badge-primary">{typeMap[row.original.appointmentType] || row.original.appointmentType}</span>;
+        },
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'location',
+        header: 'الموقع',
+        cell: ({ row }) => row.original.location || '-',
+        enableSorting: true,
+      },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -153,58 +275,12 @@ function Dashboard() {
             <div className="card-header">
               <h3 className="card-title">الجلسات القادمة</h3>
             </div>
-            {upcomingSessions.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>التاريخ</th>
-                      <th>القضية</th>
-                      <th>الموكل</th>
-                      <th>المحكمة</th>
-                      <th>النوع</th>
-                      <th>الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {upcomingSessions.map((session) => (
-                      <tr key={session.id}>
-                        <td>{formatDateTime(session.sessionDate)}</td>
-                        <td>{session.case?.title || '-'}</td>
-                        <td>
-                          {session.case?.client?.type === 'company'
-                            ? session.case?.client?.companyName
-                            : `${session.case?.client?.firstName} ${session.case?.client?.lastName}`}
-                        </td>
-                        <td>{session.court || '-'}</td>
-                        <td>
-                          <span className="badge badge-info">
-                            {session.sessionType === 'hearing' && 'جلسة استماع'}
-                            {session.sessionType === 'verdict' && 'جلسة حكم'}
-                            {session.sessionType === 'procedural' && 'جلسة إجرائية'}
-                            {session.sessionType === 'other' && 'أخرى'}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="badge badge-warning">
-                            {session.status === 'scheduled' && 'مجدولة'}
-                            {session.status === 'completed' && 'مكتملة'}
-                            {session.status === 'postponed' && 'مؤجلة'}
-                            {session.status === 'cancelled' && 'ملغاة'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">🏛️</div>
-                <p className="empty-state-title">لا توجد جلسات قادمة</p>
-                <p className="empty-state-description">لم يتم جدولة أي جلسات محكمة</p>
-              </div>
-            )}
+            <DataTable
+              data={upcomingSessions}
+              columns={courtSessionsColumns}
+              showPagination={false}
+              emptyMessage="لا توجد جلسات قادمة"
+            />
           </div>
 
           {/* Upcoming Appointments */}
@@ -212,53 +288,12 @@ function Dashboard() {
             <div className="card-header">
               <h3 className="card-title">المواعيد القادمة</h3>
             </div>
-            {upcomingAppointments.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>التاريخ</th>
-                      <th>العنوان</th>
-                      <th>الموكل</th>
-                      <th>القضية</th>
-                      <th>النوع</th>
-                      <th>الموقع</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {upcomingAppointments.map((appointment) => (
-                      <tr key={appointment.id}>
-                        <td>{formatDateTime(appointment.appointmentDate)}</td>
-                        <td>{appointment.title}</td>
-                        <td>
-                          {appointment.client
-                            ? appointment.client.type === 'company'
-                              ? appointment.client.companyName
-                              : `${appointment.client.firstName} ${appointment.client.lastName}`
-                            : '-'}
-                        </td>
-                        <td>{appointment.case?.title || '-'}</td>
-                        <td>
-                          <span className="badge badge-primary">
-                            {appointment.appointmentType === 'consultation' && 'استشارة'}
-                            {appointment.appointmentType === 'meeting' && 'اجتماع'}
-                            {appointment.appointmentType === 'court_session' && 'جلسة محكمة'}
-                            {appointment.appointmentType === 'other' && 'أخرى'}
-                          </span>
-                        </td>
-                        <td>{appointment.location || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">📅</div>
-                <p className="empty-state-title">لا توجد مواعيد قادمة</p>
-                <p className="empty-state-description">لم يتم تحديد أي مواعيد</p>
-              </div>
-            )}
+            <DataTable
+              data={upcomingAppointments}
+              columns={appointmentsColumns}
+              showPagination={false}
+              emptyMessage="لا توجد مواعيد قادمة"
+            />
           </div>
         </>
       )}

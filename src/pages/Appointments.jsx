@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { appointmentAPI, clientAPI, caseAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function AppointmentModal({ appointment, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -204,6 +205,7 @@ function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const confirm = useConfirm();
@@ -283,12 +285,6 @@ function AppointmentsPage() {
       : `${client.firstName} ${client.lastName}`;
   };
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus;
-    const matchesType = filterType === 'all' || appointment.appointmentType === filterType;
-    return matchesStatus && matchesType;
-  });
-
   const formatDateTime = (date) => {
     return new Date(date).toLocaleString('ar-DZ', {
       year: 'numeric',
@@ -298,6 +294,111 @@ function AppointmentsPage() {
       minute: '2-digit'
     });
   };
+
+  const globalFilterFn = (appointment, searchTerm) => {
+    return (
+      appointment.title.includes(searchTerm) ||
+      (appointment.location && appointment.location.includes(searchTerm)) ||
+      (appointment.clientId && getClientName(appointment.clientId).includes(searchTerm))
+    );
+  };
+
+  const filteredByType = useMemo(() => {
+    if (filterType === 'all') return appointments;
+    return appointments.filter(a => a.appointmentType === filterType);
+  }, [appointments, filterType]);
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'appointmentDate',
+        header: 'التاريخ والوقت',
+        cell: ({ row }) => formatDateTime(row.original.appointmentDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'title',
+        header: 'العنوان',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'clientId',
+        header: 'الموكل',
+        cell: ({ row }) => row.original.clientId ? getClientName(row.original.clientId) : '-',
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'appointmentType',
+        header: 'النوع',
+        cell: ({ row }) => (
+          <span className="badge badge-primary">
+            {row.original.appointmentType === 'consultation' && 'استشارة'}
+            {row.original.appointmentType === 'meeting' && 'اجتماع'}
+            {row.original.appointmentType === 'court_session' && 'جلسة محكمة'}
+            {row.original.appointmentType === 'other' && 'أخرى'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'duration',
+        header: 'المدة',
+        cell: ({ row }) => `${row.original.duration} دقيقة`,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'location',
+        header: 'الموقع',
+        cell: ({ row }) => row.original.location || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'scheduled'
+                ? 'badge-warning'
+                : row.original.status === 'completed'
+                ? 'badge-success'
+                : row.original.status === 'cancelled'
+                ? 'badge-danger'
+                : 'badge-info'
+            }`}
+          >
+            {row.original.status === 'scheduled' && 'مجدول'}
+            {row.original.status === 'completed' && 'مكتمل'}
+            {row.original.status === 'cancelled' && 'ملغى'}
+            {row.original.status === 'rescheduled' && 'معاد جدولة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [clients]
+  );
 
   if (loading) {
     return (
@@ -319,6 +420,13 @@ function AppointmentsPage() {
 
       <div className="card">
         <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 البحث عن موعد..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select
             className="form-select"
             style={{ width: '180px' }}
@@ -345,86 +453,21 @@ function AppointmentsPage() {
           </select>
         </div>
 
-        {filteredAppointments.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>التاريخ والوقت</th>
-                  <th>العنوان</th>
-                  <th>الموكل</th>
-                  <th>النوع</th>
-                  <th>المدة</th>
-                  <th>الموقع</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAppointments.map((appointment) => (
-                  <tr key={appointment.id}>
-                    <td>{formatDateTime(appointment.appointmentDate)}</td>
-                    <td>{appointment.title}</td>
-                    <td>{appointment.clientId ? getClientName(appointment.clientId) : '-'}</td>
-                    <td>
-                      <span className="badge badge-primary">
-                        {appointment.appointmentType === 'consultation' && 'استشارة'}
-                        {appointment.appointmentType === 'meeting' && 'اجتماع'}
-                        {appointment.appointmentType === 'court_session' && 'جلسة محكمة'}
-                        {appointment.appointmentType === 'other' && 'أخرى'}
-                      </span>
-                    </td>
-                    <td>{appointment.duration} دقيقة</td>
-                    <td>{appointment.location || '-'}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          appointment.status === 'scheduled'
-                            ? 'badge-warning'
-                            : appointment.status === 'completed'
-                            ? 'badge-success'
-                            : appointment.status === 'cancelled'
-                            ? 'badge-danger'
-                            : 'badge-info'
-                        }`}
-                      >
-                        {appointment.status === 'scheduled' && 'مجدول'}
-                        {appointment.status === 'completed' && 'مكتمل'}
-                        {appointment.status === 'cancelled' && 'ملغى'}
-                        {appointment.status === 'rescheduled' && 'معاد جدولة'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleEdit(appointment)}
-                        >
-                          ✏️ تعديل
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(appointment.id)}
-                        >
-                          🗑️ حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">📅</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">لم يتم إضافة أي مواعيد بعد</p>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              ➕ إضافة موعد جديد
-            </button>
-          </div>
-        )}
+        <DataTable
+          data={filteredByType}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== 'all' || filterType !== 'all'
+              ? 'لم يتم العثور على مواعيد مطابقة للبحث'
+              : 'لم يتم إضافة أي مواعيد بعد'
+          }
+        />
       </div>
 
       {showModal && (

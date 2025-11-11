@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { clientAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function ClientModal({ client, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -297,17 +298,97 @@ function ClientsPage() {
     setShowModal(true);
   };
 
-  const filteredClients = clients.filter((client) => {
-    const matchesSearch = searchTerm === '' ||
+  const globalFilterFn = (client, searchTerm) => {
+    return (
       (client.firstName && client.firstName.includes(searchTerm)) ||
       (client.lastName && client.lastName.includes(searchTerm)) ||
       (client.companyName && client.companyName.includes(searchTerm)) ||
-      (client.phone && client.phone.includes(searchTerm));
+      (client.phone && client.phone.includes(searchTerm))
+    );
+  };
 
-    const matchesStatus = filterStatus === 'all' || client.status === filterStatus;
-
-    return matchesSearch && matchesStatus;
-  });
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'الاسم',
+        cell: ({ row }) =>
+          row.original.type === 'company'
+            ? row.original.companyName
+            : `${row.original.firstName} ${row.original.lastName}`,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'type',
+        header: 'النوع',
+        cell: ({ row }) => (
+          <span className="badge badge-secondary">
+            {row.original.type === 'individual' ? 'فرد' : 'شركة'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'phone',
+        header: 'رقم الهاتف',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'email',
+        header: 'البريد الإلكتروني',
+        cell: ({ row }) => row.original.email || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'wilaya',
+        header: 'الولاية',
+        cell: ({ row }) => row.original.wilaya || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'status',
+        header: 'الحالة',
+        cell: ({ row }) => (
+          <span
+            className={`badge ${
+              row.original.status === 'active'
+                ? 'badge-success'
+                : row.original.status === 'inactive'
+                ? 'badge-warning'
+                : 'badge-secondary'
+            }`}
+          >
+            {row.original.status === 'active' && 'نشط'}
+            {row.original.status === 'inactive' && 'غير نشط'}
+            {row.original.status === 'archived' && 'مؤرشف'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -349,88 +430,21 @@ function ClientsPage() {
           </select>
         </div>
 
-        {filteredClients.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>النوع</th>
-                  <th>رقم الهاتف</th>
-                  <th>البريد الإلكتروني</th>
-                  <th>الولاية</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClients.map((client) => (
-                  <tr key={client.id}>
-                    <td>
-                      {client.type === 'company'
-                        ? client.companyName
-                        : `${client.firstName} ${client.lastName}`}
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary">
-                        {client.type === 'individual' ? 'فرد' : 'شركة'}
-                      </span>
-                    </td>
-                    <td>{client.phone}</td>
-                    <td>{client.email || '-'}</td>
-                    <td>{client.wilaya || '-'}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          client.status === 'active'
-                            ? 'badge-success'
-                            : client.status === 'inactive'
-                            ? 'badge-warning'
-                            : 'badge-secondary'
-                        }`}
-                      >
-                        {client.status === 'active' && 'نشط'}
-                        {client.status === 'inactive' && 'غير نشط'}
-                        {client.status === 'archived' && 'مؤرشف'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleEdit(client)}
-                        >
-                          ✏️ تعديل
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(client.id)}
-                        >
-                          🗑️ حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">
-              {searchTerm
-                ? 'لم يتم العثور على موكلين مطابقين للبحث'
-                : 'لم يتم إضافة أي موكلين بعد'}
-            </p>
-            {!searchTerm && (
-              <button className="btn btn-primary" onClick={handleAdd}>
-                ➕ إضافة موكل جديد
-              </button>
-            )}
-          </div>
-        )}
+        <DataTable
+          data={clients}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== 'all'
+              ? 'لم يتم العثور على موكلين مطابقين للبحث'
+              : 'لم يتم إضافة أي موكلين بعد'
+          }
+        />
       </div>
 
       {showModal && (

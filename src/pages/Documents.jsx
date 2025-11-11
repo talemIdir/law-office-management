@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { documentAPI, clientAPI, caseAPI } from '../utils/api';
 import { showSuccess, showError } from '../utils/toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
 function DocumentModal({ document, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -251,19 +252,82 @@ function DocumentsPage() {
     setShowModal(true);
   };
 
-  const filteredDocuments = documents.filter((doc) => {
-    const matchesSearch = searchTerm === '' ||
-      doc.title.includes(searchTerm) ||
-      (doc.fileName && doc.fileName.includes(searchTerm));
-
-    const matchesType = filterType === 'all' || doc.documentType === filterType;
-
-    return matchesSearch && matchesType;
-  });
-
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('ar-DZ');
   };
+
+  const globalFilterFn = (doc, searchTerm) => {
+    return (
+      doc.title.includes(searchTerm) ||
+      (doc.fileName && doc.fileName.includes(searchTerm)) ||
+      (doc.description && doc.description.includes(searchTerm))
+    );
+  };
+
+  const filteredByType = useMemo(() => {
+    if (filterType === 'all') return documents;
+    return documents.filter(d => d.documentType === filterType);
+  }, [documents, filterType]);
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'title',
+        header: 'عنوان المستند',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'documentType',
+        header: 'النوع',
+        cell: ({ row }) => (
+          <span className="badge badge-secondary">
+            {row.original.documentType === 'contract' && 'عقد'}
+            {row.original.documentType === 'court_filing' && 'صك محكمة'}
+            {row.original.documentType === 'evidence' && 'دليل'}
+            {row.original.documentType === 'correspondence' && 'مراسلة'}
+            {row.original.documentType === 'id_document' && 'وثيقة هوية'}
+            {row.original.documentType === 'power_of_attorney' && 'توكيل'}
+            {row.original.documentType === 'other' && 'أخرى'}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'fileName',
+        header: 'اسم الملف',
+        cell: ({ row }) => row.original.fileName || '-',
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'uploadDate',
+        header: 'تاريخ الرفع',
+        cell: ({ row }) => formatDate(row.original.uploadDate || row.original.createdAt),
+        enableSorting: true,
+      },
+      {
+        id: 'actions',
+        header: 'الإجراءات',
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => handleEdit(row.original)}
+            >
+              ✏️ تعديل
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleDelete(row.original.id)}
+            >
+              🗑️ حذف
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -309,72 +373,21 @@ function DocumentsPage() {
           </select>
         </div>
 
-        {filteredDocuments.length > 0 ? (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>عنوان المستند</th>
-                  <th>النوع</th>
-                  <th>اسم الملف</th>
-                  <th>تاريخ الرفع</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDocuments.map((doc) => (
-                  <tr key={doc.id}>
-                    <td>{doc.title}</td>
-                    <td>
-                      <span className="badge badge-secondary">
-                        {doc.documentType === 'contract' && 'عقد'}
-                        {doc.documentType === 'court_filing' && 'صك محكمة'}
-                        {doc.documentType === 'evidence' && 'دليل'}
-                        {doc.documentType === 'correspondence' && 'مراسلة'}
-                        {doc.documentType === 'id_document' && 'وثيقة هوية'}
-                        {doc.documentType === 'power_of_attorney' && 'توكيل'}
-                        {doc.documentType === 'other' && 'أخرى'}
-                      </span>
-                    </td>
-                    <td>{doc.fileName || '-'}</td>
-                    <td>{formatDate(doc.uploadDate || doc.createdAt)}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleEdit(doc)}
-                        >
-                          ✏️ تعديل
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(doc.id)}
-                        >
-                          🗑️ حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">📁</div>
-            <p className="empty-state-title">لا توجد نتائج</p>
-            <p className="empty-state-description">
-              {searchTerm
-                ? 'لم يتم العثور على مستندات مطابقة للبحث'
-                : 'لم يتم إضافة أي مستندات بعد'}
-            </p>
-            {!searchTerm && (
-              <button className="btn btn-primary" onClick={handleAdd}>
-                ➕ إضافة مستند جديد
-              </button>
-            )}
-          </div>
-        )}
+        <DataTable
+          data={filteredByType}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue=""
+          filterKey=""
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterType !== 'all'
+              ? 'لم يتم العثور على مستندات مطابقة للبحث'
+              : 'لم يتم إضافة أي مستندات بعد'
+          }
+        />
       </div>
 
       {showModal && (
