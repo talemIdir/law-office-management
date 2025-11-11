@@ -368,7 +368,7 @@ function CasesPage() {
         showSuccess(
           selectedCase
             ? "تم تحديث بيانات القضية بنجاح"
-            : "تم إضافة القضية بنجاح"
+            : "تم إضافة القضية بنجاح",
         );
       } else {
         showError("خطأ: " + result.error);
@@ -561,7 +561,7 @@ function CasesPage() {
         enableSorting: false,
       },
     ],
-    [clients]
+    [clients],
   );
 
   if (loading) {

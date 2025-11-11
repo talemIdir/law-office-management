@@ -100,7 +100,7 @@ export default function DataTable({
                     >
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getCanSort() && (
                         <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>

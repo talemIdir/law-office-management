@@ -1,29 +1,29 @@
-import { Sequelize } from 'sequelize';
-import path from 'path';
-import { app } from 'electron';
+import { Sequelize } from "sequelize";
+import path from "path";
+import { app } from "electron";
 
 // Initialize SQLite database
-const dbPath = path.join(app.getPath('userData'), 'law-office.db');
+const dbPath = path.join(app.getPath("userData"), "law-office.db");
 
 const sequelize = new Sequelize({
-  dialect: 'sqlite',
+  dialect: "sqlite",
   storage: dbPath,
-  logging: false
+  logging: false,
 });
 
 // Initialize database
 async function initDatabase() {
   try {
     await sequelize.authenticate();
-    console.log('Database connection established successfully.');
+    console.log("Database connection established successfully.");
 
     // Sync all models
     await sequelize.sync({ alter: true });
-    console.log('Database synchronized successfully.');
+    console.log("Database synchronized successfully.");
 
     return true;
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error("Unable to connect to the database:", error);
     return false;
   }
 }

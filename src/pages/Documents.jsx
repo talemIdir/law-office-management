@@ -219,7 +219,7 @@ function DocumentsPage() {
         showSuccess(
           selectedDocument
             ? "تم تحديث بيانات المستند بنجاح"
-            : "تم إضافة المستند بنجاح"
+            : "تم إضافة المستند بنجاح",
         );
       } else {
         showError("خطأ: " + result.error);
@@ -333,7 +333,7 @@ function DocumentsPage() {
         enableSorting: false,
       },
     ],
-    []
+    [],
   );
 
   if (loading) {

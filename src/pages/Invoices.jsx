@@ -392,7 +392,7 @@ function InvoicesPage() {
         showSuccess(
           selectedInvoice
             ? "تم تحديث الفاتورة بنجاح"
-            : "تم إضافة الفاتورة بنجاح"
+            : "تم إضافة الفاتورة بنجاح",
         );
       } else {
         showError("خطأ: " + result.error);
@@ -600,7 +600,7 @@ function InvoicesPage() {
         enableSorting: false,
       },
     ],
-    [clients]
+    [clients],
   );
 
   if (loading) {

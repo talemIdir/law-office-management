@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 // Toast configuration defaults
 const defaultOptions = {
@@ -65,7 +65,7 @@ export const showInfo = (message, options = {}) => {
  * @param {string} message - The loading message to display
  * @returns {number|string} Toast ID for updating the toast later
  */
-export const showLoading = (message = 'جاري التحميل...') => {
+export const showLoading = (message = "جاري التحميل...") => {
   return toast.loading(message, {
     ...defaultOptions,
   });

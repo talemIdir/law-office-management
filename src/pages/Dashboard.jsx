@@ -134,7 +134,7 @@ function Dashboard() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   // Column definitions for appointments table
@@ -195,7 +195,7 @@ function Dashboard() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   if (loading) {

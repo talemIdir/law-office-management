@@ -250,7 +250,7 @@ function CourtSessionsPage() {
         showSuccess(
           selectedSession
             ? "تم تحديث بيانات الجلسة بنجاح"
-            : "تم إضافة الجلسة بنجاح"
+            : "تم إضافة الجلسة بنجاح",
         );
       } else {
         showError("خطأ: " + result.error);
@@ -404,7 +404,7 @@ function CourtSessionsPage() {
         enableSorting: false,
       },
     ],
-    []
+    [],
   );
 
   if (loading) {

@@ -355,15 +355,15 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
 
     const totalInvoiced = invoices.reduce(
       (sum, inv) => sum + parseFloat(inv.totalAmount),
-      0
+      0,
     );
     const totalPaid = payments.reduce(
       (sum, pay) => sum + parseFloat(pay.amount),
-      0
+      0,
     );
     const totalExpenses = expenses.reduce(
       (sum, exp) => sum + parseFloat(exp.amount),
-      0
+      0,
     );
     const netIncome = totalPaid - totalExpenses;
 

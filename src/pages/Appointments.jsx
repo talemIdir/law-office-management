@@ -245,7 +245,7 @@ function AppointmentsPage() {
         showSuccess(
           selectedAppointment
             ? "تم تحديث بيانات الموعد بنجاح"
-            : "تم إضافة الموعد بنجاح"
+            : "تم إضافة الموعد بنجاح",
         );
       } else {
         showError("خطأ: " + result.error);
@@ -406,7 +406,7 @@ function AppointmentsPage() {
         enableSorting: false,
       },
     ],
-    [clients]
+    [clients],
   );
 
   if (loading) {

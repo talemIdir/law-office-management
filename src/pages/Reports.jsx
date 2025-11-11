@@ -198,7 +198,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   // Column definitions for cases by type table
@@ -217,7 +217,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   // Column definitions for cases by status table
@@ -236,7 +236,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   // Column definitions for clients by status table
@@ -255,7 +255,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -395,7 +395,7 @@ function ReportsPage() {
             <h3 className="card-title">القضايا حسب النوع</h3>
             <DataTable
               data={Object.entries(reportData.casesByType).map(
-                ([type, count]) => ({ type, count })
+                ([type, count]) => ({ type, count }),
               )}
               columns={casesByTypeColumns}
               showPagination={false}
@@ -407,7 +407,7 @@ function ReportsPage() {
             <h3 className="card-title">القضايا حسب الحالة</h3>
             <DataTable
               data={Object.entries(reportData.casesByStatus).map(
-                ([status, count]) => ({ status, count })
+                ([status, count]) => ({ status, count }),
               )}
               columns={casesByStatusColumns}
               showPagination={false}
@@ -456,7 +456,7 @@ function ReportsPage() {
             <h3 className="card-title">الموكلين حسب الحالة</h3>
             <DataTable
               data={Object.entries(reportData.clientsByStatus).map(
-                ([status, count]) => ({ status, count })
+                ([status, count]) => ({ status, count }),
               )}
               columns={clientsByStatusColumns}
               showPagination={false}
