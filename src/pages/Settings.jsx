@@ -24,12 +24,13 @@ function SettingsPage() {
   const loadSettings = async () => {
     setLoading(true);
     const result = await settingAPI.getAll();
+
     if (result.success && result.data.length > 0) {
       const settingsObj = {};
       result.data.forEach((setting) => {
         settingsObj[setting.key] = setting.value;
       });
-      setSettings({ ...settings, ...settingsObj });
+      setSettings((prevSettings) => ({ ...prevSettings, ...settingsObj }));
     }
     setLoading(false);
   };
