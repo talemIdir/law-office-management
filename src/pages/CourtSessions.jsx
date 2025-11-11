@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { courtSessionAPI, caseAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { courtSessionAPI, caseAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
   const [formData, setFormData] = useState({
-    sessionDate: '',
-    sessionType: 'hearing',
-    court: '',
-    courtRoom: '',
-    judge: '',
-    attendees: '',
-    outcome: '',
-    nextSessionDate: '',
-    notes: '',
-    status: 'scheduled',
-    caseId: '',
-    ...session
+    sessionDate: "",
+    sessionType: "hearing",
+    court: "",
+    courtRoom: "",
+    judge: "",
+    attendees: "",
+    outcome: "",
+    nextSessionDate: "",
+    notes: "",
+    status: "scheduled",
+    caseId: "",
+    ...session,
   });
 
   useEffect(() => {
@@ -27,7 +27,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
 
   const loadCases = async () => {
     const result = await caseAPI.getAll({
-      where: { status: ['open', 'in_progress'] }
+      where: { status: ["open", "in_progress"] },
     });
     if (result.success) {
       setCases(result.data);
@@ -48,9 +48,11 @@ function CourtSessionModal({ session, onClose, onSave }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {session ? 'تعديل بيانات جلسة' : 'إضافة جلسة جديدة'}
+            {session ? "تعديل بيانات جلسة" : "إضافة جلسة جديدة"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -197,7 +199,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {session ? 'حفظ التعديلات' : 'إضافة جلسة'}
+              {session ? "حفظ التعديلات" : "إضافة جلسة"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -214,9 +216,9 @@ function CourtSessionsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -245,30 +247,34 @@ function CourtSessionsPage() {
         setShowModal(false);
         setSelectedSession(null);
         loadSessions();
-        showSuccess(selectedSession ? 'تم تحديث بيانات الجلسة بنجاح' : 'تم إضافة الجلسة بنجاح');
+        showSuccess(
+          selectedSession
+            ? "تم تحديث بيانات الجلسة بنجاح"
+            : "تم إضافة الجلسة بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذه الجلسة؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذه الجلسة؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await courtSessionAPI.delete(id);
       if (result.success) {
         loadSessions();
-        showSuccess('تم حذف الجلسة بنجاح');
+        showSuccess("تم حذف الجلسة بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -284,12 +290,12 @@ function CourtSessionsPage() {
   };
 
   const formatDateTime = (date) => {
-    return new Date(date).toLocaleString('ar-DZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleString("ar-DZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -303,81 +309,82 @@ function CourtSessionsPage() {
   };
 
   const filteredByType = useMemo(() => {
-    if (filterType === 'all') return sessions;
-    return sessions.filter(s => s.sessionType === filterType);
+    if (filterType === "all") return sessions;
+    return sessions.filter((s) => s.sessionType === filterType);
   }, [sessions, filterType]);
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'sessionDate',
-        header: 'التاريخ والوقت',
+        accessorKey: "sessionDate",
+        header: "التاريخ والوقت",
         cell: ({ row }) => formatDateTime(row.original.sessionDate),
         enableSorting: true,
       },
       {
-        accessorKey: 'caseId',
-        header: 'رقم القضية',
-        cell: ({ row }) => row.original.caseId ? `#${row.original.caseId}` : '-',
+        accessorKey: "caseId",
+        header: "رقم القضية",
+        cell: ({ row }) =>
+          row.original.caseId ? `#${row.original.caseId}` : "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'sessionType',
-        header: 'النوع',
+        accessorKey: "sessionType",
+        header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-info">
-            {row.original.sessionType === 'hearing' && 'جلسة استماع'}
-            {row.original.sessionType === 'verdict' && 'جلسة حكم'}
-            {row.original.sessionType === 'procedural' && 'جلسة إجرائية'}
-            {row.original.sessionType === 'other' && 'أخرى'}
+            {row.original.sessionType === "hearing" && "جلسة استماع"}
+            {row.original.sessionType === "verdict" && "جلسة حكم"}
+            {row.original.sessionType === "procedural" && "جلسة إجرائية"}
+            {row.original.sessionType === "other" && "أخرى"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'court',
-        header: 'المحكمة',
-        cell: ({ row }) => row.original.court || '-',
+        accessorKey: "court",
+        header: "المحكمة",
+        cell: ({ row }) => row.original.court || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'courtRoom',
-        header: 'القاعة',
-        cell: ({ row }) => row.original.courtRoom || '-',
+        accessorKey: "courtRoom",
+        header: "القاعة",
+        cell: ({ row }) => row.original.courtRoom || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'judge',
-        header: 'القاضي',
-        cell: ({ row }) => row.original.judge || '-',
+        accessorKey: "judge",
+        header: "القاضي",
+        cell: ({ row }) => row.original.judge || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === 'scheduled'
-                ? 'badge-warning'
-                : row.original.status === 'completed'
-                ? 'badge-success'
-                : row.original.status === 'postponed'
-                ? 'badge-info'
-                : 'badge-danger'
+              row.original.status === "scheduled"
+                ? "badge-warning"
+                : row.original.status === "completed"
+                  ? "badge-success"
+                  : row.original.status === "postponed"
+                    ? "badge-info"
+                    : "badge-danger"
             }`}
           >
-            {row.original.status === 'scheduled' && 'مجدولة'}
-            {row.original.status === 'completed' && 'مكتملة'}
-            {row.original.status === 'postponed' && 'مؤجلة'}
-            {row.original.status === 'cancelled' && 'ملغاة'}
+            {row.original.status === "scheduled" && "مجدولة"}
+            {row.original.status === "completed" && "مكتملة"}
+            {row.original.status === "postponed" && "مؤجلة"}
+            {row.original.status === "cancelled" && "ملغاة"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
@@ -410,7 +417,7 @@ function CourtSessionsPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الجلسات</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -429,7 +436,7 @@ function CourtSessionsPage() {
           />
           <select
             className="form-select"
-            style={{ width: '200px' }}
+            style={{ width: "200px" }}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -441,7 +448,7 @@ function CourtSessionsPage() {
           </select>
           <select
             className="form-select"
-            style={{ width: '200px' }}
+            style={{ width: "200px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -463,9 +470,9 @@ function CourtSessionsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== 'all' || filterType !== 'all'
-              ? 'لم يتم العثور على جلسات مطابقة للبحث'
-              : 'لم يتم إضافة أي جلسات بعد'
+            searchTerm || filterStatus !== "all" || filterType !== "all"
+              ? "لم يتم العثور على جلسات مطابقة للبحث"
+              : "لم يتم إضافة أي جلسات بعد"
           }
         />
       </div>

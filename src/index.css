@@ -24,7 +24,12 @@
 }
 
 body {
-  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    "Tajawal",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   background-color: var(--bg-light);
   color: var(--text-dark);
   line-height: 1.6;
@@ -37,18 +42,35 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--text-dark);
 }
 
-h1 { font-size: 2rem; }
-h2 { font-size: 1.75rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.1rem; }
-h6 { font-size: 1rem; }
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.25rem;
+}
+h5 {
+  font-size: 1.1rem;
+}
+h6 {
+  font-size: 1rem;
+}
 
 p {
   margin-bottom: 0.75rem;
@@ -62,7 +84,11 @@ p {
 
 .sidebar {
   width: 260px;
-  background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--primary-dark) 0%,
+    var(--primary-color) 100%
+  );
   color: white;
   position: fixed;
   right: 0;
@@ -130,6 +156,8 @@ p {
   flex: 1;
   padding: 2rem;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Cards */
@@ -140,6 +168,7 @@ p {
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
+  flex: 1;
 }
 
 .card-header {
@@ -171,7 +200,7 @@ p {
   cursor: pointer;
   transition: all 0.3s;
   text-decoration: none;
-  font-family: 'Tajawal', sans-serif;
+  font-family: "Tajawal", sans-serif;
   gap: 0.5rem;
 }
 
@@ -254,7 +283,7 @@ p {
 }
 
 .form-label.required::after {
-  content: ' *';
+  content: " *";
   color: var(--danger-color);
 }
 
@@ -264,7 +293,7 @@ p {
   width: 100%;
   padding: 0.625rem 0.875rem;
   font-size: 0.95rem;
-  font-family: 'Tajawal', sans-serif;
+  font-family: "Tajawal", sans-serif;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: white;
@@ -386,7 +415,9 @@ p {
   border-radius: 8px;
   box-shadow: var(--shadow);
   border-right: 4px solid var(--primary-color);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .stat-card:hover {
@@ -529,7 +560,7 @@ p {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 0.95rem;
-  font-family: 'Tajawal', sans-serif;
+  font-family: "Tajawal", sans-serif;
   direction: rtl;
 }
 
@@ -583,8 +614,12 @@ p {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-container {
@@ -631,6 +666,12 @@ p {
   justify-content: flex-start;
 }
 
+.page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Page Header */
 .page-header {
   display: flex;
@@ -647,25 +688,63 @@ p {
 }
 
 /* Utility Classes */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mt-3 { margin-top: 1.5rem; }
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.mb-3 { margin-bottom: 1.5rem; }
-.p-1 { padding: 0.5rem; }
-.p-2 { padding: 1rem; }
-.p-3 { padding: 1.5rem; }
-.flex { display: flex; }
-.flex-1 { flex: 1; }
-.gap-1 { gap: 0.5rem; }
-.gap-2 { gap: 1rem; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+.mt-1 {
+  margin-top: 0.5rem;
+}
+.mt-2 {
+  margin-top: 1rem;
+}
+.mt-3 {
+  margin-top: 1.5rem;
+}
+.mb-1 {
+  margin-bottom: 0.5rem;
+}
+.mb-2 {
+  margin-bottom: 1rem;
+}
+.mb-3 {
+  margin-bottom: 1.5rem;
+}
+.p-1 {
+  padding: 0.5rem;
+}
+.p-2 {
+  padding: 1rem;
+}
+.p-3 {
+  padding: 1.5rem;
+}
+.flex {
+  display: flex;
+}
+.flex-1 {
+  flex: 1;
+}
+.gap-1 {
+  gap: 0.5rem;
+}
+.gap-2 {
+  gap: 1rem;
+}
+.items-center {
+  align-items: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.justify-center {
+  justify-content: center;
+}
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {

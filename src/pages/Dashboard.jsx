@@ -1,6 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { getDashboardStats, getUpcomingCourtSessions, getUpcomingAppointments } from '../utils/api';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  getDashboardStats,
+  getUpcomingCourtSessions,
+  getUpcomingAppointments,
+} from "../utils/api";
+import DataTable from "../components/DataTable";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -18,42 +22,45 @@ function Dashboard() {
       const [statsRes, sessionsRes, appointmentsRes] = await Promise.all([
         getDashboardStats(),
         getUpcomingCourtSessions(5),
-        getUpcomingAppointments(5)
+        getUpcomingAppointments(5),
       ]);
 
       if (statsRes.success) setStats(statsRes.data);
       if (sessionsRes.success) setUpcomingSessions(sessionsRes.data);
-      if (appointmentsRes.success) setUpcomingAppointments(appointmentsRes.data);
+      if (appointmentsRes.success)
+        setUpcomingAppointments(appointmentsRes.data);
     } catch (error) {
-      console.error('Error loading dashboard:', error);
+      console.error("Error loading dashboard:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ar-DZ', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount) + ' دج';
+    return (
+      new Intl.NumberFormat("ar-DZ", {
+        style: "decimal",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount) + " دج"
+    );
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('ar-DZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("ar-DZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatDateTime = (date) => {
-    return new Date(date).toLocaleString('ar-DZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleString("ar-DZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -61,60 +68,68 @@ function Dashboard() {
   const courtSessionsColumns = useMemo(
     () => [
       {
-        accessorKey: 'sessionDate',
-        header: 'التاريخ',
+        accessorKey: "sessionDate",
+        header: "التاريخ",
         cell: ({ row }) => formatDateTime(row.original.sessionDate),
         enableSorting: true,
       },
       {
-        accessorKey: 'case.title',
-        header: 'القضية',
-        cell: ({ row }) => row.original.case?.title || '-',
+        accessorKey: "case.title",
+        header: "القضية",
+        cell: ({ row }) => row.original.case?.title || "-",
         enableSorting: false,
       },
       {
-        accessorKey: 'case.client',
-        header: 'الموكل',
+        accessorKey: "case.client",
+        header: "الموكل",
         cell: ({ row }) => {
           const client = row.original.case?.client;
-          if (!client) return '-';
-          return client.type === 'company'
+          if (!client) return "-";
+          return client.type === "company"
             ? client.companyName
             : `${client.firstName} ${client.lastName}`;
         },
         enableSorting: false,
       },
       {
-        accessorKey: 'court',
-        header: 'المحكمة',
-        cell: ({ row }) => row.original.court || '-',
+        accessorKey: "court",
+        header: "المحكمة",
+        cell: ({ row }) => row.original.court || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'sessionType',
-        header: 'النوع',
+        accessorKey: "sessionType",
+        header: "النوع",
         cell: ({ row }) => {
           const typeMap = {
-            hearing: 'جلسة استماع',
-            verdict: 'جلسة حكم',
-            procedural: 'جلسة إجرائية',
-            other: 'أخرى'
+            hearing: "جلسة استماع",
+            verdict: "جلسة حكم",
+            procedural: "جلسة إجرائية",
+            other: "أخرى",
           };
-          return <span className="badge badge-info">{typeMap[row.original.sessionType] || row.original.sessionType}</span>;
+          return (
+            <span className="badge badge-info">
+              {typeMap[row.original.sessionType] || row.original.sessionType}
+            </span>
+          );
         },
         enableSorting: true,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => {
           const statusMap = {
-            scheduled: 'مجدولة',
-            completed: 'مكتملة',
-            postponed: 'مؤجلة',
-            cancelled: 'ملغاة'
+            scheduled: "مجدولة",
+            completed: "مكتملة",
+            postponed: "مؤجلة",
+            cancelled: "ملغاة",
           };
-          return <span className="badge badge-warning">{statusMap[row.original.status] || row.original.status}</span>;
+          return (
+            <span className="badge badge-warning">
+              {statusMap[row.original.status] || row.original.status}
+            </span>
+          );
         },
         enableSorting: true,
       },
@@ -126,52 +141,57 @@ function Dashboard() {
   const appointmentsColumns = useMemo(
     () => [
       {
-        accessorKey: 'appointmentDate',
-        header: 'التاريخ',
+        accessorKey: "appointmentDate",
+        header: "التاريخ",
         cell: ({ row }) => formatDateTime(row.original.appointmentDate),
         enableSorting: true,
       },
       {
-        accessorKey: 'title',
-        header: 'العنوان',
+        accessorKey: "title",
+        header: "العنوان",
         enableSorting: true,
       },
       {
-        accessorKey: 'client',
-        header: 'الموكل',
+        accessorKey: "client",
+        header: "الموكل",
         cell: ({ row }) => {
           const client = row.original.client;
-          if (!client) return '-';
-          return client.type === 'company'
+          if (!client) return "-";
+          return client.type === "company"
             ? client.companyName
             : `${client.firstName} ${client.lastName}`;
         },
         enableSorting: false,
       },
       {
-        accessorKey: 'case.title',
-        header: 'القضية',
-        cell: ({ row }) => row.original.case?.title || '-',
+        accessorKey: "case.title",
+        header: "القضية",
+        cell: ({ row }) => row.original.case?.title || "-",
         enableSorting: false,
       },
       {
-        accessorKey: 'appointmentType',
-        header: 'النوع',
+        accessorKey: "appointmentType",
+        header: "النوع",
         cell: ({ row }) => {
           const typeMap = {
-            consultation: 'استشارة',
-            meeting: 'اجتماع',
-            court_session: 'جلسة محكمة',
-            other: 'أخرى'
+            consultation: "استشارة",
+            meeting: "اجتماع",
+            court_session: "جلسة محكمة",
+            other: "أخرى",
           };
-          return <span className="badge badge-primary">{typeMap[row.original.appointmentType] || row.original.appointmentType}</span>;
+          return (
+            <span className="badge badge-primary">
+              {typeMap[row.original.appointmentType] ||
+                row.original.appointmentType}
+            </span>
+          );
         },
         enableSorting: true,
       },
       {
-        accessorKey: 'location',
-        header: 'الموقع',
-        cell: ({ row }) => row.original.location || '-',
+        accessorKey: "location",
+        header: "الموقع",
+        cell: ({ row }) => row.original.location || "-",
         enableSorting: true,
       },
     ],
@@ -188,15 +208,15 @@ function Dashboard() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">لوحة التحكم</h1>
-        <p style={{ color: '#666', margin: 0 }}>
-          {new Date().toLocaleDateString('ar-DZ', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        <p style={{ color: "#666", margin: 0 }}>
+          {new Date().toLocaleDateString("ar-DZ", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           })}
         </p>
       </div>
@@ -252,7 +272,7 @@ function Dashboard() {
                 <span className="stat-card-title">الإيرادات المحصلة</span>
                 <span className="stat-card-icon">💵</span>
               </div>
-              <div className="stat-card-value" style={{ fontSize: '1.5rem' }}>
+              <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
                 {formatCurrency(stats.totalRevenue)}
               </div>
               <div className="stat-card-description">هذا الشهر</div>
@@ -263,7 +283,7 @@ function Dashboard() {
                 <span className="stat-card-title">مستحقات معلقة</span>
                 <span className="stat-card-icon">⏳</span>
               </div>
-              <div className="stat-card-value" style={{ fontSize: '1.5rem' }}>
+              <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
                 {formatCurrency(stats.pendingRevenue)}
               </div>
               <div className="stat-card-description">في انتظار الدفع</div>

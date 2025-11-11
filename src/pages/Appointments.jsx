@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { appointmentAPI, clientAPI, caseAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { appointmentAPI, clientAPI, caseAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function AppointmentModal({ appointment, onClose, onSave }) {
   const [clients, setClients] = useState([]);
   const [cases, setCases] = useState([]);
   const [formData, setFormData] = useState({
-    title: '',
-    appointmentDate: '',
-    duration: '60',
-    location: '',
-    appointmentType: 'meeting',
-    status: 'scheduled',
+    title: "",
+    appointmentDate: "",
+    duration: "60",
+    location: "",
+    appointmentType: "meeting",
+    status: "scheduled",
     reminderSent: false,
-    notes: '',
-    clientId: '',
-    caseId: '',
-    ...appointment
+    notes: "",
+    clientId: "",
+    caseId: "",
+    ...appointment,
   });
 
   useEffect(() => {
@@ -28,7 +28,7 @@ function AppointmentModal({ appointment, onClose, onSave }) {
   const loadData = async () => {
     const [clientsResult, casesResult] = await Promise.all([
       clientAPI.getAll(),
-      caseAPI.getAll()
+      caseAPI.getAll(),
     ]);
     if (clientsResult.success) setClients(clientsResult.data);
     if (casesResult.success) setCases(casesResult.data);
@@ -40,7 +40,8 @@ function AppointmentModal({ appointment, onClose, onSave }) {
   };
 
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setFormData({ ...formData, [e.target.name]: value });
   };
 
@@ -49,9 +50,11 @@ function AppointmentModal({ appointment, onClose, onSave }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {appointment ? 'تعديل موعد' : 'إضافة موعد جديد'}
+            {appointment ? "تعديل موعد" : "إضافة موعد جديد"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -106,7 +109,7 @@ function AppointmentModal({ appointment, onClose, onSave }) {
                   <option value="">اختر الموكل</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.type === 'company'
+                      {client.type === "company"
                         ? client.companyName
                         : `${client.firstName} ${client.lastName}`}
                     </option>
@@ -187,7 +190,7 @@ function AppointmentModal({ appointment, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {appointment ? 'حفظ التعديلات' : 'إضافة موعد'}
+              {appointment ? "حفظ التعديلات" : "إضافة موعد"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -205,9 +208,9 @@ function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -218,7 +221,7 @@ function AppointmentsPage() {
     setLoading(true);
     const [appointmentsResult, clientsResult] = await Promise.all([
       appointmentAPI.getAll(),
-      clientAPI.getAll()
+      clientAPI.getAll(),
     ]);
 
     if (appointmentsResult.success) setAppointments(appointmentsResult.data);
@@ -239,30 +242,34 @@ function AppointmentsPage() {
         setShowModal(false);
         setSelectedAppointment(null);
         loadData();
-        showSuccess(selectedAppointment ? 'تم تحديث بيانات الموعد بنجاح' : 'تم إضافة الموعد بنجاح');
+        showSuccess(
+          selectedAppointment
+            ? "تم تحديث بيانات الموعد بنجاح"
+            : "تم إضافة الموعد بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذا الموعد؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذا الموعد؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await appointmentAPI.delete(id);
       if (result.success) {
         loadData();
-        showSuccess('تم حذف الموعد بنجاح');
+        showSuccess("تم حذف الموعد بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -279,19 +286,19 @@ function AppointmentsPage() {
 
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
-    if (!client) return '-';
-    return client.type === 'company'
+    if (!client) return "-";
+    return client.type === "company"
       ? client.companyName
       : `${client.firstName} ${client.lastName}`;
   };
 
   const formatDateTime = (date) => {
-    return new Date(date).toLocaleString('ar-DZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleString("ar-DZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -299,85 +306,87 @@ function AppointmentsPage() {
     return (
       appointment.title.includes(searchTerm) ||
       (appointment.location && appointment.location.includes(searchTerm)) ||
-      (appointment.clientId && getClientName(appointment.clientId).includes(searchTerm))
+      (appointment.clientId &&
+        getClientName(appointment.clientId).includes(searchTerm))
     );
   };
 
   const filteredByType = useMemo(() => {
-    if (filterType === 'all') return appointments;
-    return appointments.filter(a => a.appointmentType === filterType);
+    if (filterType === "all") return appointments;
+    return appointments.filter((a) => a.appointmentType === filterType);
   }, [appointments, filterType]);
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'appointmentDate',
-        header: 'التاريخ والوقت',
+        accessorKey: "appointmentDate",
+        header: "التاريخ والوقت",
         cell: ({ row }) => formatDateTime(row.original.appointmentDate),
         enableSorting: true,
       },
       {
-        accessorKey: 'title',
-        header: 'العنوان',
+        accessorKey: "title",
+        header: "العنوان",
         enableSorting: true,
       },
       {
-        accessorKey: 'clientId',
-        header: 'الموكل',
-        cell: ({ row }) => row.original.clientId ? getClientName(row.original.clientId) : '-',
+        accessorKey: "clientId",
+        header: "الموكل",
+        cell: ({ row }) =>
+          row.original.clientId ? getClientName(row.original.clientId) : "-",
         enableSorting: false,
       },
       {
-        accessorKey: 'appointmentType',
-        header: 'النوع',
+        accessorKey: "appointmentType",
+        header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-primary">
-            {row.original.appointmentType === 'consultation' && 'استشارة'}
-            {row.original.appointmentType === 'meeting' && 'اجتماع'}
-            {row.original.appointmentType === 'court_session' && 'جلسة محكمة'}
-            {row.original.appointmentType === 'other' && 'أخرى'}
+            {row.original.appointmentType === "consultation" && "استشارة"}
+            {row.original.appointmentType === "meeting" && "اجتماع"}
+            {row.original.appointmentType === "court_session" && "جلسة محكمة"}
+            {row.original.appointmentType === "other" && "أخرى"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'duration',
-        header: 'المدة',
+        accessorKey: "duration",
+        header: "المدة",
         cell: ({ row }) => `${row.original.duration} دقيقة`,
         enableSorting: true,
       },
       {
-        accessorKey: 'location',
-        header: 'الموقع',
-        cell: ({ row }) => row.original.location || '-',
+        accessorKey: "location",
+        header: "الموقع",
+        cell: ({ row }) => row.original.location || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === 'scheduled'
-                ? 'badge-warning'
-                : row.original.status === 'completed'
-                ? 'badge-success'
-                : row.original.status === 'cancelled'
-                ? 'badge-danger'
-                : 'badge-info'
+              row.original.status === "scheduled"
+                ? "badge-warning"
+                : row.original.status === "completed"
+                  ? "badge-success"
+                  : row.original.status === "cancelled"
+                    ? "badge-danger"
+                    : "badge-info"
             }`}
           >
-            {row.original.status === 'scheduled' && 'مجدول'}
-            {row.original.status === 'completed' && 'مكتمل'}
-            {row.original.status === 'cancelled' && 'ملغى'}
-            {row.original.status === 'rescheduled' && 'معاد جدولة'}
+            {row.original.status === "scheduled" && "مجدول"}
+            {row.original.status === "completed" && "مكتمل"}
+            {row.original.status === "cancelled" && "ملغى"}
+            {row.original.status === "rescheduled" && "معاد جدولة"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
@@ -410,7 +419,7 @@ function AppointmentsPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المواعيد</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -429,7 +438,7 @@ function AppointmentsPage() {
           />
           <select
             className="form-select"
-            style={{ width: '180px' }}
+            style={{ width: "180px" }}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -441,7 +450,7 @@ function AppointmentsPage() {
           </select>
           <select
             className="form-select"
-            style={{ width: '180px' }}
+            style={{ width: "180px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -463,9 +472,9 @@ function AppointmentsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== 'all' || filterType !== 'all'
-              ? 'لم يتم العثور على مواعيد مطابقة للبحث'
-              : 'لم يتم إضافة أي مواعيد بعد'
+            searchTerm || filterStatus !== "all" || filterType !== "all"
+              ? "لم يتم العثور على مواعيد مطابقة للبحث"
+              : "لم يتم إضافة أي مواعيد بعد"
           }
         />
       </div>

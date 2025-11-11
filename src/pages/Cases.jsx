@@ -1,31 +1,31 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { caseAPI, clientAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { caseAPI, clientAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
   const [formData, setFormData] = useState({
-    caseNumber: '',
-    title: '',
-    description: '',
-    caseType: 'civil',
-    court: '',
-    courtType: 'محكمة ابتدائية',
-    judge: '',
-    opposingParty: '',
-    opposingLawyer: '',
-    clientRole: 'plaintiff',
-    status: 'open',
-    priority: 'medium',
-    startDate: '',
-    endDate: '',
-    nextHearingDate: '',
-    amount: '',
-    notes: '',
-    clientId: '',
-    ...caseData
+    caseNumber: "",
+    title: "",
+    description: "",
+    caseType: "civil",
+    court: "",
+    courtType: "محكمة ابتدائية",
+    judge: "",
+    opposingParty: "",
+    opposingLawyer: "",
+    clientRole: "plaintiff",
+    status: "open",
+    priority: "medium",
+    startDate: "",
+    endDate: "",
+    nextHearingDate: "",
+    amount: "",
+    notes: "",
+    clientId: "",
+    ...caseData,
   });
 
   useEffect(() => {
@@ -33,7 +33,7 @@ function CaseModal({ caseData, onClose, onSave }) {
   }, []);
 
   const loadClients = async () => {
-    const result = await clientAPI.getAll({ where: { status: 'active' } });
+    const result = await clientAPI.getAll({ where: { status: "active" } });
     if (result.success) {
       setClients(result.data);
     }
@@ -50,12 +50,18 @@ function CaseModal({ caseData, onClose, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px' }}>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "900px" }}
+      >
         <div className="modal-header">
           <h3 className="modal-title">
-            {caseData ? 'تعديل بيانات قضية' : 'إضافة قضية جديدة'}
+            {caseData ? "تعديل بيانات قضية" : "إضافة قضية جديدة"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -83,7 +89,7 @@ function CaseModal({ caseData, onClose, onSave }) {
                   <option value="">اختر الموكل</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.type === 'company'
+                      {client.type === "company"
                         ? client.companyName
                         : `${client.firstName} ${client.lastName}`}
                     </option>
@@ -305,7 +311,7 @@ function CaseModal({ caseData, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {caseData ? 'حفظ التعديلات' : 'إضافة قضية'}
+              {caseData ? "حفظ التعديلات" : "إضافة قضية"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -323,9 +329,9 @@ function CasesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -336,9 +342,9 @@ function CasesPage() {
     setLoading(true);
     const [casesResult, clientsResult] = await Promise.all([
       caseAPI.getAll({
-        include: [{ model: 'Client', as: 'client' }]
+        include: [{ model: "Client", as: "client" }],
       }),
-      clientAPI.getAll()
+      clientAPI.getAll(),
     ]);
 
     if (casesResult.success) setCases(casesResult.data);
@@ -359,30 +365,34 @@ function CasesPage() {
         setShowModal(false);
         setSelectedCase(null);
         loadData();
-        showSuccess(selectedCase ? 'تم تحديث بيانات القضية بنجاح' : 'تم إضافة القضية بنجاح');
+        showSuccess(
+          selectedCase
+            ? "تم تحديث بيانات القضية بنجاح"
+            : "تم إضافة القضية بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذه القضية؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذه القضية؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await caseAPI.delete(id);
       if (result.success) {
         loadData();
-        showSuccess('تم حذف القضية بنجاح');
+        showSuccess("تم حذف القضية بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -399,23 +409,25 @@ function CasesPage() {
 
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
-    if (!client) return '-';
-    return client.type === 'company'
+    if (!client) return "-";
+    return client.type === "company"
       ? client.companyName
       : `${client.firstName} ${client.lastName}`;
   };
 
   const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('ar-DZ');
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("ar-DZ");
   };
 
   const formatCurrency = (amount) => {
-    if (!amount) return '-';
-    return new Intl.NumberFormat('ar-DZ', {
-      style: 'decimal',
-      minimumFractionDigits: 2
-    }).format(amount) + ' دج';
+    if (!amount) return "-";
+    return (
+      new Intl.NumberFormat("ar-DZ", {
+        style: "decimal",
+        minimumFractionDigits: 2,
+      }).format(amount) + " دج"
+    );
   };
 
   const globalFilterFn = (caseItem, searchTerm) => {
@@ -427,109 +439,109 @@ function CasesPage() {
   };
 
   const filteredByType = useMemo(() => {
-    if (filterType === 'all') return cases;
-    return cases.filter(c => c.caseType === filterType);
+    if (filterType === "all") return cases;
+    return cases.filter((c) => c.caseType === filterType);
   }, [cases, filterType]);
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'caseNumber',
-        header: 'رقم القضية',
+        accessorKey: "caseNumber",
+        header: "رقم القضية",
         cell: ({ row }) => <strong>{row.original.caseNumber}</strong>,
         enableSorting: true,
       },
       {
-        accessorKey: 'title',
-        header: 'العنوان',
+        accessorKey: "title",
+        header: "العنوان",
         enableSorting: true,
       },
       {
-        accessorKey: 'clientId',
-        header: 'الموكل',
+        accessorKey: "clientId",
+        header: "الموكل",
         cell: ({ row }) => getClientName(row.original.clientId),
         enableSorting: false,
       },
       {
-        accessorKey: 'caseType',
-        header: 'النوع',
+        accessorKey: "caseType",
+        header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-secondary">
-            {row.original.caseType === 'civil' && 'مدني'}
-            {row.original.caseType === 'criminal' && 'جنائي'}
-            {row.original.caseType === 'commercial' && 'تجاري'}
-            {row.original.caseType === 'administrative' && 'إداري'}
-            {row.original.caseType === 'family' && 'أسري'}
-            {row.original.caseType === 'labor' && 'عمالي'}
-            {row.original.caseType === 'other' && 'أخرى'}
+            {row.original.caseType === "civil" && "مدني"}
+            {row.original.caseType === "criminal" && "جنائي"}
+            {row.original.caseType === "commercial" && "تجاري"}
+            {row.original.caseType === "administrative" && "إداري"}
+            {row.original.caseType === "family" && "أسري"}
+            {row.original.caseType === "labor" && "عمالي"}
+            {row.original.caseType === "other" && "أخرى"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'court',
-        header: 'المحكمة',
-        cell: ({ row }) => row.original.court || '-',
+        accessorKey: "court",
+        header: "المحكمة",
+        cell: ({ row }) => row.original.court || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === 'won'
-                ? 'badge-success'
-                : row.original.status === 'lost'
-                ? 'badge-danger'
-                : row.original.status === 'in_progress'
-                ? 'badge-info'
-                : row.original.status === 'settled'
-                ? 'badge-success'
-                : 'badge-warning'
+              row.original.status === "won"
+                ? "badge-success"
+                : row.original.status === "lost"
+                  ? "badge-danger"
+                  : row.original.status === "in_progress"
+                    ? "badge-info"
+                    : row.original.status === "settled"
+                      ? "badge-success"
+                      : "badge-warning"
             }`}
           >
-            {row.original.status === 'open' && 'مفتوحة'}
-            {row.original.status === 'in_progress' && 'قيد المعالجة'}
-            {row.original.status === 'won' && 'كسب'}
-            {row.original.status === 'lost' && 'خسارة'}
-            {row.original.status === 'settled' && 'تسوية'}
-            {row.original.status === 'closed' && 'مغلقة'}
-            {row.original.status === 'appealed' && 'استئناف'}
+            {row.original.status === "open" && "مفتوحة"}
+            {row.original.status === "in_progress" && "قيد المعالجة"}
+            {row.original.status === "won" && "كسب"}
+            {row.original.status === "lost" && "خسارة"}
+            {row.original.status === "settled" && "تسوية"}
+            {row.original.status === "closed" && "مغلقة"}
+            {row.original.status === "appealed" && "استئناف"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'priority',
-        header: 'الأولوية',
+        accessorKey: "priority",
+        header: "الأولوية",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.priority === 'urgent'
-                ? 'badge-danger'
-                : row.original.priority === 'high'
-                ? 'badge-warning'
-                : 'badge-info'
+              row.original.priority === "urgent"
+                ? "badge-danger"
+                : row.original.priority === "high"
+                  ? "badge-warning"
+                  : "badge-info"
             }`}
           >
-            {row.original.priority === 'low' && 'منخفضة'}
-            {row.original.priority === 'medium' && 'متوسطة'}
-            {row.original.priority === 'high' && 'عالية'}
-            {row.original.priority === 'urgent' && 'عاجلة'}
+            {row.original.priority === "low" && "منخفضة"}
+            {row.original.priority === "medium" && "متوسطة"}
+            {row.original.priority === "high" && "عالية"}
+            {row.original.priority === "urgent" && "عاجلة"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'amount',
-        header: 'المبلغ',
+        accessorKey: "amount",
+        header: "المبلغ",
         cell: ({ row }) => formatCurrency(row.original.amount),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
@@ -562,7 +574,7 @@ function CasesPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة القضايا</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -581,7 +593,7 @@ function CasesPage() {
           />
           <select
             className="form-select"
-            style={{ width: '180px' }}
+            style={{ width: "180px" }}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -596,7 +608,7 @@ function CasesPage() {
           </select>
           <select
             className="form-select"
-            style={{ width: '180px' }}
+            style={{ width: "180px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -621,9 +633,9 @@ function CasesPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== 'all' || filterType !== 'all'
-              ? 'لم يتم العثور على قضايا مطابقة للبحث'
-              : 'لم يتم إضافة أي قضايا بعد'
+            searchTerm || filterStatus !== "all" || filterType !== "all"
+              ? "لم يتم العثور على قضايا مطابقة للبحث"
+              : "لم يتم إضافة أي قضايا بعد"
           }
         />
       </div>

@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { settingAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
+import React, { useState, useEffect } from "react";
+import { settingAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
 
 function SettingsPage() {
   const [settings, setSettings] = useState({
-    officeName: '',
-    officeAddress: '',
-    officePhone: '',
-    officeEmail: '',
-    taxId: '',
-    registrationNumber: '',
-    bankName: '',
-    bankAccountNumber: '',
-    bankIBAN: ''
+    officeName: "",
+    officeAddress: "",
+    officePhone: "",
+    officeEmail: "",
+    taxId: "",
+    registrationNumber: "",
+    bankName: "",
+    bankAccountNumber: "",
+    bankIBAN: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,15 +48,19 @@ function SettingsPage() {
         const existing = existingResult.data?.find((s) => s.key === key);
 
         if (existing) {
-          await settingAPI.update(existing.id, { key, value, category: 'office' });
+          await settingAPI.update(existing.id, {
+            key,
+            value,
+            category: "office",
+          });
         } else {
-          await settingAPI.create({ key, value, category: 'office' });
+          await settingAPI.create({ key, value, category: "office" });
         }
       }
 
-      showSuccess('تم حفظ الإعدادات بنجاح');
+      showSuccess("تم حفظ الإعدادات بنجاح");
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ الإعدادات');
+      showError("حدث خطأ أثناء حفظ الإعدادات");
     } finally {
       setSaving(false);
     }
@@ -72,13 +76,13 @@ function SettingsPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">الإعدادات</h1>
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: '1.5rem' }}>معلومات المكتب</h3>
+        <h3 style={{ marginBottom: "1.5rem" }}>معلومات المكتب</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">اسم المكتب</label>
@@ -152,7 +156,9 @@ function SettingsPage() {
             </div>
           </div>
 
-          <h3 style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>المعلومات البنكية</h3>
+          <h3 style={{ marginTop: "2rem", marginBottom: "1.5rem" }}>
+            المعلومات البنكية
+          </h3>
 
           <div className="form-group">
             <label className="form-label">اسم البنك</label>
@@ -190,17 +196,21 @@ function SettingsPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: '2rem' }}>
-            <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
-              {saving ? 'جاري الحفظ...' : '💾 حفظ الإعدادات'}
+          <div style={{ marginTop: "2rem" }}>
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg"
+              disabled={saving}
+            >
+              {saving ? "جاري الحفظ..." : "💾 حفظ الإعدادات"}
             </button>
           </div>
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: '1rem' }}>معلومات النظام</h3>
-        <div style={{ color: '#666' }}>
+        <h3 style={{ marginBottom: "1rem" }}>معلومات النظام</h3>
+        <div style={{ color: "#666" }}>
           <p>
             <strong>الإصدار:</strong> 1.0.0
           </p>
@@ -208,7 +218,8 @@ function SettingsPage() {
             <strong>النظام:</strong> نظام إدارة مكتب المحاماة - الجزائر
           </p>
           <p>
-            <strong>التقنيات:</strong> Electron + React + Vite + SQLite3 + Sequelize
+            <strong>التقنيات:</strong> Electron + React + Vite + SQLite3 +
+            Sequelize
           </p>
         </div>
       </div>

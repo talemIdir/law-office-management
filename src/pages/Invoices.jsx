@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function PaymentModal({ invoiceId, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    paymentDate: new Date().toISOString().split('T')[0],
-    amount: '',
-    paymentMethod: 'cash',
-    reference: '',
-    notes: '',
-    invoiceId: invoiceId
+    paymentDate: new Date().toISOString().split("T")[0],
+    amount: "",
+    paymentMethod: "cash",
+    reference: "",
+    notes: "",
+    invoiceId: invoiceId,
   });
 
   const handleSubmit = async (e) => {
@@ -25,10 +25,16 @@ function PaymentModal({ invoiceId, onClose, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "500px" }}
+      >
         <div className="modal-header">
           <h3 className="modal-title">إضافة دفعة</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -116,18 +122,18 @@ function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);
   const [cases, setCases] = useState([]);
   const [formData, setFormData] = useState({
-    invoiceNumber: '',
-    invoiceDate: new Date().toISOString().split('T')[0],
-    dueDate: '',
-    description: '',
-    amount: '',
-    taxAmount: '0',
-    totalAmount: '',
-    status: 'draft',
-    notes: '',
-    clientId: '',
-    caseId: '',
-    ...invoice
+    invoiceNumber: "",
+    invoiceDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    description: "",
+    amount: "",
+    taxAmount: "0",
+    totalAmount: "",
+    status: "draft",
+    notes: "",
+    clientId: "",
+    caseId: "",
+    ...invoice,
   });
 
   useEffect(() => {
@@ -139,14 +145,14 @@ function InvoiceModal({ invoice, onClose, onSave }) {
     const taxAmount = parseFloat(formData.taxAmount) || 0;
     setFormData((prev) => ({
       ...prev,
-      totalAmount: (amount + taxAmount).toFixed(2)
+      totalAmount: (amount + taxAmount).toFixed(2),
     }));
   }, [formData.amount, formData.taxAmount]);
 
   const loadData = async () => {
     const [clientsResult, casesResult] = await Promise.all([
       clientAPI.getAll(),
-      caseAPI.getAll()
+      caseAPI.getAll(),
     ]);
     if (clientsResult.success) setClients(clientsResult.data);
     if (casesResult.success) setCases(casesResult.data);
@@ -166,9 +172,11 @@ function InvoiceModal({ invoice, onClose, onSave }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {invoice ? 'تعديل فاتورة' : 'إضافة فاتورة جديدة'}
+            {invoice ? "تعديل فاتورة" : "إضافة فاتورة جديدة"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -196,7 +204,7 @@ function InvoiceModal({ invoice, onClose, onSave }) {
                   <option value="">اختر الموكل</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.type === 'company'
+                      {client.type === "company"
                         ? client.companyName
                         : `${client.firstName} ${client.lastName}`}
                     </option>
@@ -293,7 +301,7 @@ function InvoiceModal({ invoice, onClose, onSave }) {
                 className="form-control"
                 value={formData.totalAmount}
                 readOnly
-                style={{ background: '#f5f5f5' }}
+                style={{ background: "#f5f5f5" }}
               />
             </div>
 
@@ -327,7 +335,7 @@ function InvoiceModal({ invoice, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {invoice ? 'حفظ التعديلات' : 'إضافة فاتورة'}
+              {invoice ? "حفظ التعديلات" : "إضافة فاتورة"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -346,9 +354,10 @@ function InvoicesPage() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] =
+    useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -359,7 +368,7 @@ function InvoicesPage() {
     setLoading(true);
     const [invoicesResult, clientsResult] = await Promise.all([
       invoiceAPI.getAll(),
-      clientAPI.getAll()
+      clientAPI.getAll(),
     ]);
 
     if (invoicesResult.success) setInvoices(invoicesResult.data);
@@ -380,12 +389,16 @@ function InvoicesPage() {
         setShowInvoiceModal(false);
         setSelectedInvoice(null);
         loadData();
-        showSuccess(selectedInvoice ? 'تم تحديث الفاتورة بنجاح' : 'تم إضافة الفاتورة بنجاح');
+        showSuccess(
+          selectedInvoice
+            ? "تم تحديث الفاتورة بنجاح"
+            : "تم إضافة الفاتورة بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
@@ -396,47 +409,48 @@ function InvoicesPage() {
       if (result.success) {
         const invoice = invoices.find((inv) => inv.id === formData.invoiceId);
         if (invoice) {
-          const newPaidAmount = parseFloat(invoice.paidAmount || 0) + parseFloat(formData.amount);
+          const newPaidAmount =
+            parseFloat(invoice.paidAmount || 0) + parseFloat(formData.amount);
           const totalAmount = parseFloat(invoice.totalAmount);
 
-          let newStatus = 'partially_paid';
+          let newStatus = "partially_paid";
           if (newPaidAmount >= totalAmount) {
-            newStatus = 'paid';
+            newStatus = "paid";
           }
 
           await invoiceAPI.update(invoice.id, {
             paidAmount: newPaidAmount,
-            status: newStatus
+            status: newStatus,
           });
         }
 
         setShowPaymentModal(false);
         setSelectedInvoiceForPayment(null);
         loadData();
-        showSuccess('تم تسجيل الدفعة بنجاح');
+        showSuccess("تم تسجيل الدفعة بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذه الفاتورة؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذه الفاتورة؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await invoiceAPI.delete(id);
       if (result.success) {
         loadData();
-        showSuccess('تم حذف الفاتورة بنجاح');
+        showSuccess("تم حذف الفاتورة بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -458,21 +472,23 @@ function InvoicesPage() {
 
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
-    if (!client) return '-';
-    return client.type === 'company'
+    if (!client) return "-";
+    return client.type === "company"
       ? client.companyName
       : `${client.firstName} ${client.lastName}`;
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('ar-DZ');
+    return new Date(date).toLocaleDateString("ar-DZ");
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ar-DZ', {
-      style: 'decimal',
-      minimumFractionDigits: 2
-    }).format(amount) + ' دج';
+    return (
+      new Intl.NumberFormat("ar-DZ", {
+        style: "decimal",
+        minimumFractionDigits: 2,
+      }).format(amount) + " دج"
+    );
   };
 
   const globalFilterFn = (invoice, searchTerm) => {
@@ -486,84 +502,87 @@ function InvoicesPage() {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'invoiceNumber',
-        header: 'رقم الفاتورة',
+        accessorKey: "invoiceNumber",
+        header: "رقم الفاتورة",
         cell: ({ row }) => <strong>{row.original.invoiceNumber}</strong>,
         enableSorting: true,
       },
       {
-        accessorKey: 'clientId',
-        header: 'الموكل',
+        accessorKey: "clientId",
+        header: "الموكل",
         cell: ({ row }) => getClientName(row.original.clientId),
         enableSorting: false,
       },
       {
-        accessorKey: 'invoiceDate',
-        header: 'التاريخ',
+        accessorKey: "invoiceDate",
+        header: "التاريخ",
         cell: ({ row }) => formatDate(row.original.invoiceDate),
         enableSorting: true,
       },
       {
-        accessorKey: 'totalAmount',
-        header: 'المبلغ الإجمالي',
+        accessorKey: "totalAmount",
+        header: "المبلغ الإجمالي",
         cell: ({ row }) => formatCurrency(row.original.totalAmount),
         enableSorting: true,
       },
       {
-        accessorKey: 'paidAmount',
-        header: 'المبلغ المدفوع',
+        accessorKey: "paidAmount",
+        header: "المبلغ المدفوع",
         cell: ({ row }) => formatCurrency(row.original.paidAmount || 0),
         enableSorting: true,
       },
       {
-        id: 'remaining',
-        header: 'المتبقي',
+        id: "remaining",
+        header: "المتبقي",
         cell: ({ row }) => {
-          const remaining = parseFloat(row.original.totalAmount) - parseFloat(row.original.paidAmount || 0);
+          const remaining =
+            parseFloat(row.original.totalAmount) -
+            parseFloat(row.original.paidAmount || 0);
           return formatCurrency(remaining);
         },
         enableSorting: false,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === 'paid'
-                ? 'badge-success'
-                : row.original.status === 'overdue'
-                ? 'badge-danger'
-                : row.original.status === 'partially_paid'
-                ? 'badge-warning'
-                : row.original.status === 'sent'
-                ? 'badge-info'
-                : 'badge-secondary'
+              row.original.status === "paid"
+                ? "badge-success"
+                : row.original.status === "overdue"
+                  ? "badge-danger"
+                  : row.original.status === "partially_paid"
+                    ? "badge-warning"
+                    : row.original.status === "sent"
+                      ? "badge-info"
+                      : "badge-secondary"
             }`}
           >
-            {row.original.status === 'draft' && 'مسودة'}
-            {row.original.status === 'sent' && 'مرسلة'}
-            {row.original.status === 'paid' && 'مدفوعة'}
-            {row.original.status === 'partially_paid' && 'مدفوعة جزئياً'}
-            {row.original.status === 'overdue' && 'متأخرة'}
-            {row.original.status === 'cancelled' && 'ملغاة'}
+            {row.original.status === "draft" && "مسودة"}
+            {row.original.status === "sent" && "مرسلة"}
+            {row.original.status === "paid" && "مدفوعة"}
+            {row.original.status === "partially_paid" && "مدفوعة جزئياً"}
+            {row.original.status === "overdue" && "متأخرة"}
+            {row.original.status === "cancelled" && "ملغاة"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
-            {row.original.status !== 'paid' && row.original.status !== 'cancelled' && (
-              <button
-                className="btn btn-sm btn-success"
-                onClick={() => handleAddPayment(row.original.id)}
-              >
-                💵 دفعة
-              </button>
-            )}
+            {row.original.status !== "paid" &&
+              row.original.status !== "cancelled" && (
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() => handleAddPayment(row.original.id)}
+                >
+                  💵 دفعة
+                </button>
+              )}
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
@@ -594,7 +613,7 @@ function InvoicesPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الفواتير والمدفوعات</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -613,7 +632,7 @@ function InvoicesPage() {
           />
           <select
             className="form-select"
-            style={{ width: '200px' }}
+            style={{ width: "200px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -637,9 +656,9 @@ function InvoicesPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== 'all'
-              ? 'لم يتم العثور على فواتير مطابقة للبحث'
-              : 'لم يتم إضافة أي فواتير بعد'
+            searchTerm || filterStatus !== "all"
+              ? "لم يتم العثور على فواتير مطابقة للبحث"
+              : "لم يتم إضافة أي فواتير بعد"
           }
         />
       </div>

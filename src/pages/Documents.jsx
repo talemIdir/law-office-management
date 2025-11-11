@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { documentAPI, clientAPI, caseAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { documentAPI, clientAPI, caseAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function DocumentModal({ document, onClose, onSave }) {
   const [clients, setClients] = useState([]);
   const [cases, setCases] = useState([]);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    documentType: 'other',
-    filePath: '',
-    fileName: '',
-    notes: '',
-    clientId: '',
-    caseId: '',
-    ...document
+    title: "",
+    description: "",
+    documentType: "other",
+    filePath: "",
+    fileName: "",
+    notes: "",
+    clientId: "",
+    caseId: "",
+    ...document,
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function DocumentModal({ document, onClose, onSave }) {
   const loadData = async () => {
     const [clientsResult, casesResult] = await Promise.all([
       clientAPI.getAll(),
-      caseAPI.getAll()
+      caseAPI.getAll(),
     ]);
     if (clientsResult.success) setClients(clientsResult.data);
     if (casesResult.success) setCases(casesResult.data);
@@ -46,9 +46,11 @@ function DocumentModal({ document, onClose, onSave }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {document ? 'تعديل بيانات مستند' : 'إضافة مستند جديد'}
+            {document ? "تعديل بيانات مستند" : "إضافة مستند جديد"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -106,7 +108,7 @@ function DocumentModal({ document, onClose, onSave }) {
                   <option value="">اختر الموكل</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.type === 'company'
+                      {client.type === "company"
                         ? client.companyName
                         : `${client.firstName} ${client.lastName}`}
                     </option>
@@ -167,7 +169,7 @@ function DocumentModal({ document, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {document ? 'حفظ التعديلات' : 'إضافة مستند'}
+              {document ? "حفظ التعديلات" : "إضافة مستند"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -184,8 +186,8 @@ function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -214,30 +216,34 @@ function DocumentsPage() {
         setShowModal(false);
         setSelectedDocument(null);
         loadDocuments();
-        showSuccess(selectedDocument ? 'تم تحديث بيانات المستند بنجاح' : 'تم إضافة المستند بنجاح');
+        showSuccess(
+          selectedDocument
+            ? "تم تحديث بيانات المستند بنجاح"
+            : "تم إضافة المستند بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذا المستند؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذا المستند؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await documentAPI.delete(id);
       if (result.success) {
         loadDocuments();
-        showSuccess('تم حذف المستند بنجاح');
+        showSuccess("تم حذف المستند بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -253,7 +259,7 @@ function DocumentsPage() {
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('ar-DZ');
+    return new Date(date).toLocaleDateString("ar-DZ");
   };
 
   const globalFilterFn = (doc, searchTerm) => {
@@ -265,48 +271,49 @@ function DocumentsPage() {
   };
 
   const filteredByType = useMemo(() => {
-    if (filterType === 'all') return documents;
-    return documents.filter(d => d.documentType === filterType);
+    if (filterType === "all") return documents;
+    return documents.filter((d) => d.documentType === filterType);
   }, [documents, filterType]);
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'title',
-        header: 'عنوان المستند',
+        accessorKey: "title",
+        header: "عنوان المستند",
         enableSorting: true,
       },
       {
-        accessorKey: 'documentType',
-        header: 'النوع',
+        accessorKey: "documentType",
+        header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-secondary">
-            {row.original.documentType === 'contract' && 'عقد'}
-            {row.original.documentType === 'court_filing' && 'صك محكمة'}
-            {row.original.documentType === 'evidence' && 'دليل'}
-            {row.original.documentType === 'correspondence' && 'مراسلة'}
-            {row.original.documentType === 'id_document' && 'وثيقة هوية'}
-            {row.original.documentType === 'power_of_attorney' && 'توكيل'}
-            {row.original.documentType === 'other' && 'أخرى'}
+            {row.original.documentType === "contract" && "عقد"}
+            {row.original.documentType === "court_filing" && "صك محكمة"}
+            {row.original.documentType === "evidence" && "دليل"}
+            {row.original.documentType === "correspondence" && "مراسلة"}
+            {row.original.documentType === "id_document" && "وثيقة هوية"}
+            {row.original.documentType === "power_of_attorney" && "توكيل"}
+            {row.original.documentType === "other" && "أخرى"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'fileName',
-        header: 'اسم الملف',
-        cell: ({ row }) => row.original.fileName || '-',
+        accessorKey: "fileName",
+        header: "اسم الملف",
+        cell: ({ row }) => row.original.fileName || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'uploadDate',
-        header: 'تاريخ الرفع',
-        cell: ({ row }) => formatDate(row.original.uploadDate || row.original.createdAt),
+        accessorKey: "uploadDate",
+        header: "تاريخ الرفع",
+        cell: ({ row }) =>
+          formatDate(row.original.uploadDate || row.original.createdAt),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
@@ -339,7 +346,7 @@ function DocumentsPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المستندات</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -358,7 +365,7 @@ function DocumentsPage() {
           />
           <select
             className="form-select"
-            style={{ width: '200px' }}
+            style={{ width: "200px" }}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -383,9 +390,9 @@ function DocumentsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterType !== 'all'
-              ? 'لم يتم العثور على مستندات مطابقة للبحث'
-              : 'لم يتم إضافة أي مستندات بعد'
+            searchTerm || filterType !== "all"
+              ? "لم يتم العثور على مستندات مطابقة للبحث"
+              : "لم يتم إضافة أي مستندات بعد"
           }
         />
       </div>
