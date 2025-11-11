@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { documentAPI, clientAPI, caseAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function DocumentModal({ document, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -183,6 +185,7 @@ function DocumentsPage() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadDocuments();
@@ -210,21 +213,30 @@ function DocumentsPage() {
         setShowModal(false);
         setSelectedDocument(null);
         loadDocuments();
+        showSuccess(selectedDocument ? 'تم تحديث بيانات المستند بنجاح' : 'تم إضافة المستند بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
   const handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا المستند؟')) {
+    const confirmed = await confirm({
+      title: 'تأكيد الحذف',
+      message: 'هل أنت متأكد من حذف هذا المستند؟',
+      confirmText: 'نعم، احذف',
+      cancelText: 'إلغاء'
+    });
+
+    if (confirmed) {
       const result = await documentAPI.delete(id);
       if (result.success) {
         loadDocuments();
+        showSuccess('تم حذف المستند بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     }
   };

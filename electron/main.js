@@ -15,7 +15,7 @@ import {
   User,
   Setting,
   sequelize
-} from './database/index.js';
+} from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

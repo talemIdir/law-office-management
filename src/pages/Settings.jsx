@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { settingAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
 
 function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -15,7 +16,6 @@ function SettingsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -41,7 +41,6 @@ function SettingsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setSuccessMessage('');
 
     try {
       for (const [key, value] of Object.entries(settings)) {
@@ -55,10 +54,9 @@ function SettingsPage() {
         }
       }
 
-      setSuccessMessage('تم حفظ الإعدادات بنجاح');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      showSuccess('تم حفظ الإعدادات بنجاح');
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ الإعدادات');
+      showError('حدث خطأ أثناء حفظ الإعدادات');
     } finally {
       setSaving(false);
     }
@@ -78,10 +76,6 @@ function SettingsPage() {
       <div className="page-header">
         <h1 className="page-title">الإعدادات</h1>
       </div>
-
-      {successMessage && (
-        <div className="alert alert-success">{successMessage}</div>
-      )}
 
       <div className="card">
         <h3 style={{ marginBottom: '1.5rem' }}>معلومات المكتب</h3>

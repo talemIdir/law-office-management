@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ConfirmDialogProvider } from './components/ConfirmDialog';
 import Dashboard from './pages/Dashboard';
 import ClientsPage from './pages/Clients';
 import CasesPage from './pages/Cases';
@@ -50,22 +53,36 @@ function Sidebar() {
 function App() {
   return (
     <HashRouter>
-      <div className="app-container">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/cases" element={<CasesPage />} />
-            <Route path="/court-sessions" element={<CourtSessionsPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
-        </main>
-      </div>
+      <ConfirmDialogProvider>
+        <div className="app-container">
+          <Sidebar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/cases" element={<CasesPage />} />
+              <Route path="/court-sessions" element={<CourtSessionsPage />} />
+              <Route path="/documents" element={<DocumentsPage />} />
+              <Route path="/invoices" element={<InvoicesPage />} />
+              <Route path="/appointments" element={<AppointmentsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </main>
+        </div>
+        <ToastContainer
+          position="top-left"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </ConfirmDialogProvider>
     </HashRouter>
   );
 }

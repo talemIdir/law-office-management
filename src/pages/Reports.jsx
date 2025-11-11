@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getFinancialReport, caseAPI, clientAPI } from '../utils/api';
+import { showError, showWarning } from '../utils/toast';
 
 function ReportsPage() {
   const [reportType, setReportType] = useState('financial');
@@ -33,7 +34,7 @@ function ReportsPage() {
     if (result.success) {
       setReportData(result.data);
     } else {
-      alert('خطأ: ' + result.error);
+      showError('خطأ: ' + result.error);
     }
     setLoading(false);
   };
@@ -100,7 +101,7 @@ function ReportsPage() {
 
   const handleGenerateReport = () => {
     if (!startDate || !endDate) {
-      alert('الرجاء اختيار تاريخ البداية والنهاية');
+      showWarning('الرجاء اختيار تاريخ البداية والنهاية');
       return;
     }
 

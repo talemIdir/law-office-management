@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { caseAPI, clientAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -323,6 +325,7 @@ function CasesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadData();
@@ -355,21 +358,30 @@ function CasesPage() {
         setShowModal(false);
         setSelectedCase(null);
         loadData();
+        showSuccess(selectedCase ? 'تم تحديث بيانات القضية بنجاح' : 'تم إضافة القضية بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
   const handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذه القضية؟')) {
+    const confirmed = await confirm({
+      title: 'تأكيد الحذف',
+      message: 'هل أنت متأكد من حذف هذه القضية؟',
+      confirmText: 'نعم، احذف',
+      cancelText: 'إلغاء'
+    });
+
+    if (confirmed) {
       const result = await caseAPI.delete(id);
       if (result.success) {
         loadData();
+        showSuccess('تم حذف القضية بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     }
   };

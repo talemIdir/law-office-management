@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function PaymentModal({ invoiceId, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -345,6 +347,7 @@ function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadData();
@@ -375,11 +378,12 @@ function InvoicesPage() {
         setShowInvoiceModal(false);
         setSelectedInvoice(null);
         loadData();
+        showSuccess(selectedInvoice ? 'تم تحديث الفاتورة بنجاح' : 'تم إضافة الفاتورة بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
@@ -407,21 +411,30 @@ function InvoicesPage() {
         setShowPaymentModal(false);
         setSelectedInvoiceForPayment(null);
         loadData();
+        showSuccess('تم تسجيل الدفعة بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
   const handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) {
+    const confirmed = await confirm({
+      title: 'تأكيد الحذف',
+      message: 'هل أنت متأكد من حذف هذه الفاتورة؟',
+      confirmText: 'نعم، احذف',
+      cancelText: 'إلغاء'
+    });
+
+    if (confirmed) {
       const result = await invoiceAPI.delete(id);
       if (result.success) {
         loadData();
+        showSuccess('تم حذف الفاتورة بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     }
   };

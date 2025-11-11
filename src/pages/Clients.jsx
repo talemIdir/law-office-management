@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { clientAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function ClientModal({ client, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -229,6 +231,7 @@ function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadClients();
@@ -256,21 +259,30 @@ function ClientsPage() {
         setShowModal(false);
         setSelectedClient(null);
         loadClients();
+        showSuccess(selectedClient ? 'تم تحديث بيانات الموكل بنجاح' : 'تم إضافة الموكل بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
   const handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا الموكل؟')) {
+    const confirmed = await confirm({
+      title: 'تأكيد الحذف',
+      message: 'هل أنت متأكد من حذف هذا الموكل؟',
+      confirmText: 'نعم، احذف',
+      cancelText: 'إلغاء'
+    });
+
+    if (confirmed) {
       const result = await clientAPI.delete(id);
       if (result.success) {
         loadClients();
+        showSuccess('تم حذف الموكل بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     }
   };

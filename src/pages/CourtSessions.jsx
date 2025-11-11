@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { courtSessionAPI, caseAPI } from '../utils/api';
+import { showSuccess, showError } from '../utils/toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
@@ -213,6 +215,7 @@ function CourtSessionsPage() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadSessions();
@@ -240,21 +243,30 @@ function CourtSessionsPage() {
         setShowModal(false);
         setSelectedSession(null);
         loadSessions();
+        showSuccess(selectedSession ? 'تم تحديث بيانات الجلسة بنجاح' : 'تم إضافة الجلسة بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     } catch (error) {
-      alert('حدث خطأ أثناء حفظ البيانات');
+      showError('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
   const handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذه الجلسة؟')) {
+    const confirmed = await confirm({
+      title: 'تأكيد الحذف',
+      message: 'هل أنت متأكد من حذف هذه الجلسة؟',
+      confirmText: 'نعم، احذف',
+      cancelText: 'إلغاء'
+    });
+
+    if (confirmed) {
       const result = await courtSessionAPI.delete(id);
       if (result.success) {
         loadSessions();
+        showSuccess('تم حذف الجلسة بنجاح');
       } else {
-        alert('خطأ: ' + result.error);
+        showError('خطأ: ' + result.error);
       }
     }
   };
