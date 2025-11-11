@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { clientAPI } from '../utils/api';
-import { showSuccess, showError } from '../utils/toast';
-import { useConfirm } from '../components/ConfirmDialog';
-import DataTable from '../components/DataTable';
+import React, { useState, useEffect, useMemo } from "react";
+import { clientAPI } from "../utils/api";
+import { showSuccess, showError } from "../utils/toast";
+import { useConfirm } from "../components/ConfirmDialog";
+import DataTable from "../components/DataTable";
 
 function ClientModal({ client, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    type: 'individual',
-    firstName: '',
-    lastName: '',
-    companyName: '',
-    nationalId: '',
-    taxId: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    wilaya: '',
-    notes: '',
-    status: 'active',
-    ...client
+    type: "individual",
+    firstName: "",
+    lastName: "",
+    companyName: "",
+    nationalId: "",
+    taxId: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    wilaya: "",
+    notes: "",
+    status: "active",
+    ...client,
   });
 
   const handleSubmit = async (e) => {
@@ -32,9 +32,30 @@ function ClientModal({ client, onClose, onSave }) {
   };
 
   const wilayas = [
-    'الجزائر', 'وهران', 'قسنطينة', 'عنابة', 'بليدة', 'باتنة', 'سطيف', 'سيدي بلعباس',
-    'بسكرة', 'تبسة', 'تلمسان', 'بجاية', 'جيجل', 'سكيكدة', 'تيارت', 'بشار',
-    'مستغانم', 'المسيلة', 'الشلف', 'الأغواط', 'غرداية', 'ورقلة', 'البويرة', 'تيزي وزو'
+    "الجزائر",
+    "وهران",
+    "قسنطينة",
+    "عنابة",
+    "بليدة",
+    "باتنة",
+    "سطيف",
+    "سيدي بلعباس",
+    "بسكرة",
+    "تبسة",
+    "تلمسان",
+    "بجاية",
+    "جيجل",
+    "سكيكدة",
+    "تيارت",
+    "بشار",
+    "مستغانم",
+    "المسيلة",
+    "الشلف",
+    "الأغواط",
+    "غرداية",
+    "ورقلة",
+    "البويرة",
+    "تيزي وزو",
   ];
 
   return (
@@ -42,9 +63,11 @@ function ClientModal({ client, onClose, onSave }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            {client ? 'تعديل بيانات موكل' : 'إضافة موكل جديد'}
+            {client ? "تعديل بيانات موكل" : "إضافة موكل جديد"}
           </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -62,7 +85,7 @@ function ClientModal({ client, onClose, onSave }) {
               </select>
             </div>
 
-            {formData.type === 'individual' ? (
+            {formData.type === "individual" ? (
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label required">الاسم الأول</label>
@@ -180,7 +203,9 @@ function ClientModal({ client, onClose, onSave }) {
                 >
                   <option value="">اختر الولاية</option>
                   {wilayas.map((w) => (
-                    <option key={w} value={w}>{w}</option>
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -213,7 +238,7 @@ function ClientModal({ client, onClose, onSave }) {
           </div>
           <div className="modal-footer">
             <button type="submit" className="btn btn-primary">
-              {client ? 'حفظ التعديلات' : 'إضافة موكل'}
+              {client ? "حفظ التعديلات" : "إضافة موكل"}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               إلغاء
@@ -230,8 +255,8 @@ function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -260,30 +285,34 @@ function ClientsPage() {
         setShowModal(false);
         setSelectedClient(null);
         loadClients();
-        showSuccess(selectedClient ? 'تم تحديث بيانات الموكل بنجاح' : 'تم إضافة الموكل بنجاح');
+        showSuccess(
+          selectedClient
+            ? "تم تحديث بيانات الموكل بنجاح"
+            : "تم إضافة الموكل بنجاح"
+        );
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     } catch (error) {
-      showError('حدث خطأ أثناء حفظ البيانات');
+      showError("حدث خطأ أثناء حفظ البيانات");
     }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await confirm({
-      title: 'تأكيد الحذف',
-      message: 'هل أنت متأكد من حذف هذا الموكل؟',
-      confirmText: 'نعم، احذف',
-      cancelText: 'إلغاء'
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من حذف هذا الموكل؟",
+      confirmText: "نعم، احذف",
+      cancelText: "إلغاء",
     });
 
     if (confirmed) {
       const result = await clientAPI.delete(id);
       if (result.success) {
         loadClients();
-        showSuccess('تم حذف الموكل بنجاح');
+        showSuccess("تم حذف الموكل بنجاح");
       } else {
-        showError('خطأ: ' + result.error);
+        showError("خطأ: " + result.error);
       }
     }
   };
@@ -310,64 +339,64 @@ function ClientsPage() {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'name',
-        header: 'الاسم',
+        accessorKey: "name",
+        header: "الاسم",
         cell: ({ row }) =>
-          row.original.type === 'company'
+          row.original.type === "company"
             ? row.original.companyName
             : `${row.original.firstName} ${row.original.lastName}`,
         enableSorting: true,
       },
       {
-        accessorKey: 'type',
-        header: 'النوع',
+        accessorKey: "type",
+        header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-secondary">
-            {row.original.type === 'individual' ? 'فرد' : 'شركة'}
+            {row.original.type === "individual" ? "فرد" : "شركة"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        accessorKey: 'phone',
-        header: 'رقم الهاتف',
+        accessorKey: "phone",
+        header: "رقم الهاتف",
         enableSorting: true,
       },
       {
-        accessorKey: 'email',
-        header: 'البريد الإلكتروني',
-        cell: ({ row }) => row.original.email || '-',
+        accessorKey: "email",
+        header: "البريد الإلكتروني",
+        cell: ({ row }) => row.original.email || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'wilaya',
-        header: 'الولاية',
-        cell: ({ row }) => row.original.wilaya || '-',
+        accessorKey: "wilaya",
+        header: "الولاية",
+        cell: ({ row }) => row.original.wilaya || "-",
         enableSorting: true,
       },
       {
-        accessorKey: 'status',
-        header: 'الحالة',
+        accessorKey: "status",
+        header: "الحالة",
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === 'active'
-                ? 'badge-success'
-                : row.original.status === 'inactive'
-                ? 'badge-warning'
-                : 'badge-secondary'
+              row.original.status === "active"
+                ? "badge-success"
+                : row.original.status === "inactive"
+                  ? "badge-warning"
+                  : "badge-secondary"
             }`}
           >
-            {row.original.status === 'active' && 'نشط'}
-            {row.original.status === 'inactive' && 'غير نشط'}
-            {row.original.status === 'archived' && 'مؤرشف'}
+            {row.original.status === "active" && "نشط"}
+            {row.original.status === "inactive" && "غير نشط"}
+            {row.original.status === "archived" && "مؤرشف"}
           </span>
         ),
         enableSorting: true,
       },
       {
-        id: 'actions',
-        header: 'الإجراءات',
+        id: "actions",
+        header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
@@ -400,7 +429,7 @@ function ClientsPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الموكلين</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
@@ -419,7 +448,7 @@ function ClientsPage() {
           />
           <select
             className="form-select"
-            style={{ width: '200px' }}
+            style={{ width: "200px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -440,9 +469,9 @@ function ClientsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== 'all'
-              ? 'لم يتم العثور على موكلين مطابقين للبحث'
-              : 'لم يتم إضافة أي موكلين بعد'
+            searchTerm || filterStatus !== "all"
+              ? "لم يتم العثور على موكلين مطابقين للبحث"
+              : "لم يتم إضافة أي موكلين بعد"
           }
         />
       </div>
