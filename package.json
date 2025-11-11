@@ -2,7 +2,7 @@
   "name": "law-office-management",
   "version": "1.0.0",
   "description": "نظام إدارة مكتب المحاماة - Algerian Law Office Management System",
-  "main": "electron/main.js",
+  "main": ".vite/build/main.js",
   "type": "module",
   "scripts": {
     "start": "electron-forge start",
@@ -10,6 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:build": "electron-builder",
+    "package": "electron-forge package",
+    "build-win": "npm run package && electron-builder --win --prepackaged out/lawyer-office-management-win32-x64",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "db:seed": "node electron/database/seed.js"
   },
@@ -50,5 +52,37 @@
     "electron-builder": "^24.13.3",
     "vite": "^5.3.1",
     "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.yourcompany.hardwarepos",
+    "productName": "Hardware POS",
+    "directories": {
+      "output": "release"
+    },
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": "resources",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "include": "build/installer.nsh",
+      "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
+      "warningsAsErrors": false,
+      "differentialPackage": false
+    }
   }
 }
