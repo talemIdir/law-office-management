@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:build": "electron-builder",
-    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "db:seed": "node electron/database/seed.js"
   },
   "keywords": [
     "electron",
