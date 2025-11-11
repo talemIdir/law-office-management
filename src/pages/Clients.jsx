@@ -288,7 +288,7 @@ function ClientsPage() {
         showSuccess(
           selectedClient
             ? "تم تحديث بيانات الموكل بنجاح"
-            : "تم إضافة الموكل بنجاح",
+            : "تم إضافة الموكل بنجاح"
         );
       } else {
         showError("خطأ: " + result.error);
@@ -416,7 +416,7 @@ function ClientsPage() {
         enableSorting: false,
       },
     ],
-    [],
+    []
   );
 
   if (loading) {
