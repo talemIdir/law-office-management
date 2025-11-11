@@ -1,0 +1,430 @@
+import React, { useState, useEffect } from 'react';
+import { getFinancialReport, caseAPI, clientAPI } from '../utils/api';
+
+function ReportsPage() {
+  const [reportType, setReportType] = useState('financial');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [cases, setCases] = useState([]);
+  const [clients, setClients] = useState([]);
+
+  useEffect(() => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    setStartDate(firstDay.toISOString().split('T')[0]);
+    setEndDate(today.toISOString().split('T')[0]);
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const [casesResult, clientsResult] = await Promise.all([
+      caseAPI.getAll(),
+      clientAPI.getAll()
+    ]);
+    if (casesResult.success) setCases(casesResult.data);
+    if (clientsResult.success) setClients(clientsResult.data);
+  };
+
+  const generateFinancialReport = async () => {
+    setLoading(true);
+    const result = await getFinancialReport(startDate, endDate);
+    if (result.success) {
+      setReportData(result.data);
+    } else {
+      alert('خطأ: ' + result.error);
+    }
+    setLoading(false);
+  };
+
+  const generateCaseReport = () => {
+    setLoading(true);
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const filteredCases = cases.filter((c) => {
+      const caseDate = new Date(c.startDate || c.createdAt);
+      return caseDate >= start && caseDate <= end;
+    });
+
+    const casesByType = {};
+    const casesByStatus = {};
+
+    filteredCases.forEach((c) => {
+      casesByType[c.caseType] = (casesByType[c.caseType] || 0) + 1;
+      casesByStatus[c.status] = (casesByStatus[c.status] || 0) + 1;
+    });
+
+    setReportData({
+      totalCases: filteredCases.length,
+      casesByType,
+      casesByStatus,
+      cases: filteredCases
+    });
+
+    setLoading(false);
+  };
+
+  const generateClientReport = () => {
+    setLoading(true);
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const filteredClients = clients.filter((c) => {
+      const clientDate = new Date(c.createdAt);
+      return clientDate >= start && clientDate <= end;
+    });
+
+    const clientsByType = {
+      individual: filteredClients.filter((c) => c.type === 'individual').length,
+      company: filteredClients.filter((c) => c.type === 'company').length
+    };
+
+    const clientsByStatus = {};
+    filteredClients.forEach((c) => {
+      clientsByStatus[c.status] = (clientsByStatus[c.status] || 0) + 1;
+    });
+
+    setReportData({
+      totalClients: filteredClients.length,
+      clientsByType,
+      clientsByStatus,
+      clients: filteredClients
+    });
+
+    setLoading(false);
+  };
+
+  const handleGenerateReport = () => {
+    if (!startDate || !endDate) {
+      alert('الرجاء اختيار تاريخ البداية والنهاية');
+      return;
+    }
+
+    if (reportType === 'financial') {
+      generateFinancialReport();
+    } else if (reportType === 'cases') {
+      generateCaseReport();
+    } else if (reportType === 'clients') {
+      generateClientReport();
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ar-DZ', {
+      style: 'decimal',
+      minimumFractionDigits: 2
+    }).format(amount || 0) + ' دج';
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('ar-DZ');
+  };
+
+  const translateCaseType = (type) => {
+    const types = {
+      civil: 'مدني',
+      criminal: 'جنائي',
+      commercial: 'تجاري',
+      administrative: 'إداري',
+      family: 'أسري',
+      labor: 'عمالي',
+      other: 'أخرى'
+    };
+    return types[type] || type;
+  };
+
+  const translateCaseStatus = (status) => {
+    const statuses = {
+      open: 'مفتوحة',
+      in_progress: 'قيد المعالجة',
+      won: 'كسب',
+      lost: 'خسارة',
+      settled: 'تسوية',
+      closed: 'مغلقة',
+      appealed: 'استئناف'
+    };
+    return statuses[status] || status;
+  };
+
+  const translateClientStatus = (status) => {
+    const statuses = {
+      active: 'نشط',
+      inactive: 'غير نشط',
+      archived: 'مؤرشف'
+    };
+    return statuses[status] || status;
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">التقارير والإحصائيات</h1>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginBottom: '1.5rem' }}>إنشاء تقرير</h3>
+
+        <div className="form-row" style={{ marginBottom: '1.5rem' }}>
+          <div className="form-group">
+            <label className="form-label">نوع التقرير</label>
+            <select
+              className="form-select"
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+            >
+              <option value="financial">التقرير المالي</option>
+              <option value="cases">تقرير القضايا</option>
+              <option value="clients">تقرير الموكلين</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">من تاريخ</label>
+            <input
+              type="date"
+              className="form-control"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">إلى تاريخ</label>
+            <input
+              type="date"
+              className="form-control"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button
+          className="btn btn-primary"
+          onClick={handleGenerateReport}
+          disabled={loading}
+        >
+          {loading ? 'جاري إنشاء التقرير...' : '📊 إنشاء التقرير'}
+        </button>
+      </div>
+
+      {reportData && reportType === 'financial' && (
+        <>
+          <div className="stats-grid">
+            <div className="stat-card success">
+              <div className="stat-card-header">
+                <span className="stat-card-title">إجمالي الفواتير</span>
+                <span className="stat-card-icon">💵</span>
+              </div>
+              <div className="stat-card-value">{formatCurrency(reportData.totalInvoiced)}</div>
+              <div className="stat-card-description">
+                عدد الفواتير: {reportData.invoices.length}
+              </div>
+            </div>
+
+            <div className="stat-card success">
+              <div className="stat-card-header">
+                <span className="stat-card-title">إجمالي المدفوعات</span>
+                <span className="stat-card-icon">💰</span>
+              </div>
+              <div className="stat-card-value">{formatCurrency(reportData.totalPaid)}</div>
+              <div className="stat-card-description">
+                عدد الدفعات: {reportData.payments.length}
+              </div>
+            </div>
+
+            <div className="stat-card danger">
+              <div className="stat-card-header">
+                <span className="stat-card-title">إجمالي المصروفات</span>
+                <span className="stat-card-icon">💳</span>
+              </div>
+              <div className="stat-card-value">{formatCurrency(reportData.totalExpenses)}</div>
+              <div className="stat-card-description">
+                عدد المصروفات: {reportData.expenses.length}
+              </div>
+            </div>
+
+            <div className="stat-card info">
+              <div className="stat-card-header">
+                <span className="stat-card-title">صافي الدخل</span>
+                <span className="stat-card-icon">📈</span>
+              </div>
+              <div className="stat-card-value">{formatCurrency(reportData.netIncome)}</div>
+              <div className="stat-card-description">
+                {reportData.netIncome >= 0 ? 'ربح' : 'خسارة'}
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">تفاصيل الفواتير</h3>
+            {reportData.invoices.length > 0 ? (
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>رقم الفاتورة</th>
+                      <th>التاريخ</th>
+                      <th>المبلغ</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.invoices.map((invoice) => (
+                      <tr key={invoice.id}>
+                        <td>{invoice.invoiceNumber}</td>
+                        <td>{formatDate(invoice.invoiceDate)}</td>
+                        <td>{formatCurrency(invoice.totalAmount)}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
+                            }`}
+                          >
+                            {invoice.status === 'paid' ? 'مدفوعة' : 'غير مدفوعة'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
+                لا توجد فواتير في هذه الفترة
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
+      {reportData && reportType === 'cases' && (
+        <>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-title">إجمالي القضايا</span>
+                <span className="stat-card-icon">⚖️</span>
+              </div>
+              <div className="stat-card-value">{reportData.totalCases}</div>
+              <div className="stat-card-description">في الفترة المحددة</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">القضايا حسب النوع</h3>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>نوع القضية</th>
+                    <th>العدد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(reportData.casesByType).map(([type, count]) => (
+                    <tr key={type}>
+                      <td>{translateCaseType(type)}</td>
+                      <td><strong>{count}</strong></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">القضايا حسب الحالة</h3>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>حالة القضية</th>
+                    <th>العدد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(reportData.casesByStatus).map(([status, count]) => (
+                    <tr key={status}>
+                      <td>{translateCaseStatus(status)}</td>
+                      <td><strong>{count}</strong></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {reportData && reportType === 'clients' && (
+        <>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-title">إجمالي الموكلين</span>
+                <span className="stat-card-icon">👥</span>
+              </div>
+              <div className="stat-card-value">{reportData.totalClients}</div>
+              <div className="stat-card-description">في الفترة المحددة</div>
+            </div>
+
+            <div className="stat-card info">
+              <div className="stat-card-header">
+                <span className="stat-card-title">أفراد</span>
+                <span className="stat-card-icon">👤</span>
+              </div>
+              <div className="stat-card-value">{reportData.clientsByType.individual}</div>
+              <div className="stat-card-description">موكلين أفراد</div>
+            </div>
+
+            <div className="stat-card success">
+              <div className="stat-card-header">
+                <span className="stat-card-title">شركات</span>
+                <span className="stat-card-icon">🏢</span>
+              </div>
+              <div className="stat-card-value">{reportData.clientsByType.company}</div>
+              <div className="stat-card-description">موكلين شركات</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">الموكلين حسب الحالة</h3>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>الحالة</th>
+                    <th>العدد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(reportData.clientsByStatus).map(([status, count]) => (
+                    <tr key={status}>
+                      <td>{translateClientStatus(status)}</td>
+                      <td><strong>{count}</strong></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!reportData && !loading && (
+        <div className="empty-state">
+          <div className="empty-state-icon">📊</div>
+          <p className="empty-state-title">لم يتم إنشاء تقرير بعد</p>
+          <p className="empty-state-description">
+            اختر نوع التقرير والفترة الزمنية ثم اضغط على "إنشاء التقرير"
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ReportsPage;
