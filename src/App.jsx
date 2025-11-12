@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDialogProvider } from "./components/ConfirmDialog";
 import Dashboard from "./pages/Dashboard";
 import ClientsPage from "./pages/Clients";
+import ViewClient from "./pages/ViewClient";
 import CasesPage from "./pages/Cases";
 import CourtSessionsPage from "./pages/CourtSessions";
 import DocumentsPage from "./pages/Documents";
@@ -93,6 +94,10 @@ const router = createHashRouter([
       {
         path: "clients",
         element: <ClientsPage />,
+      },
+      {
+        path: "clients/:id",
+        element: <ViewClient />,
       },
       {
         path: "cases",

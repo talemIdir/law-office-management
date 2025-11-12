@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { clientAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -251,6 +252,7 @@ function ClientModal({ client, onClose, onSave }) {
 }
 
 function ClientsPage() {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -399,6 +401,12 @@ function ClientsPage() {
         header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-info"
+              onClick={() => navigate(`/clients/${row.original.id}`)}
+            >
+              👁️ عرض
+            </button>
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
