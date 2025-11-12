@@ -18,7 +18,13 @@ import {
   getPaymentMethodLabel,
   getAppointmentTypeLabel,
   getDocumentTypeLabel,
+  getPriorityLabel,
+  getClientRoleLabel,
+  getSessionTypeLabel,
 } from "../utils/labels";
+import { formatDate, formatDateTime, formatCurrency, formatFileSize } from "../utils/formatters";
+import { generateCasePDF } from "../utils/pdfGenerator.jsx";
+import { showSuccess } from "../utils/toast";
 
 function ViewCase() {
   const { id } = useParams();
@@ -108,37 +114,6 @@ function ViewCase() {
     }
   };
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString("ar-DZ");
-  };
-
-  const formatDateTime = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("ar-DZ", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return "-";
-    return new Intl.NumberFormat("ar-DZ", {
-      style: "currency",
-      currency: "DZD",
-    }).format(amount);
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes) return "-";
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  };
-
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "active":
@@ -189,30 +164,6 @@ function ViewCase() {
     }
   };
 
-  const getPriorityLabel = (priority) => {
-    const labels = {
-      urgent: "عاجل",
-      high: "عالية",
-      medium: "متوسطة",
-      low: "منخفضة",
-    };
-    return labels[priority] || priority;
-  };
-
-  const getClientRoleLabel = (role) => {
-    return role === "plaintiff" ? "مدعي" : "مدعى عليه";
-  };
-
-  const getSessionTypeLabel = (type) => {
-    const labels = {
-      hearing: "جلسة استماع",
-      verdict: "حكم",
-      procedural: "إجرائية",
-      other: "أخرى",
-    };
-    return labels[type] || type;
-  };
-
   const getCourtTypeLabel = (type) => {
     if (!type) return "-";
     return type;
@@ -229,6 +180,16 @@ function ViewCase() {
       other: "أخرى",
     };
     return labels[category] || category;
+  };
+
+  const handleExportPDF = () => {
+    try {
+      generateCasePDF(caseData, client, courtSessions, payments);
+      showSuccess("تم تصدير ملف PDF بنجاح");
+    } catch (error) {
+      showError("حدث خطأ أثناء تصدير ملف PDF");
+      console.error("PDF generation error:", error);
+    }
   };
 
   // Columns for Payments Tab
@@ -552,12 +513,21 @@ function ViewCase() {
             رقم القضية: {caseData.caseNumber}
           </p>
         </div>
-        <button
-          className="btn btn-outline"
-          onClick={() => navigate("/cases")}
-        >
-          ← العودة إلى قائمة القضايا
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="btn btn-primary"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 تصدير PDF
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => navigate("/cases")}
+          >
+            ← العودة إلى قائمة القضايا
+          </button>
+        </div>
       </div>
 
       {/* Case Details Card */}
