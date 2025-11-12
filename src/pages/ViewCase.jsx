@@ -171,13 +171,9 @@ function ViewCase() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     try {
-      console.log(client);
-      await generateCasePDF(caseData, client, courtSessions, payments).then(
-        console.log(1)
-      );
-      console.log("here");
+      generateCasePDF(caseData, client, courtSessions, payments);
     } catch (error) {
       showError("حدث خطأ أثناء تصدير ملف PDF");
       console.error("PDF generation error:", error);

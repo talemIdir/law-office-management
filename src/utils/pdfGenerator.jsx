@@ -156,6 +156,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#7f8c8d",
     fontSize: 9,
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
   },
   badge: {
     display: "inline-block",
@@ -193,6 +197,37 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
           <Text style={styles.title}>تقرير القضية</Text>
           <Text style={styles.subtitle}>تاريخ التقرير: {currentDate}</Text>
         </View>
+
+        {/* Client Information */}
+        {client && (
+          <>
+            <Text style={styles.sectionTitle}>معلومات الموكل</Text>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>الاسم</Text>
+                <Text style={styles.tableCol2}>{clientName}</Text>
+              </View>
+              <View style={[styles.tableRow, styles.tableRowEven]}>
+                <Text style={styles.tableCol1}>النوع</Text>
+                <Text style={styles.tableCol2}>
+                  {client.type === "company" ? "شركة" : "فرد"}
+                </Text>
+              </View>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>البريد الإلكتروني</Text>
+                <Text style={styles.tableCol2}>{client.email || "-"}</Text>
+              </View>
+              <View style={[styles.tableRow, styles.tableRowEven]}>
+                <Text style={styles.tableCol1}>الهاتف</Text>
+                <Text style={styles.tableCol2}>{client.phone || "-"}</Text>
+              </View>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>العنوان</Text>
+                <Text style={styles.tableCol2}>{client.address || "-"}</Text>
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Case Information */}
         <Text style={styles.sectionTitle}>معلومات القضية</Text>
@@ -293,37 +328,6 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
             <Text style={styles.sectionTitle}>ملاحظات</Text>
             <View style={styles.textSection}>
               <Text>{caseData.notes}</Text>
-            </View>
-          </>
-        )}
-
-        {/* Client Information */}
-        {client && (
-          <>
-            <Text style={styles.sectionTitle}>معلومات الموكل</Text>
-            <View style={styles.table}>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableCol1}>الاسم</Text>
-                <Text style={styles.tableCol2}>{clientName}</Text>
-              </View>
-              <View style={[styles.tableRow, styles.tableRowEven]}>
-                <Text style={styles.tableCol1}>النوع</Text>
-                <Text style={styles.tableCol2}>
-                  {client.type === "company" ? "شركة" : "فرد"}
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableCol1}>البريد الإلكتروني</Text>
-                <Text style={styles.tableCol2}>{client.email || "-"}</Text>
-              </View>
-              <View style={[styles.tableRow, styles.tableRowEven]}>
-                <Text style={styles.tableCol1}>الهاتف</Text>
-                <Text style={styles.tableCol2}>{client.phone || "-"}</Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableCol1}>العنوان</Text>
-                <Text style={styles.tableCol2}>{client.address || "-"}</Text>
-              </View>
             </View>
           </>
         )}
@@ -508,7 +512,7 @@ export const generateCasePDF = async (
 
     // Use window focus event to detect when save dialog is closed
     const handleFocus = () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
 
       // Ask user if they want to open the file after save dialog closes
       const shouldOpen = window.confirm(
@@ -527,7 +531,7 @@ export const generateCasePDF = async (
     };
 
     // Listen for when window regains focus (after save dialog closes)
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener("focus", handleFocus);
   } catch (error) {
     console.error("Error generating PDF:", error);
     throw error;
