@@ -4,7 +4,6 @@ import Client from "../models/Client.js";
 import CourtSession from "../models/CourtSession.js";
 import Document from "../models/Document.js";
 import Invoice from "../models/Invoice.js";
-import Payment from "../models/Payment.js";
 import Expense from "../models/Expense.js";
 import Appointment from "../models/Appointment.js";
 import User from "../models/User.js";
@@ -166,13 +165,6 @@ class CaseService {
             { model: CourtSession, as: "courtSessions" },
             { model: Document, as: "documents" },
             { model: Invoice, as: "invoices" },
-            {
-              model: Payment,
-              as: "payments",
-              include: [
-                { model: Invoice, as: "invoice", required: false }
-              ]
-            },
             { model: Expense, as: "expenses" },
             { model: Appointment, as: "appointments" },
           ]
@@ -296,7 +288,6 @@ class CaseService {
           { model: CourtSession, as: "courtSessions" },
           { model: Document, as: "documents" },
           { model: Invoice, as: "invoices" },
-          { model: Payment, as: "payments" },
           { model: Expense, as: "expenses" },
           { model: Appointment, as: "appointments" },
         ],
@@ -315,8 +306,7 @@ class CaseService {
         totalDocuments: caseData.documents?.length || 0,
         totalInvoices: caseData.invoices?.length || 0,
         totalBilled: caseData.invoices?.reduce((sum, inv) => sum + parseFloat(inv.totalAmount || 0), 0) || 0,
-        totalPayments: caseData.payments?.length || 0,
-        totalPaid: caseData.payments?.reduce((sum, pay) => sum + parseFloat(pay.amount || 0), 0) || 0,
+        totalPaid: caseData.invoices?.reduce((sum, inv) => sum + parseFloat(inv.paidAmount || 0), 0) || 0,
         totalExpenses: caseData.expenses?.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0) || 0,
         totalAppointments: caseData.appointments?.length || 0,
         upcomingAppointments: caseData.appointments?.filter(

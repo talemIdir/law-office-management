@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import Payment from "../models/Payment.js";
+import Invoice from "../models/Invoice.js";
 
 /**
  * Payment Service
@@ -21,22 +22,33 @@ class PaymentService {
       if (!paymentData.paymentMethod) {
         throw new Error("Payment method is required");
       }
-      if (!paymentData.caseId) {
-        throw new Error("Case ID is required");
+      if (!paymentData.invoiceId) {
+        throw new Error("Invoice ID is required");
       }
 
-      // Verify case exists
-      const Case = (await import("../models/Case.js")).default;
-      const caseRecord = await Case.findByPk(paymentData.caseId);
-      if (!caseRecord) {
-        throw new Error("Case not found");
+      // Verify invoice exists
+      const invoice = await Invoice.findByPk(paymentData.invoiceId);
+      if (!invoice) {
+        throw new Error("Invoice not found");
       }
 
-      if (parseFloat(paymentData.amount) <= 0) {
+      // Validate payment amount doesn't exceed remaining balance
+      const remainingBalance = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount);
+      const paymentAmount = parseFloat(paymentData.amount);
+
+      if (paymentAmount > remainingBalance) {
+        throw new Error(`Payment amount (${paymentAmount}) exceeds remaining balance (${remainingBalance})`);
+      }
+
+      if (paymentAmount <= 0) {
         throw new Error("Payment amount must be greater than 0");
       }
 
       const payment = await Payment.create(paymentData);
+
+      // Update invoice status after payment
+      const InvoiceService = (await import("./invoiceService.js")).default;
+      await InvoiceService.updateInvoiceStatus(paymentData.invoiceId);
 
       return {
         success: true,
@@ -63,8 +75,8 @@ class PaymentService {
       const where = {};
 
       // Apply filters
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
+      if (filters.invoiceId) {
+        where.invoiceId = filters.invoiceId;
       }
 
       if (filters.paymentMethod) {
@@ -98,10 +110,11 @@ class PaymentService {
         where,
         include: [
           {
-            model: (await import("../models/Case.js")).default,
-            as: "case",
+            model: Invoice,
+            as: "invoice",
             include: [
               { model: (await import("../models/Client.js")).default, as: "client" },
+              { model: (await import("../models/Case.js")).default, as: "case" },
             ],
           },
         ],
@@ -137,10 +150,11 @@ class PaymentService {
       const payment = await Payment.findByPk(id, {
         include: [
           {
-            model: (await import("../models/Case.js")).default,
-            as: "case",
+            model: Invoice,
+            as: "invoice",
             include: [
               { model: (await import("../models/Client.js")).default, as: "client" },
+              { model: (await import("../models/Case.js")).default, as: "case" },
             ],
           },
         ],
@@ -177,25 +191,41 @@ class PaymentService {
       }
 
       const payment = await Payment.findByPk(id, {
-        include: [
-          { model: (await import("../models/Case.js")).default, as: "case" },
-        ],
+        include: [{ model: Invoice, as: "invoice" }],
       });
 
       if (!payment) {
         throw new Error("Payment not found");
       }
 
-      // Verify case still exists if being updated
-      if (updateData.caseId) {
-        const Case = (await import("../models/Case.js")).default;
-        const caseRecord = await Case.findByPk(updateData.caseId);
-        if (!caseRecord) {
-          throw new Error("Case not found");
+      // If amount is being updated, validate it
+      if (updateData.amount) {
+        const invoice = payment.invoice;
+        const otherPayments = await Payment.findAll({
+          where: {
+            invoiceId: invoice.id,
+            id: { [Op.ne]: id },
+          },
+        });
+
+        const otherPaymentsTotal = otherPayments.reduce(
+          (sum, p) => sum + parseFloat(p.amount || 0),
+          0
+        );
+
+        const newTotal = otherPaymentsTotal + parseFloat(updateData.amount);
+        const invoiceTotal = parseFloat(invoice.totalAmount);
+
+        if (newTotal > invoiceTotal) {
+          throw new Error(`Total payments (${newTotal}) would exceed invoice amount (${invoiceTotal})`);
         }
       }
 
       await payment.update(updateData);
+
+      // Update invoice status after payment update
+      const InvoiceService = (await import("./invoiceService.js")).default;
+      await InvoiceService.updateInvoiceStatus(payment.invoiceId);
 
       return {
         success: true,
@@ -228,7 +258,13 @@ class PaymentService {
         throw new Error("Payment not found");
       }
 
+      const invoiceId = payment.invoiceId;
+
       await payment.destroy();
+
+      // Update invoice status after payment deletion
+      const InvoiceService = (await import("./invoiceService.js")).default;
+      await InvoiceService.updateInvoiceStatus(invoiceId);
 
       return {
         success: true,
@@ -245,18 +281,18 @@ class PaymentService {
   }
 
   /**
-   * Get payments by case
-   * @param {number} caseId - Case ID
-   * @returns {Promise<Object>} Case payments
+   * Get payments by invoice
+   * @param {number} invoiceId - Invoice ID
+   * @returns {Promise<Object>} Invoice payments
    */
-  async getPaymentsByCase(caseId) {
+  async getPaymentsByInvoice(invoiceId) {
     try {
-      if (!caseId) {
-        throw new Error("Case ID is required");
+      if (!invoiceId) {
+        throw new Error("Invoice ID is required");
       }
 
       const payments = await Payment.findAll({
-        where: { caseId },
+        where: { invoiceId },
         order: [["paymentDate", "DESC"]],
       });
 
@@ -269,11 +305,11 @@ class PaymentService {
         total,
       };
     } catch (error) {
-      console.error("Error fetching payments by case:", error);
+      console.error("Error fetching payments by invoice:", error);
       return {
         success: false,
         error: error.message,
-        message: "Failed to fetch payments by case",
+        message: "Failed to fetch payments by invoice",
       };
     }
   }
@@ -346,8 +382,8 @@ class PaymentService {
       const payments = await Payment.findAll({
         include: [
           {
-            model: (await import("../models/Case.js")).default,
-            as: "case",
+            model: Invoice,
+            as: "invoice",
             include: [
               { model: (await import("../models/Client.js")).default, as: "client" },
             ],
