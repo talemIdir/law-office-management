@@ -471,6 +471,213 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
   );
 };
 
+// Invoice PDF Document Component
+const InvoiceDocument = ({ invoice, client, caseData, payments }) => {
+  const currentDate = new Date().toLocaleDateString("ar-DZ", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const clientName = client
+    ? client.type === "company"
+      ? client.companyName
+      : `${client.firstName} ${client.lastName}`
+    : "-";
+
+  const clientAddress = client?.address || "-";
+  const clientPhone = client?.phone || "-";
+
+  // Calculate amounts from case
+  const baseAmount = caseData ? parseFloat(caseData.amount || 0) : 0;
+  const taxPercentage = parseFloat(invoice.taxPercentage || 0);
+  const taxAmount = (baseAmount * taxPercentage) / 100;
+  const totalAmount = baseAmount + taxAmount;
+
+  // Calculate total paid from payments
+  const totalPaid = payments.reduce(
+    (sum, p) => sum + (parseFloat(p.amount) || 0),
+    0
+  );
+  const remainingAmount = totalAmount - totalPaid;
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>فاتورة</Text>
+          <Text style={styles.subtitle}>رقم الفاتورة: {invoice.invoiceNumber}</Text>
+        </View>
+
+        {/* Invoice Info and Client Info Side by Side */}
+        <View style={{ flexDirection: "row-reverse", gap: 15, marginBottom: 20 }}>
+          {/* Invoice Information */}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sectionTitle}>معلومات الفاتورة</Text>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>تاريخ الإصدار</Text>
+                <Text style={styles.tableCol2}>{formatDate(invoice.invoiceDate)}</Text>
+              </View>
+              {caseData && (
+                <View style={[styles.tableRow, styles.tableRowEven]}>
+                  <Text style={styles.tableCol1}>رقم القضية</Text>
+                  <Text style={styles.tableCol2}>{caseData.caseNumber}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Client Information */}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sectionTitle}>معلومات الموكل</Text>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>الاسم</Text>
+                <Text style={styles.tableCol2}>{clientName}</Text>
+              </View>
+              <View style={[styles.tableRow, styles.tableRowEven]}>
+                <Text style={styles.tableCol1}>الهاتف</Text>
+                <Text style={styles.tableCol2}>{clientPhone}</Text>
+              </View>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>العنوان</Text>
+                <Text style={styles.tableCol2}>{clientAddress}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Description/Services */}
+        {invoice.description && (
+          <>
+            <Text style={styles.sectionTitle}>وصف الخدمات</Text>
+            <View style={styles.textSection}>
+              <Text>{invoice.description}</Text>
+            </View>
+          </>
+        )}
+
+        {/* Amount Details */}
+        <Text style={styles.sectionTitle}>تفاصيل المبلغ</Text>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCol1}>المبلغ الأساسي</Text>
+            <Text style={styles.tableCol2}>{formatCurrency(baseAmount)}</Text>
+          </View>
+          <View style={[styles.tableRow, styles.tableRowEven]}>
+            <Text style={styles.tableCol1}>الضريبة ({taxPercentage}%)</Text>
+            <Text style={styles.tableCol2}>{formatCurrency(taxAmount)}</Text>
+          </View>
+          <View style={[styles.tableRow, { backgroundColor: "#3b82f6" }]}>
+            <Text style={[styles.tableCol1, { color: "white", fontSize: 12, fontWeight: 800 }]}>
+              المبلغ الإجمالي
+            </Text>
+            <Text style={[styles.tableCol2, { color: "white", fontSize: 12, fontWeight: 800 }]}>
+              {formatCurrency(totalAmount)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Payment Status */}
+        {totalPaid > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>حالة الدفع</Text>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>المبلغ المدفوع</Text>
+                <Text style={[styles.tableCol2, { color: "#10b981", fontWeight: 700 }]}>
+                  {formatCurrency(totalPaid)}
+                </Text>
+              </View>
+              <View style={[styles.tableRow, styles.tableRowEven]}>
+                <Text style={styles.tableCol1}>المبلغ المتبقي</Text>
+                <Text style={[styles.tableCol2, { color: "#ef4444", fontWeight: 700 }]}>
+                  {formatCurrency(remainingAmount)}
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* Notes */}
+        {invoice.notes && (
+          <>
+            <Text style={styles.sectionTitle}>ملاحظات</Text>
+            <View style={styles.textSection}>
+              <Text>{invoice.notes}</Text>
+            </View>
+          </>
+        )}
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>نظام إدارة مكتب المحاماة - تم إنشاء هذه الفاتورة بتاريخ {currentDate}</Text>
+          <Text style={{ marginTop: 5, fontSize: 8 }}>شكراً لتعاملكم معنا</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+/**
+ * Generate PDF for invoice with Arabic support using @react-pdf/renderer
+ * @param {Object} invoice - Invoice information
+ * @param {Object} client - Client information
+ * @param {Object} caseData - Optional case information
+ * @param {Array} payments - Payments data for the case
+ */
+export const generateInvoicePDF = async (invoice, client, caseData = null, payments = []) => {
+  try {
+    // Create PDF blob
+    const blob = await pdf(
+      <InvoiceDocument invoice={invoice} client={client} caseData={caseData} payments={payments} />
+    ).toBlob();
+
+    const fileName = `فاتورة_${invoice.invoiceNumber}_${
+      new Date().toISOString().split("T")[0]
+    }.pdf`;
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Use window focus event to detect when save dialog is closed
+    const handleFocus = () => {
+      window.removeEventListener("focus", handleFocus);
+
+      // Ask user if they want to open the file after save dialog closes
+      const shouldOpen = window.confirm(
+        "تم حفظ الملف بنجاح. هل تريد فتح الملف؟"
+      );
+
+      if (shouldOpen) {
+        // Open PDF in new tab
+        window.open(url, "_blank");
+      }
+
+      // Clean up the blob URL
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+    };
+
+    // Listen for when window regains focus (after save dialog closes)
+    window.addEventListener("focus", handleFocus);
+  } catch (error) {
+    console.error("Error generating invoice PDF:", error);
+    throw error;
+  }
+};
+
 /**
  * Generate PDF for case details with Arabic support using @react-pdf/renderer
  * @param {Object} caseData - Case information
