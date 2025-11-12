@@ -76,3 +76,27 @@ export const getDocumentTypeLabel = (type) => {
   };
   return labels[type] || type;
 };
+
+export const getPriorityLabel = (priority) => {
+  const labels = {
+    urgent: "عاجل",
+    high: "عالية",
+    medium: "متوسطة",
+    low: "منخفضة",
+  };
+  return labels[priority] || priority;
+};
+
+export const getClientRoleLabel = (role) => {
+  return role === "plaintiff" ? "مدعي" : "مدعى عليه";
+};
+
+export const getSessionTypeLabel = (type) => {
+  const labels = {
+    hearing: "جلسة استماع",
+    verdict: "حكم",
+    procedural: "إجرائية",
+    other: "أخرى",
+  };
+  return labels[type] || type;
+};
