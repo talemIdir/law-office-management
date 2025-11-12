@@ -20,6 +20,11 @@ function AppointmentModal({ appointment, onClose, onSave }) {
     clientId: "",
     caseId: "",
     ...appointment,
+    // Ensure null values are converted to empty strings for select fields
+    clientId: appointment?.clientId || "",
+    caseId: appointment?.caseId || "",
+    location: appointment?.location || "",
+    notes: appointment?.notes || "",
   });
 
   useEffect(() => {
