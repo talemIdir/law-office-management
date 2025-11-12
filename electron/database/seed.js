@@ -1118,6 +1118,12 @@ async function seedDatabase() {
         description: "البريد الإلكتروني للمكتب",
       },
       {
+        key: "officeLogo",
+        value: "",
+        category: "general",
+        description: "شعار المكتب (Base64)",
+      },
+      {
         key: "taxId",
         value: "123456789012345",
         category: "general",

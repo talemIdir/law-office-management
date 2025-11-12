@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   Font,
   pdf,
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
+const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeLogo }) => {
   const currentDate = new Date().toLocaleDateString("ar-DZ", {
     year: "numeric",
     month: "long",
@@ -194,6 +195,17 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {officeLogo && (
+            <Image
+              src={officeLogo}
+              style={{
+                width: 80,
+                height: 80,
+                marginBottom: 10,
+                objectFit: "contain",
+              }}
+            />
+          )}
           <Text style={styles.title}>تقرير القضية</Text>
           <Text style={styles.subtitle}>تاريخ التقرير: {currentDate}</Text>
         </View>
@@ -472,7 +484,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments }) => {
 };
 
 // Invoice PDF Document Component
-const InvoiceDocument = ({ invoice, client, caseData, payments }) => {
+const InvoiceDocument = ({ invoice, client, caseData, payments, officeLogo }) => {
   const currentDate = new Date().toLocaleDateString("ar-DZ", {
     year: "numeric",
     month: "long",
@@ -506,6 +518,17 @@ const InvoiceDocument = ({ invoice, client, caseData, payments }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {officeLogo && (
+            <Image
+              src={officeLogo}
+              style={{
+                width: 80,
+                height: 80,
+                marginBottom: 10,
+                objectFit: "contain",
+              }}
+            />
+          )}
           <Text style={styles.title}>فاتورة</Text>
           <Text style={styles.subtitle}>رقم الفاتورة: {invoice.invoiceNumber}</Text>
         </View>
@@ -627,12 +650,13 @@ const InvoiceDocument = ({ invoice, client, caseData, payments }) => {
  * @param {Object} client - Client information
  * @param {Object} caseData - Optional case information
  * @param {Array} payments - Payments data for the case
+ * @param {String} officeLogo - Office logo base64 string (optional)
  */
-export const generateInvoicePDF = async (invoice, client, caseData = null, payments = []) => {
+export const generateInvoicePDF = async (invoice, client, caseData = null, payments = [], officeLogo = null) => {
   try {
     // Create PDF blob
     const blob = await pdf(
-      <InvoiceDocument invoice={invoice} client={client} caseData={caseData} payments={payments} />
+      <InvoiceDocument invoice={invoice} client={client} caseData={caseData} payments={payments} officeLogo={officeLogo} />
     ).toBlob();
 
     const fileName = `فاتورة_${invoice.invoiceNumber}_${
@@ -684,12 +708,14 @@ export const generateInvoicePDF = async (invoice, client, caseData = null, payme
  * @param {Object} client - Client information
  * @param {Array} courtSessions - Court sessions data
  * @param {Array} payments - Payments data
+ * @param {String} officeLogo - Office logo base64 string (optional)
  */
 export const generateCasePDF = async (
   caseData,
   client,
   courtSessions,
-  payments
+  payments,
+  officeLogo = null
 ) => {
   try {
     // Create PDF blob
@@ -699,6 +725,7 @@ export const generateCasePDF = async (
         client={client}
         courtSessions={courtSessions}
         payments={payments}
+        officeLogo={officeLogo}
       />
     ).toBlob();
 

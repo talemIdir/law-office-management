@@ -9,6 +9,7 @@ import {
   documentAPI,
   expenseAPI,
   invoiceAPI,
+  settingAPI,
 } from "../utils/api";
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
@@ -171,9 +172,28 @@ function ViewCase() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
-      generateCasePDF(caseData, client, courtSessions, payments);
+      // Fetch office logo from settings
+      const settingsResult = await settingAPI.getAll();
+      let officeLogo = null;
+      if (settingsResult.success) {
+        const logoSetting = settingsResult.data.find(
+          (s) => s.key === "officeLogo"
+        );
+        if (logoSetting && logoSetting.value) {
+          officeLogo = logoSetting.value;
+        }
+      }
+
+      await generateCasePDF(
+        caseData,
+        client,
+        courtSessions,
+        payments,
+        officeLogo
+      );
+      showSuccess("تم تصدير ملف PDF بنجاح");
     } catch (error) {
       showError("حدث خطأ أثناء تصدير ملف PDF");
       console.error("PDF generation error:", error);
@@ -430,25 +450,15 @@ function ViewCase() {
         enableSorting: true,
       },
       {
-        accessorKey: "dueDate",
-        header: "تاريخ الاستحقاق",
-        cell: ({ row }) => formatDate(row.original.dueDate),
-        enableSorting: true,
+        accessorKey: "description",
+        header: "الوصف",
+        cell: ({ row }) => row.original.description || "-",
+        enableSorting: false,
       },
       {
-        accessorKey: "totalAmount",
-        header: "المبلغ الإجمالي",
-        cell: ({ row }) => formatCurrency(row.original.totalAmount),
-        enableSorting: true,
-      },
-      {
-        accessorKey: "status",
-        header: "الحالة",
-        cell: ({ row }) => (
-          <span className={`badge ${getStatusBadgeClass(row.original.status)}`}>
-            {getStatusLabel(row.original.status)}
-          </span>
-        ),
+        accessorKey: "taxPercentage",
+        header: "نسبة الضريبة",
+        cell: ({ row }) => `${row.original.taxPercentage || 0}%`,
         enableSorting: true,
       },
       {

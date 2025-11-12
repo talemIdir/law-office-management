@@ -13,9 +13,11 @@ function SettingsPage() {
     bankName: "",
     bankAccountNumber: "",
     bankIBAN: "",
+    officeLogo: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [logoPreview, setLogoPreview] = useState(null);
 
   useEffect(() => {
     loadSettings();
@@ -31,12 +33,47 @@ function SettingsPage() {
         settingsObj[setting.key] = setting.value;
       });
       setSettings((prevSettings) => ({ ...prevSettings, ...settingsObj }));
+
+      // Set logo preview if it exists
+      if (settingsObj.officeLogo) {
+        setLogoPreview(settingsObj.officeLogo);
+      }
     }
     setLoading(false);
   };
 
   const handleChange = (e) => {
     setSettings({ ...settings, [e.target.name]: e.target.value });
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        showError("حجم الصورة يجب أن يكون أقل من 2 ميجابايت");
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        showError("يرجى اختيار ملف صورة");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setSettings({ ...settings, officeLogo: base64String });
+        setLogoPreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setSettings({ ...settings, officeLogo: "" });
+    setLogoPreview(null);
   };
 
   const handleSubmit = async (e) => {
@@ -85,6 +122,73 @@ function SettingsPage() {
       <div className="card">
         <h3 style={{ marginBottom: "1.5rem" }}>معلومات المكتب</h3>
         <form onSubmit={handleSubmit}>
+          {/* Logo Upload Section */}
+          <div className="form-group">
+            <label className="form-label">شعار المكتب (Logo)</label>
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: "#666",
+                marginBottom: "10px",
+              }}
+            >
+              سيتم استخدام الشعار في الفواتير والتقارير PDF
+            </p>
+
+            {logoPreview ? (
+              <div style={{ marginBottom: "15px" }}>
+                <img
+                  src={logoPreview}
+                  alt="Office Logo"
+                  style={{
+                    maxWidth: "200px",
+                    maxHeight: "150px",
+                    border: "2px solid #e5e7eb",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                />
+                <div style={{ marginTop: "10px" }}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    onClick={handleRemoveLogo}
+                  >
+                    🗑️ إزالة الشعار
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  border: "2px dashed #d1d5db",
+                  borderRadius: "8px",
+                  padding: "30px",
+                  textAlign: "center",
+                  backgroundColor: "#f9fafb",
+                  marginBottom: "15px",
+                }}
+              >
+                <p style={{ color: "#6b7280", marginBottom: "10px" }}>
+                  📷 لم يتم رفع شعار بعد
+                </p>
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              style={{ display: "block", marginTop: "10px" }}
+            />
+            <small
+              style={{ color: "#6b7280", display: "block", marginTop: "5px" }}
+            >
+              الحد الأقصى لحجم الملف: 2 ميجابايت | الصيغ المدعومة: JPG, PNG, GIF
+            </small>
+          </div>
+
           <div className="form-group">
             <label className="form-label">اسم المكتب</label>
             <input

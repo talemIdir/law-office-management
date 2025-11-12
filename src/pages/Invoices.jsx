@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { invoiceAPI, clientAPI, caseAPI, paymentAPI } from "../utils/api";
+import { invoiceAPI, clientAPI, caseAPI, paymentAPI, settingAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
@@ -268,7 +268,18 @@ function InvoicesPage() {
         }
       }
 
-      await generateInvoicePDF(invoice, client, caseData, payments);
+      // Fetch office logo from settings
+      const settingsResult = await settingAPI.getAll();
+      let officeLogo = null;
+
+      if (settingsResult.success) {
+        const logoSetting = settingsResult.data.find(s => s.key === "officeLogo");
+        if (logoSetting && logoSetting.value) {
+          officeLogo = logoSetting.value;
+        }
+      }
+
+      await generateInvoicePDF(invoice, client, caseData, payments, officeLogo);
       showSuccess("تم تصدير الفاتورة إلى PDF بنجاح");
     } catch (error) {
       showError("حدث خطأ أثناء تصدير الفاتورة");
