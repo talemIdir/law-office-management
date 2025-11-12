@@ -660,6 +660,7 @@ async function seedDatabase() {
         paymentMethod: "bank_transfer",
         reference: "TRF-20240315-001",
         notes: "دفع بنكي - حساب البنك الوطني الجزائري",
+        caseId: cases[0].id,
         invoiceId: invoices[0].id,
       },
       {
@@ -668,6 +669,7 @@ async function seedDatabase() {
         paymentMethod: "check",
         reference: "CHK-20240330-002",
         notes: "شيك رقم 4567890 - بنك الخليج",
+        caseId: cases[1].id,
         invoiceId: invoices[1].id,
       },
       {
@@ -675,6 +677,7 @@ async function seedDatabase() {
         amount: 297500.0,
         paymentMethod: "cash",
         notes: "دفع نقدي - تم إصدار وصل",
+        caseId: cases[4].id,
         invoiceId: invoices[5].id,
       },
       {
@@ -683,7 +686,23 @@ async function seedDatabase() {
         paymentMethod: "bank_transfer",
         reference: "TRF-20240402-003",
         notes: "دفعة أولى - حوالة بنكية",
+        caseId: cases[6].id,
         invoiceId: invoices[6].id,
+      },
+      {
+        paymentDate: pastDate(5),
+        amount: 100000.0,
+        paymentMethod: "cash",
+        notes: "دفعة نقدية بدون فاتورة - تم إصدار وصل",
+        caseId: cases[2].id,
+      },
+      {
+        paymentDate: pastDate(3),
+        amount: 50000.0,
+        paymentMethod: "bank_transfer",
+        reference: "TRF-20240410-004",
+        notes: "دفعة جزئية بدون فاتورة",
+        caseId: cases[3].id,
       },
     ]);
     console.log(`   ✓ Created ${await Payment.count()} payments\n`);

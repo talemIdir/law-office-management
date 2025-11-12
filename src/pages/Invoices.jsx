@@ -3,120 +3,7 @@ import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
-
-function PaymentModal({ invoiceId, onClose, onSave }) {
-  const [formData, setFormData] = useState({
-    paymentDate: new Date().toISOString().split("T")[0],
-    amount: "",
-    paymentMethod: "cash",
-    reference: "",
-    notes: "",
-    invoiceId: invoiceId,
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: "500px" }}
-      >
-        <div className="modal-header">
-          <h3 className="modal-title">إضافة دفعة</h3>
-          <button className="modal-close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label required">تاريخ الدفع</label>
-                <input
-                  type="date"
-                  name="paymentDate"
-                  className="form-control"
-                  value={formData.paymentDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label required">المبلغ (دج)</label>
-                <input
-                  type="number"
-                  name="amount"
-                  className="form-control"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label required">طريقة الدفع</label>
-              <select
-                name="paymentMethod"
-                className="form-select"
-                value={formData.paymentMethod}
-                onChange={handleChange}
-                required
-              >
-                <option value="cash">نقداً</option>
-                <option value="check">شيك</option>
-                <option value="bank_transfer">تحويل بنكي</option>
-                <option value="credit_card">بطاقة ائتمان</option>
-                <option value="other">أخرى</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">المرجع / رقم الشيك</label>
-              <input
-                type="text"
-                name="reference"
-                className="form-control"
-                value={formData.reference}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">ملاحظات</label>
-              <textarea
-                name="notes"
-                className="form-textarea"
-                value={formData.notes}
-                onChange={handleChange}
-                rows="2"
-              ></textarea>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button type="submit" className="btn btn-primary">
-              إضافة دفعة
-            </button>
-            <button type="button" className="btn btn-outline" onClick={onClose}>
-              إلغاء
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+import PaymentModal from "../components/PaymentModal";
 
 function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -404,26 +291,15 @@ function InvoicesPage() {
 
   const handleSavePayment = async (formData) => {
     try {
+      // Validate that if payment is from an invoice, that invoice has a caseId
+      if (!formData.caseId) {
+        showError("لا يمكن إضافة دفعة لفاتورة بدون قضية مرتبطة");
+        return;
+      }
+
       const result = await paymentAPI.create(formData);
 
       if (result.success) {
-        const invoice = invoices.find((inv) => inv.id === formData.invoiceId);
-        if (invoice) {
-          const newPaidAmount =
-            parseFloat(invoice.paidAmount || 0) + parseFloat(formData.amount);
-          const totalAmount = parseFloat(invoice.totalAmount);
-
-          let newStatus = "partially_paid";
-          if (newPaidAmount >= totalAmount) {
-            newStatus = "paid";
-          }
-
-          await invoiceAPI.update(invoice.id, {
-            paidAmount: newPaidAmount,
-            status: newStatus,
-          });
-        }
-
         setShowPaymentModal(false);
         setSelectedInvoiceForPayment(null);
         loadData();
@@ -465,8 +341,8 @@ function InvoicesPage() {
     setShowInvoiceModal(true);
   };
 
-  const handleAddPayment = (invoiceId) => {
-    setSelectedInvoiceForPayment(invoiceId);
+  const handleAddPayment = (invoice) => {
+    setSelectedInvoiceForPayment(invoice);
     setShowPaymentModal(true);
   };
 
@@ -578,7 +454,9 @@ function InvoicesPage() {
               row.original.status !== "cancelled" && (
                 <button
                   className="btn btn-sm btn-success"
-                  onClick={() => handleAddPayment(row.original.id)}
+                  onClick={() => handleAddPayment(row.original)}
+                  disabled={!row.original.caseId}
+                  title={!row.original.caseId ? "يجب ربط الفاتورة بقضية أولاً" : ""}
                 >
                   💵 دفعة
                 </button>
@@ -674,9 +552,10 @@ function InvoicesPage() {
         />
       )}
 
-      {showPaymentModal && (
+      {showPaymentModal && selectedInvoiceForPayment && (
         <PaymentModal
-          invoiceId={selectedInvoiceForPayment}
+          caseId={selectedInvoiceForPayment.caseId}
+          invoiceId={selectedInvoiceForPayment.id}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedInvoiceForPayment(null);
