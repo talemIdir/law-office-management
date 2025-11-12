@@ -58,13 +58,13 @@ function setupAssociations() {
   });
   Invoice.belongsTo(Case, { foreignKey: "caseId", as: "case" });
 
-  // Invoice - Payment (One-to-Many)
-  Invoice.hasMany(Payment, {
-    foreignKey: "invoiceId",
+  // Case - Payment (One-to-Many)
+  Case.hasMany(Payment, {
+    foreignKey: "caseId",
     as: "payments",
     onDelete: "CASCADE",
   });
-  Payment.belongsTo(Invoice, { foreignKey: "invoiceId", as: "invoice" });
+  Payment.belongsTo(Case, { foreignKey: "caseId", as: "case" });
 
   // Case - Expense (One-to-Many)
   Case.hasMany(Expense, {

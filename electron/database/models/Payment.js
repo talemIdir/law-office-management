@@ -40,6 +40,11 @@ const Payment = sequelize.define(
       type: DataTypes.TEXT,
       comment: "ملاحظات",
     },
+    caseId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      comment: "معرف القضية - Case ID",
+    },
   },
   {
     timestamps: true,

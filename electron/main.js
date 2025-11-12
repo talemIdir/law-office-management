@@ -214,14 +214,13 @@ ipcMain.handle("case:getWithRelations", async (event, id) => {
   }
 });
 
-// Get invoice with payments
+// Get invoice with details
 ipcMain.handle("invoice:getWithPayments", async (event, id) => {
   try {
     const invoice = await Invoice.findByPk(id, {
       include: [
         { model: Client, as: "client" },
         { model: Case, as: "case" },
-        { model: Payment, as: "payments" },
       ],
     });
     if (!invoice) {
@@ -347,7 +346,6 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
             [sequelize.Op.between]: [startDate, endDate],
           },
         },
-        include: [{ model: Invoice, as: "invoice" }],
       }),
       Expense.findAll({
         where: {
