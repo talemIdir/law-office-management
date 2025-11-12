@@ -23,7 +23,7 @@ function ViewClient() {
       // Load client data
       const clientResult = await clientAPI.getById(id);
       if (clientResult.success) {
-        setClient(clientResult.data);
+        setClient(clientResult.data.dataValues);
       } else {
         showError("خطأ في تحميل بيانات الموكل");
         navigate("/clients");
@@ -33,27 +33,29 @@ function ViewClient() {
       // Load client's cases
       const casesResult = await caseAPI.getAll({
         where: { clientId: parseInt(id) },
-        order: [["startDate", "DESC"]]
+        order: [["startDate", "DESC"]],
       });
       if (casesResult.success) {
         setCases(casesResult.data);
       }
 
       // Load payments for client's cases
-      const caseIds = casesResult.data?.map(c => c.id) || [];
+      const caseIds = casesResult.data?.map((c) => c.id) || [];
       if (caseIds.length > 0) {
         const paymentsResult = await paymentAPI.getAll({
           where: { caseId: caseIds },
-          order: [["paymentDate", "DESC"]]
+          order: [["paymentDate", "DESC"]],
         });
         if (paymentsResult.success) {
           // Enhance payments with case information
-          const paymentsWithCases = paymentsResult.data.map(payment => {
-            const relatedCase = casesResult.data.find(c => c.id === payment.caseId);
+          const paymentsWithCases = paymentsResult.data.map((payment) => {
+            const relatedCase = casesResult.data.find(
+              (c) => c.id === payment.caseId
+            );
             return {
               ...payment,
               caseNumber: relatedCase?.caseNumber,
-              caseTitle: relatedCase?.title
+              caseTitle: relatedCase?.title,
             };
           });
           setPayments(paymentsWithCases);
@@ -109,7 +111,7 @@ function ViewClient() {
       lost: "مخسورة",
       settled: "مسوّاة",
       closed: "مغلقة",
-      appealed: "مستأنفة"
+      appealed: "مستأنفة",
     };
     return labels[status] || status;
   };
@@ -122,7 +124,7 @@ function ViewClient() {
       administrative: "إدارية",
       family: "أسرية",
       labor: "عمالية",
-      other: "أخرى"
+      other: "أخرى",
     };
     return types[type] || type;
   };
@@ -133,7 +135,7 @@ function ViewClient() {
       check: "شيك",
       bank_transfer: "تحويل بنكي",
       credit_card: "بطاقة ائتمان",
-      other: "أخرى"
+      other: "أخرى",
     };
     return methods[method] || method;
   };
@@ -263,8 +265,14 @@ function ViewClient() {
     );
   }
 
-  const totalCasesAmount = cases.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
-  const totalPaymentsAmount = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const totalCasesAmount = cases.reduce(
+    (sum, c) => sum + (parseFloat(c.amount) || 0),
+    0
+  );
+  const totalPaymentsAmount = payments.reduce(
+    (sum, p) => sum + (parseFloat(p.amount) || 0),
+    0
+  );
 
   return (
     <div className="page-content">
@@ -274,7 +282,10 @@ function ViewClient() {
             ? client.companyName
             : `${client.firstName} ${client.lastName}`}
         </h1>
-        <button className="btn btn-outline" onClick={() => navigate("/clients")}>
+        <button
+          className="btn btn-outline"
+          onClick={() => navigate("/clients")}
+        >
           ← العودة إلى قائمة الموكلين
         </button>
       </div>
@@ -306,7 +317,9 @@ function ViewClient() {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">رقم البطاقة الوطنية:</span>
-                  <span className="detail-value">{client.nationalId || "-"}</span>
+                  <span className="detail-value">
+                    {client.nationalId || "-"}
+                  </span>
                 </div>
               </>
             ) : (
@@ -349,7 +362,9 @@ function ViewClient() {
 
             <div className="detail-item">
               <span className="detail-label">تاريخ التسجيل:</span>
-              <span className="detail-value">{formatDate(client.createdAt)}</span>
+              <span className="detail-value">
+                {formatDate(client.createdAt)}
+              </span>
             </div>
           </div>
 
@@ -391,7 +406,9 @@ function ViewClient() {
         <div className="stat-card">
           <div className="stat-icon">📊</div>
           <div className="stat-content">
-            <div className="stat-value">{formatCurrency(totalPaymentsAmount)}</div>
+            <div className="stat-value">
+              {formatCurrency(totalPaymentsAmount)}
+            </div>
             <div className="stat-label">إجمالي المبالغ المدفوعة</div>
           </div>
         </div>
