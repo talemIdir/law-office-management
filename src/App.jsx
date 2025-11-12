@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import ClientsPage from "./pages/Clients";
 import ViewClient from "./pages/ViewClient";
 import CasesPage from "./pages/Cases";
+import ViewCase from "./pages/ViewCase";
 import CourtSessionsPage from "./pages/CourtSessions";
 import DocumentsPage from "./pages/Documents";
 import InvoicesPage from "./pages/Invoices";
@@ -104,6 +105,10 @@ const router = createHashRouter([
       {
         path: "cases",
         element: <CasesPage />,
+      },
+      {
+        path: "cases/:id",
+        element: <ViewCase />,
       },
       {
         path: "court-sessions",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { caseAPI, clientAPI, paymentAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -326,6 +327,7 @@ function CaseModal({ caseData, onClose, onSave }) {
 }
 
 function CasesPage() {
+  const navigate = useNavigate();
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -554,6 +556,13 @@ function CasesPage() {
         header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-info"
+              onClick={() => navigate(`/cases/${row.original.id}`)}
+              title="عرض التفاصيل"
+            >
+              👁️ عرض
+            </button>
             <button
               className="btn btn-sm btn-success"
               onClick={() => handleAddPayment(row.original)}
