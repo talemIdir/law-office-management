@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from "electron";
+import started from "electron-squirrel-startup";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -21,6 +22,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let mainWindow;
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) {
+  app.quit();
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
