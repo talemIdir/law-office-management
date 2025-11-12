@@ -1,6 +1,5 @@
 import { Op } from "sequelize";
 import Payment from "../models/Payment.js";
-import Invoice from "../models/Invoice.js";
 
 /**
  * Payment Service
@@ -33,38 +32,11 @@ class PaymentService {
         throw new Error("Case not found");
       }
 
-      // If invoice is provided, verify it exists and belongs to the case
-      if (paymentData.invoiceId) {
-        const invoice = await Invoice.findByPk(paymentData.invoiceId);
-        if (!invoice) {
-          throw new Error("Invoice not found");
-        }
-
-        // Verify invoice belongs to the same case
-        if (invoice.caseId && invoice.caseId !== paymentData.caseId) {
-          throw new Error("Invoice does not belong to this case");
-        }
-
-        // Validate payment amount doesn't exceed remaining balance
-        const remainingBalance = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount);
-        const paymentAmount = parseFloat(paymentData.amount);
-
-        if (paymentAmount > remainingBalance) {
-          throw new Error(`Payment amount (${paymentAmount}) exceeds remaining invoice balance (${remainingBalance})`);
-        }
-      }
-
       if (parseFloat(paymentData.amount) <= 0) {
         throw new Error("Payment amount must be greater than 0");
       }
 
       const payment = await Payment.create(paymentData);
-
-      // Update invoice status after payment (if invoice is associated)
-      if (paymentData.invoiceId) {
-        const InvoiceService = (await import("./invoiceService.js")).default;
-        await InvoiceService.updateInvoiceStatus(paymentData.invoiceId);
-      }
 
       return {
         success: true,
@@ -93,10 +65,6 @@ class PaymentService {
       // Apply filters
       if (filters.caseId) {
         where.caseId = filters.caseId;
-      }
-
-      if (filters.invoiceId) {
-        where.invoiceId = filters.invoiceId;
       }
 
       if (filters.paymentMethod) {
@@ -135,11 +103,6 @@ class PaymentService {
             include: [
               { model: (await import("../models/Client.js")).default, as: "client" },
             ],
-          },
-          {
-            model: Invoice,
-            as: "invoice",
-            required: false, // Make invoice optional
           },
         ],
         order: [["paymentDate", "DESC"]],
@@ -180,11 +143,6 @@ class PaymentService {
               { model: (await import("../models/Client.js")).default, as: "client" },
             ],
           },
-          {
-            model: Invoice,
-            as: "invoice",
-            required: false, // Make invoice optional
-          },
         ],
       });
 
@@ -220,36 +178,12 @@ class PaymentService {
 
       const payment = await Payment.findByPk(id, {
         include: [
-          { model: Invoice, as: "invoice", required: false },
           { model: (await import("../models/Case.js")).default, as: "case" },
         ],
       });
 
       if (!payment) {
         throw new Error("Payment not found");
-      }
-
-      // If amount is being updated and payment has an invoice, validate it
-      if (updateData.amount && payment.invoiceId) {
-        const invoice = payment.invoice;
-        const otherPayments = await Payment.findAll({
-          where: {
-            invoiceId: invoice.id,
-            id: { [Op.ne]: id },
-          },
-        });
-
-        const otherPaymentsTotal = otherPayments.reduce(
-          (sum, p) => sum + parseFloat(p.amount || 0),
-          0
-        );
-
-        const newTotal = otherPaymentsTotal + parseFloat(updateData.amount);
-        const invoiceTotal = parseFloat(invoice.totalAmount);
-
-        if (newTotal > invoiceTotal) {
-          throw new Error(`Total payments (${newTotal}) would exceed invoice amount (${invoiceTotal})`);
-        }
       }
 
       // Verify case still exists if being updated
@@ -262,12 +196,6 @@ class PaymentService {
       }
 
       await payment.update(updateData);
-
-      // Update invoice status after payment update (if invoice is associated)
-      if (payment.invoiceId) {
-        const InvoiceService = (await import("./invoiceService.js")).default;
-        await InvoiceService.updateInvoiceStatus(payment.invoiceId);
-      }
 
       return {
         success: true,
@@ -300,15 +228,7 @@ class PaymentService {
         throw new Error("Payment not found");
       }
 
-      const invoiceId = payment.invoiceId;
-
       await payment.destroy();
-
-      // Update invoice status after payment deletion (if invoice is associated)
-      if (invoiceId) {
-        const InvoiceService = (await import("./invoiceService.js")).default;
-        await InvoiceService.updateInvoiceStatus(invoiceId);
-      }
 
       return {
         success: true,
@@ -320,40 +240,6 @@ class PaymentService {
         success: false,
         error: error.message,
         message: "Failed to delete payment",
-      };
-    }
-  }
-
-  /**
-   * Get payments by invoice
-   * @param {number} invoiceId - Invoice ID
-   * @returns {Promise<Object>} Invoice payments
-   */
-  async getPaymentsByInvoice(invoiceId) {
-    try {
-      if (!invoiceId) {
-        throw new Error("Invoice ID is required");
-      }
-
-      const payments = await Payment.findAll({
-        where: { invoiceId },
-        order: [["paymentDate", "DESC"]],
-      });
-
-      const total = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-      return {
-        success: true,
-        data: payments,
-        count: payments.length,
-        total,
-      };
-    } catch (error) {
-      console.error("Error fetching payments by invoice:", error);
-      return {
-        success: false,
-        error: error.message,
-        message: "Failed to fetch payments by invoice",
       };
     }
   }
@@ -371,13 +257,6 @@ class PaymentService {
 
       const payments = await Payment.findAll({
         where: { caseId },
-        include: [
-          {
-            model: Invoice,
-            as: "invoice",
-            required: false,
-          },
-        ],
         order: [["paymentDate", "DESC"]],
       });
 
@@ -472,11 +351,6 @@ class PaymentService {
             include: [
               { model: (await import("../models/Client.js")).default, as: "client" },
             ],
-          },
-          {
-            model: Invoice,
-            as: "invoice",
-            required: false,
           },
         ],
         order: [["paymentDate", "DESC"]],

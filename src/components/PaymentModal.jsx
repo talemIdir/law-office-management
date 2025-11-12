@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { invoiceAPI } from "../utils/api";
+import React, { useState } from "react";
 
-function PaymentModal({ caseId, invoiceId, onClose, onSave }) {
-  const [invoices, setInvoices] = useState([]);
+function PaymentModal({ caseId, onClose, onSave }) {
   const [formData, setFormData] = useState({
     paymentDate: new Date().toISOString().split("T")[0],
     amount: "",
@@ -10,32 +8,11 @@ function PaymentModal({ caseId, invoiceId, onClose, onSave }) {
     reference: "",
     notes: "",
     caseId: caseId,
-    invoiceId: invoiceId || "",
   });
-
-  useEffect(() => {
-    if (caseId) {
-      loadCaseInvoices();
-    }
-  }, [caseId]);
-
-  const loadCaseInvoices = async () => {
-    // Load invoices for this case so user can optionally link payment to an invoice
-    const result = await invoiceAPI.getAll();
-    if (result.success) {
-      const caseInvoices = result.data.filter((inv) => inv.caseId === caseId);
-      setInvoices(caseInvoices);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Convert empty string to null for optional invoiceId
-    const dataToSave = {
-      ...formData,
-      invoiceId: formData.invoiceId || null,
-    };
-    onSave(dataToSave);
+    onSave(formData);
   };
 
   const handleChange = (e) => {
@@ -100,25 +77,6 @@ function PaymentModal({ caseId, invoiceId, onClose, onSave }) {
                 <option value="other">أخرى</option>
               </select>
             </div>
-
-            {invoices.length > 0 && (
-              <div className="form-group">
-                <label className="form-label">ربط بفاتورة (اختياري)</label>
-                <select
-                  name="invoiceId"
-                  className="form-select"
-                  value={formData.invoiceId}
-                  onChange={handleChange}
-                >
-                  <option value="">بدون فاتورة</option>
-                  {invoices.map((inv) => (
-                    <option key={inv.id} value={inv.id}>
-                      {inv.invoiceNumber} - {inv.totalAmount.toLocaleString()} دج
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <div className="form-group">
               <label className="form-label">المرجع / رقم الشيك</label>

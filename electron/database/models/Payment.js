@@ -45,11 +45,6 @@ const Payment = sequelize.define(
       allowNull: false,
       comment: "معرف القضية - Case ID",
     },
-    invoiceId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      comment: "معرف الفاتورة - Invoice ID (optional)",
-    },
   },
   {
     timestamps: true,

@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { invoiceAPI, paymentAPI, clientAPI, caseAPI } from "../utils/api";
+import { invoiceAPI, clientAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
-import PaymentModal from "../components/PaymentModal";
 
 function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -239,10 +238,7 @@ function InvoicesPage() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] =
-    useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const confirm = useConfirm();
@@ -289,29 +285,6 @@ function InvoicesPage() {
     }
   };
 
-  const handleSavePayment = async (formData) => {
-    try {
-      // Validate that if payment is from an invoice, that invoice has a caseId
-      if (!formData.caseId) {
-        showError("لا يمكن إضافة دفعة لفاتورة بدون قضية مرتبطة");
-        return;
-      }
-
-      const result = await paymentAPI.create(formData);
-
-      if (result.success) {
-        setShowPaymentModal(false);
-        setSelectedInvoiceForPayment(null);
-        loadData();
-        showSuccess("تم تسجيل الدفعة بنجاح");
-      } else {
-        showError("خطأ: " + result.error);
-      }
-    } catch (error) {
-      showError("حدث خطأ أثناء حفظ البيانات");
-    }
-  };
-
   const handleDelete = async (id) => {
     const confirmed = await confirm({
       title: "تأكيد الحذف",
@@ -339,11 +312,6 @@ function InvoicesPage() {
   const handleAdd = () => {
     setSelectedInvoice(null);
     setShowInvoiceModal(true);
-  };
-
-  const handleAddPayment = (invoice) => {
-    setSelectedInvoiceForPayment(invoice);
-    setShowPaymentModal(true);
   };
 
   const getClientName = (clientId) => {
@@ -450,17 +418,6 @@ function InvoicesPage() {
         header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
-            {row.original.status !== "paid" &&
-              row.original.status !== "cancelled" && (
-                <button
-                  className="btn btn-sm btn-success"
-                  onClick={() => handleAddPayment(row.original)}
-                  disabled={!row.original.caseId}
-                  title={!row.original.caseId ? "يجب ربط الفاتورة بقضية أولاً" : ""}
-                >
-                  💵 دفعة
-                </button>
-              )}
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
@@ -549,18 +506,6 @@ function InvoicesPage() {
             setSelectedInvoice(null);
           }}
           onSave={handleSaveInvoice}
-        />
-      )}
-
-      {showPaymentModal && selectedInvoiceForPayment && (
-        <PaymentModal
-          caseId={selectedInvoiceForPayment.caseId}
-          invoiceId={selectedInvoiceForPayment.id}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedInvoiceForPayment(null);
-          }}
-          onSave={handleSavePayment}
         />
       )}
     </div>

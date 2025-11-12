@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import path from "path";
-import { app } from "electron";
+//import { app } from "electron";
 import fs from "fs";
 
 /**
@@ -14,7 +14,11 @@ function getCustomDataPath() {
 
   try {
     const appDataPath = app.getPath("appData");
-    const configPath = path.join(appDataPath, "law-office-management", "data-path.txt");
+    const configPath = path.join(
+      appDataPath,
+      "law-office-management",
+      "data-path.txt"
+    );
 
     if (fs.existsSync(configPath)) {
       const dataPath = fs.readFileSync(configPath, "utf8").trim();
