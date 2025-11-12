@@ -919,10 +919,6 @@ p {
   text-align: center;
 }
 
-.rbc-today {
-  background-color: rgba(44, 95, 45, 0.1);
-}
-
 .rbc-off-range {
   color: var(--text-light);
 }
