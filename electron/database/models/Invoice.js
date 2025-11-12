@@ -22,45 +22,14 @@ const Invoice = sequelize.define(
       defaultValue: DataTypes.NOW,
       comment: "تاريخ الفاتورة",
     },
-    dueDate: {
-      type: DataTypes.DATEONLY,
-      comment: "تاريخ الاستحقاق",
-    },
     description: {
       type: DataTypes.TEXT,
       comment: "الوصف",
     },
-    amount: {
-      type: DataTypes.DECIMAL(15, 2),
-      allowNull: false,
-      comment: "المبلغ (دج)",
-    },
-    taxAmount: {
-      type: DataTypes.DECIMAL(15, 2),
+    taxPercentage: {
+      type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0,
-      comment: "مبلغ الضريبة",
-    },
-    totalAmount: {
-      type: DataTypes.DECIMAL(15, 2),
-      allowNull: false,
-      comment: "المبلغ الإجمالي",
-    },
-    paidAmount: {
-      type: DataTypes.DECIMAL(15, 2),
-      defaultValue: 0,
-      comment: "المبلغ المدفوع",
-    },
-    status: {
-      type: DataTypes.ENUM(
-        "draft",
-        "sent",
-        "paid",
-        "partially_paid",
-        "overdue",
-        "cancelled",
-      ),
-      defaultValue: "draft",
-      comment: "حالة الفاتورة",
+      comment: "نسبة الضريبة (%)",
     },
     notes: {
       type: DataTypes.TEXT,

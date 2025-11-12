@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { invoiceAPI, clientAPI, caseAPI } from "../utils/api";
+import { invoiceAPI, clientAPI, caseAPI, paymentAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import { generateInvoicePDF } from "../utils/pdfGenerator.jsx";
 
 function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -10,12 +11,8 @@ function InvoiceModal({ invoice, onClose, onSave }) {
   const [formData, setFormData] = useState({
     invoiceNumber: "",
     invoiceDate: new Date().toISOString().split("T")[0],
-    dueDate: "",
     description: "",
-    amount: "",
-    taxAmount: "0",
-    totalAmount: "",
-    status: "draft",
+    taxPercentage: "0",
     notes: "",
     clientId: "",
     caseId: "",
@@ -25,15 +22,6 @@ function InvoiceModal({ invoice, onClose, onSave }) {
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    const amount = parseFloat(formData.amount) || 0;
-    const taxAmount = parseFloat(formData.taxAmount) || 0;
-    setFormData((prev) => ({
-      ...prev,
-      totalAmount: (amount + taxAmount).toFixed(2),
-    }));
-  }, [formData.amount, formData.taxAmount]);
 
   const loadData = async () => {
     const [clientsResult, casesResult] = await Promise.all([
@@ -116,28 +104,16 @@ function InvoiceModal({ invoice, onClose, onSave }) {
               </select>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label required">تاريخ الفاتورة</label>
-                <input
-                  type="date"
-                  name="invoiceDate"
-                  className="form-control"
-                  value={formData.invoiceDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">تاريخ الاستحقاق</label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  className="form-control"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label required">تاريخ الفاتورة</label>
+              <input
+                type="date"
+                name="invoiceDate"
+                className="form-control"
+                value={formData.invoiceDate}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="form-group">
@@ -151,61 +127,18 @@ function InvoiceModal({ invoice, onClose, onSave }) {
               ></textarea>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label required">المبلغ (دج)</label>
-                <input
-                  type="number"
-                  name="amount"
-                  className="form-control"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">الضريبة (دج)</label>
-                <input
-                  type="number"
-                  name="taxAmount"
-                  className="form-control"
-                  value={formData.taxAmount}
-                  onChange={handleChange}
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-
             <div className="form-group">
-              <label className="form-label">المبلغ الإجمالي (دج)</label>
+              <label className="form-label">نسبة الضريبة (%)</label>
               <input
                 type="number"
-                name="totalAmount"
+                name="taxPercentage"
                 className="form-control"
-                value={formData.totalAmount}
-                readOnly
-                style={{ background: "#f5f5f5" }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">الحالة</label>
-              <select
-                name="status"
-                className="form-select"
-                value={formData.status}
+                value={formData.taxPercentage}
                 onChange={handleChange}
-              >
-                <option value="draft">مسودة</option>
-                <option value="sent">مرسلة</option>
-                <option value="paid">مدفوعة</option>
-                <option value="partially_paid">مدفوعة جزئياً</option>
-                <option value="overdue">متأخرة</option>
-                <option value="cancelled">ملغاة</option>
-              </select>
+                step="0.01"
+                min="0"
+                max="100"
+              />
             </div>
 
             <div className="form-group">
@@ -236,6 +169,7 @@ function InvoiceModal({ invoice, onClose, onSave }) {
 function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [clients, setClients] = useState([]);
+  const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -249,13 +183,15 @@ function InvoicesPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [invoicesResult, clientsResult] = await Promise.all([
+    const [invoicesResult, clientsResult, casesResult] = await Promise.all([
       invoiceAPI.getAll(),
       clientAPI.getAll(),
+      caseAPI.getAll(),
     ]);
 
     if (invoicesResult.success) setInvoices(invoicesResult.data);
     if (clientsResult.success) setClients(clientsResult.data);
+    if (casesResult.success) setCases(casesResult.data);
     setLoading(false);
   };
 
@@ -314,6 +250,45 @@ function InvoicesPage() {
     setShowInvoiceModal(true);
   };
 
+  const handleExportPDF = async (invoice) => {
+    try {
+      const client = clients.find((c) => c.id === invoice.clientId);
+      const caseData = invoice.caseId
+        ? cases.find((c) => c.id === invoice.caseId)
+        : null;
+
+      // Fetch payments for the case
+      let payments = [];
+      if (invoice.caseId) {
+        const paymentsResult = await paymentAPI.getAll({
+          where: { caseId: parseInt(invoice.caseId) },
+        });
+        if (paymentsResult.success) {
+          payments = paymentsResult.data;
+        }
+      }
+
+      await generateInvoicePDF(invoice, client, caseData, payments);
+      showSuccess("تم تصدير الفاتورة إلى PDF بنجاح");
+    } catch (error) {
+      showError("حدث خطأ أثناء تصدير الفاتورة");
+      console.error("PDF generation error:", error);
+    }
+  };
+
+  const getCaseAmount = (caseId) => {
+    const caseData = cases.find((c) => c.id === caseId);
+    return caseData ? parseFloat(caseData.amount || 0) : 0;
+  };
+
+  const calculateTaxAmount = (amount, taxPercentage) => {
+    return (amount * parseFloat(taxPercentage || 0)) / 100;
+  };
+
+  const calculateTotalAmount = (amount, taxPercentage) => {
+    return amount + calculateTaxAmount(amount, taxPercentage);
+  };
+
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
     if (!client) return "-";
@@ -364,60 +339,52 @@ function InvoicesPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "totalAmount",
-        header: "المبلغ الإجمالي",
-        cell: ({ row }) => formatCurrency(row.original.totalAmount),
-        enableSorting: true,
-      },
-      {
-        accessorKey: "paidAmount",
-        header: "المبلغ المدفوع",
-        cell: ({ row }) => formatCurrency(row.original.paidAmount || 0),
-        enableSorting: true,
-      },
-      {
-        id: "remaining",
-        header: "المتبقي",
+        id: "caseNumber",
+        header: "رقم القضية",
         cell: ({ row }) => {
-          const remaining =
-            parseFloat(row.original.totalAmount) -
-            parseFloat(row.original.paidAmount || 0);
-          return formatCurrency(remaining);
+          if (!row.original.caseId) return "-";
+          const caseData = cases.find((c) => c.id === row.original.caseId);
+          return caseData ? caseData.caseNumber : "-";
         },
         enableSorting: false,
       },
       {
-        accessorKey: "status",
-        header: "الحالة",
-        cell: ({ row }) => (
-          <span
-            className={`badge ${
-              row.original.status === "paid"
-                ? "badge-success"
-                : row.original.status === "overdue"
-                  ? "badge-danger"
-                  : row.original.status === "partially_paid"
-                    ? "badge-warning"
-                    : row.original.status === "sent"
-                      ? "badge-info"
-                      : "badge-secondary"
-            }`}
-          >
-            {row.original.status === "draft" && "مسودة"}
-            {row.original.status === "sent" && "مرسلة"}
-            {row.original.status === "paid" && "مدفوعة"}
-            {row.original.status === "partially_paid" && "مدفوعة جزئياً"}
-            {row.original.status === "overdue" && "متأخرة"}
-            {row.original.status === "cancelled" && "ملغاة"}
-          </span>
-        ),
+        id: "amount",
+        header: "المبلغ الأساسي",
+        cell: ({ row }) => {
+          const amount = getCaseAmount(row.original.caseId);
+          return formatCurrency(amount);
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: "taxPercentage",
+        header: "الضريبة",
+        cell: ({ row }) => `${row.original.taxPercentage || 0}%`,
         enableSorting: true,
+      },
+      {
+        id: "totalAmount",
+        header: "المبلغ الإجمالي",
+        cell: ({ row }) => {
+          const amount = getCaseAmount(row.original.caseId);
+          const total = calculateTotalAmount(amount, row.original.taxPercentage);
+          return formatCurrency(total);
+        },
+        enableSorting: false,
       },
       {
         id: "actions",
         header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-success"
+              onClick={() => handleExportPDF(row.original)}
+              title="تصدير إلى PDF"
+            >
+              📄 PDF
+            </button>
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
