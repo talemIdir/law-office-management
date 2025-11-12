@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { caseAPI, clientAPI } from "../utils/api";
+import { caseAPI, clientAPI, paymentAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import PaymentModal from "../components/PaymentModal";
 import { getStatusLabel, getCaseTypeLabel } from "../utils/labels";
 
 function CaseModal({ caseData, onClose, onSave }) {
@@ -333,6 +334,8 @@ function CasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedCaseForPayment, setSelectedCaseForPayment] = useState(null);
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -404,6 +407,26 @@ function CasesPage() {
   const handleAdd = () => {
     setSelectedCase(null);
     setShowModal(true);
+  };
+
+  const handleAddPayment = (caseData) => {
+    setSelectedCaseForPayment(caseData);
+    setShowPaymentModal(true);
+  };
+
+  const handleSavePayment = async (paymentData) => {
+    try {
+      const result = await paymentAPI.create(paymentData);
+      if (result.success) {
+        setShowPaymentModal(false);
+        setSelectedCaseForPayment(null);
+        showSuccess("تم إضافة الدفعة بنجاح");
+      } else {
+        showError("خطأ: " + result.error);
+      }
+    } catch (error) {
+      showError("حدث خطأ أثناء إضافة الدفعة");
+    }
   };
 
   const getClientName = (clientId) => {
@@ -532,6 +555,13 @@ function CasesPage() {
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
+              className="btn btn-sm btn-success"
+              onClick={() => handleAddPayment(row.original)}
+              title="إضافة دفعة"
+            >
+              💰 دفعة
+            </button>
+            <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
             >
@@ -635,6 +665,17 @@ function CasesPage() {
             setSelectedCase(null);
           }}
           onSave={handleSave}
+        />
+      )}
+
+      {showPaymentModal && (
+        <PaymentModal
+          caseId={selectedCaseForPayment?.id}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedCaseForPayment(null);
+          }}
+          onSave={handleSavePayment}
         />
       )}
     </div>

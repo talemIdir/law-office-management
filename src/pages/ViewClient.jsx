@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { clientAPI, caseAPI, paymentAPI } from "../utils/api";
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
+import { getStatusLabel, getCaseTypeLabel, getPaymentMethodLabel } from "../utils/labels";
 
 function ViewClient() {
   const { id } = useParams();
@@ -100,45 +101,7 @@ function ViewClient() {
     }
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      active: "نشط",
-      inactive: "غير نشط",
-      archived: "مؤرشف",
-      open: "مفتوحة",
-      in_progress: "قيد المعالجة",
-      won: "مكسوبة",
-      lost: "مخسورة",
-      settled: "مسوّاة",
-      closed: "مغلقة",
-      appealed: "مستأنفة",
-    };
-    return labels[status] || status;
-  };
 
-  const getCaseTypeLabel = (type) => {
-    const types = {
-      civil: "مدنية",
-      criminal: "جنائية",
-      commercial: "تجارية",
-      administrative: "إدارية",
-      family: "أسرية",
-      labor: "عمالية",
-      other: "أخرى",
-    };
-    return types[type] || type;
-  };
-
-  const getPaymentMethodLabel = (method) => {
-    const methods = {
-      cash: "نقدي",
-      check: "شيك",
-      bank_transfer: "تحويل بنكي",
-      credit_card: "بطاقة ائتمان",
-      other: "أخرى",
-    };
-    return methods[method] || method;
-  };
 
   const casesColumns = useMemo(
     () => [

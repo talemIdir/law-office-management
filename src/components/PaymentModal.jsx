@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getPaymentMethodLabel } from "../utils/labels";
 
 function PaymentModal({ caseId, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -70,11 +71,11 @@ function PaymentModal({ caseId, onClose, onSave }) {
                 onChange={handleChange}
                 required
               >
-                <option value="cash">نقداً</option>
-                <option value="check">شيك</option>
-                <option value="bank_transfer">تحويل بنكي</option>
-                <option value="credit_card">بطاقة ائتمان</option>
-                <option value="other">أخرى</option>
+                <option value="cash">{getPaymentMethodLabel("cash")}</option>
+                <option value="check">{getPaymentMethodLabel("check")}</option>
+                <option value="bank_transfer">{getPaymentMethodLabel("bank_transfer")}</option>
+                <option value="credit_card">{getPaymentMethodLabel("credit_card")}</option>
+                <option value="other">{getPaymentMethodLabel("other")}</option>
               </select>
             </div>
 

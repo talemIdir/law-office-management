@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { getFinancialReport, caseAPI, clientAPI } from "../utils/api";
 import { showError, showWarning } from "../utils/toast";
 import DataTable from "../components/DataTable";
+import { getCaseTypeLabel, getPaymentMethodLabel, getStatusLabel } from "../utils/labels";
 
 function ReportsPage() {
   const [reportType, setReportType] = useState("financial");
@@ -128,40 +129,6 @@ function ReportsPage() {
     return new Date(date).toLocaleDateString("ar-DZ");
   };
 
-  const translateCaseType = (type) => {
-    const types = {
-      civil: "مدني",
-      criminal: "جنائي",
-      commercial: "تجاري",
-      administrative: "إداري",
-      family: "أسري",
-      labor: "عمالي",
-      other: "أخرى",
-    };
-    return types[type] || type;
-  };
-
-  const translateCaseStatus = (status) => {
-    const statuses = {
-      open: "مفتوحة",
-      in_progress: "قيد المعالجة",
-      won: "كسب",
-      lost: "خسارة",
-      settled: "تسوية",
-      closed: "مغلقة",
-      appealed: "استئناف",
-    };
-    return statuses[status] || status;
-  };
-
-  const translateClientStatus = (status) => {
-    const statuses = {
-      active: "نشط",
-      inactive: "غير نشط",
-      archived: "مؤرشف",
-    };
-    return statuses[status] || status;
-  };
 
   // Column definitions for invoices table
   const invoicesColumns = useMemo(
@@ -207,7 +174,7 @@ function ReportsPage() {
       {
         accessorKey: "type",
         header: "نوع القضية",
-        cell: ({ row }) => translateCaseType(row.original.type),
+        cell: ({ row }) => getCaseTypeLabel(row.original.type),
         enableSorting: true,
       },
       {
@@ -226,7 +193,7 @@ function ReportsPage() {
       {
         accessorKey: "status",
         header: "حالة القضية",
-        cell: ({ row }) => translateCaseStatus(row.original.status),
+        cell: ({ row }) => getStatusLabel(row.original.status),
         enableSorting: true,
       },
       {
@@ -245,7 +212,7 @@ function ReportsPage() {
       {
         accessorKey: "status",
         header: "الحالة",
-        cell: ({ row }) => translateClientStatus(row.original.status),
+        cell: ({ row }) => getStatusLabel(row.original.status),
         enableSorting: true,
       },
       {
