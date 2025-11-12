@@ -4,6 +4,7 @@ import { clientAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import { getStatusLabel, getClientTypeLabel } from "../utils/labels";
 
 function ClientModal({ client, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -354,7 +355,7 @@ function ClientsPage() {
         header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-secondary">
-            {row.original.type === "individual" ? "فرد" : "شركة"}
+            {getClientTypeLabel(row.original.type)}
           </span>
         ),
         enableSorting: true,
@@ -389,9 +390,7 @@ function ClientsPage() {
                   : "badge-secondary"
             }`}
           >
-            {row.original.status === "active" && "نشط"}
-            {row.original.status === "inactive" && "غير نشط"}
-            {row.original.status === "archived" && "مؤرشف"}
+            {getStatusLabel(row.original.status)}
           </span>
         ),
         enableSorting: true,

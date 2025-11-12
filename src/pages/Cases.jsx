@@ -3,6 +3,7 @@ import { caseAPI, clientAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import { getStatusLabel, getCaseTypeLabel } from "../utils/labels";
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -465,13 +466,7 @@ function CasesPage() {
         header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-secondary">
-            {row.original.caseType === "civil" && "مدني"}
-            {row.original.caseType === "criminal" && "جنائي"}
-            {row.original.caseType === "commercial" && "تجاري"}
-            {row.original.caseType === "administrative" && "إداري"}
-            {row.original.caseType === "family" && "أسري"}
-            {row.original.caseType === "labor" && "عمالي"}
-            {row.original.caseType === "other" && "أخرى"}
+            {getCaseTypeLabel(row.original.caseType)}
           </span>
         ),
         enableSorting: true,
@@ -499,13 +494,7 @@ function CasesPage() {
                       : "badge-warning"
             }`}
           >
-            {row.original.status === "open" && "مفتوحة"}
-            {row.original.status === "in_progress" && "قيد المعالجة"}
-            {row.original.status === "won" && "كسب"}
-            {row.original.status === "lost" && "خسارة"}
-            {row.original.status === "settled" && "تسوية"}
-            {row.original.status === "closed" && "مغلقة"}
-            {row.original.status === "appealed" && "استئناف"}
+            {getStatusLabel(row.original.status)}
           </span>
         ),
         enableSorting: true,

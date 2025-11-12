@@ -4,6 +4,7 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import CalendarView from "../components/CalendarView";
+import { getStatusLabel, getAppointmentTypeLabel } from "../utils/labels";
 
 function AppointmentModal({ appointment, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -365,10 +366,7 @@ function AppointmentsPage() {
         header: "النوع",
         cell: ({ row }) => (
           <span className="badge badge-primary">
-            {row.original.appointmentType === "consultation" && "استشارة"}
-            {row.original.appointmentType === "meeting" && "اجتماع"}
-            {row.original.appointmentType === "court_session" && "جلسة محكمة"}
-            {row.original.appointmentType === "other" && "أخرى"}
+            {getAppointmentTypeLabel(row.original.appointmentType)}
           </span>
         ),
         enableSorting: true,
@@ -400,10 +398,7 @@ function AppointmentsPage() {
                     : "badge-info"
             }`}
           >
-            {row.original.status === "scheduled" && "مجدول"}
-            {row.original.status === "completed" && "مكتمل"}
-            {row.original.status === "cancelled" && "ملغى"}
-            {row.original.status === "rescheduled" && "معاد جدولة"}
+            {getStatusLabel(row.original.status)}
           </span>
         ),
         enableSorting: true,

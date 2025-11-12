@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { getAppointmentTypeLabel } from "../utils/labels";
 
 // Import Arabic locale
 require('moment/locale/ar');
@@ -202,7 +203,7 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
                 display: "inline-block",
               }}
             ></span>
-            <span>استشارة</span>
+            <span>{getAppointmentTypeLabel("consultation")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
@@ -214,7 +215,7 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
                 display: "inline-block",
               }}
             ></span>
-            <span>اجتماع</span>
+            <span>{getAppointmentTypeLabel("meeting")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
@@ -226,7 +227,7 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
                 display: "inline-block",
               }}
             ></span>
-            <span>جلسة محكمة</span>
+            <span>{getAppointmentTypeLabel("court_session")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
@@ -238,7 +239,7 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
                 display: "inline-block",
               }}
             ></span>
-            <span>أخرى</span>
+            <span>{getAppointmentTypeLabel("other")}</span>
           </div>
         </div>
       </div>
