@@ -9,8 +9,26 @@ const locales = {
   "ar-DZ": arDZ,
 };
 
+// Custom format function to handle Arabic day names properly
+const customFormat = (date, formatStr, culture) => {
+  // For day names in the month view header, use custom Arabic day names
+  if (formatStr === 'cccc' || formatStr === 'ccc') {
+    const dayNames = [
+      'الأحد',    // Sunday
+      'الاثنين',   // Monday
+      'الثلاثاء',  // Tuesday
+      'الأربعاء',  // Wednesday
+      'الخميس',   // Thursday
+      'الجمعة',   // Friday
+      'السبت'     // Saturday
+    ];
+    return dayNames[getDay(date)];
+  }
+  return format(date, formatStr, { locale: locales[culture] });
+};
+
 const localizer = dateFnsLocalizer({
-  format,
+  format: customFormat,
   parse,
   startOfWeek,
   getDay,
