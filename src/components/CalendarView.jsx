@@ -1,39 +1,68 @@
 import React, { useMemo } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { arDZ } from "date-fns/locale";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-// Configure the localizer with Arabic locale
-const locales = {
-  "ar-DZ": arDZ,
-};
+// Import Arabic locale
+require('moment/locale/ar');
 
-// Custom format function to handle Arabic day names properly
-const customFormat = (date, formatStr, culture) => {
-  // For day names in the month view header, use custom Arabic day names
-  if (formatStr === 'cccc' || formatStr === 'ccc') {
-    const dayNames = [
-      'الأحد',    // Sunday
-      'الاثنين',   // Monday
-      'الثلاثاء',  // Tuesday
-      'الأربعاء',  // Wednesday
-      'الخميس',   // Thursday
-      'الجمعة',   // Friday
-      'السبت'     // Saturday
-    ];
-    return dayNames[getDay(date)];
-  }
-  return format(date, formatStr, { locale: locales[culture] });
-};
+// Set global locale to Arabic
+moment.locale("ar");
 
-const localizer = dateFnsLocalizer({
-  format: customFormat,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
+// Create localizer with Arabic locale
+const localizer = momentLocalizer(moment);
+
+// Arabic day and month names
+const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+// Custom formats for Arabic calendar
+const formats = {
+  dateFormat: 'D',
+  dayFormat: (date) => arabicDays[date.getDay()],
+  weekdayFormat: (date) => arabicDays[date.getDay()],
+  monthHeaderFormat: (date) => `${arabicMonths[date.getMonth()]} ${date.getFullYear()}`,
+  dayHeaderFormat: (date) => `${arabicDays[date.getDay()]}، ${date.getDate()} ${arabicMonths[date.getMonth()]} ${date.getFullYear()}`,
+  dayRangeHeaderFormat: ({ start, end }) =>
+    `${start.getDate()} ${arabicMonths[start.getMonth()]} - ${end.getDate()} ${arabicMonths[end.getMonth()]} ${end.getFullYear()}`,
+  agendaHeaderFormat: ({ start, end }) =>
+    `${start.getDate()} ${arabicMonths[start.getMonth()]} - ${end.getDate()} ${arabicMonths[end.getMonth()]} ${end.getFullYear()}`,
+  agendaDateFormat: (date) => `${arabicDays[date.getDay()]} ${date.getDate()} ${arabicMonths[date.getMonth()]}`,
+  agendaTimeFormat: (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  },
+  agendaTimeRangeFormat: ({ start, end }) => {
+    const formatTime = (date) => {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+    return `${formatTime(start)} - ${formatTime(end)}`;
+  },
+  timeGutterFormat: (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  },
+  eventTimeRangeFormat: ({ start, end }) => {
+    const formatTime = (date) => {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+    return `${formatTime(start)} - ${formatTime(end)}`;
+  },
+  selectRangeFormat: ({ start, end }) => {
+    const formatTime = (date) => {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+    return `${formatTime(start)} - ${formatTime(end)}`;
+  },
+};
 
 // Arabic messages for the calendar
 const messages = {
@@ -57,16 +86,19 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
   const events = useMemo(() => {
     return appointments.map((appointment) => {
       const startDate = new Date(appointment.appointmentDate);
-      const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
+      const endDate = new Date(
+        startDate.getTime() + appointment.duration * 60000
+      );
 
       // Get client name
       let clientName = "";
       if (appointment.clientId && clients) {
         const client = clients.find((c) => c.id === appointment.clientId);
         if (client) {
-          clientName = client.type === "company"
-            ? client.companyName
-            : `${client.firstName} ${client.lastName}`;
+          clientName =
+            client.type === "company"
+              ? client.companyName
+              : `${client.firstName} ${client.lastName}`;
         }
       }
 
@@ -142,23 +174,70 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
 
   return (
     <div className="calendar-container">
-      <div className="calendar-legend" style={{ marginBottom: "1rem", padding: "1rem", background: "#f9f9f9", borderRadius: "6px" }}>
-        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", alignItems: "center" }}>
+      <div
+        className="calendar-legend"
+        style={{
+          marginBottom: "1rem",
+          padding: "1rem",
+          background: "#f9f9f9",
+          borderRadius: "6px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "2rem",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
           <strong>دليل الألوان:</strong>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ width: "20px", height: "20px", background: "#3b82f6", borderRadius: "3px", display: "inline-block" }}></span>
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
+                background: "#3b82f6",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            ></span>
             <span>استشارة</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ width: "20px", height: "20px", background: "#2c5f2d", borderRadius: "3px", display: "inline-block" }}></span>
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
+                background: "#2c5f2d",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            ></span>
             <span>اجتماع</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ width: "20px", height: "20px", background: "#dc2626", borderRadius: "3px", display: "inline-block" }}></span>
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
+                background: "#dc2626",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            ></span>
             <span>جلسة محكمة</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ width: "20px", height: "20px", background: "#9333ea", borderRadius: "3px", display: "inline-block" }}></span>
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
+                background: "#9333ea",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            ></span>
             <span>أخرى</span>
           </div>
         </div>
@@ -170,14 +249,14 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
         endAccessor="end"
         style={{ height: "700px" }}
         messages={messages}
-        culture="ar-DZ"
+        formats={formats}
         rtl={true}
         onSelectEvent={handleSelectEvent}
         onSelectSlot={handleSelectSlot}
         selectable
         eventPropGetter={eventStyleGetter}
         views={["month", "week", "day", "agenda"]}
-        defaultView="month"
+        defaultView="week"
         step={15}
         showMultiDayTimes
         popup
