@@ -21,8 +21,14 @@ import {
   getPriorityLabel,
   getClientRoleLabel,
   getSessionTypeLabel,
+  getExpenseCategoryLabel,
 } from "../utils/labels";
-import { formatDate, formatDateTime, formatCurrency, formatFileSize } from "../utils/formatters";
+import {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+} from "../utils/formatters";
 import { generateCasePDF } from "../utils/pdfGenerator.jsx";
 import { showSuccess } from "../utils/toast";
 
@@ -51,11 +57,11 @@ function ViewCase() {
       const caseResult = await caseAPI.getById(id);
       if (caseResult.success) {
         setCaseData(caseResult.data.dataValues || caseResult.data);
-
         // Load client data
-        const clientId = caseResult.data.clientId;
+        const clientId = caseResult.data.dataValues.clientId;
         if (clientId) {
           const clientResult = await clientAPI.getById(clientId);
+
           if (clientResult.success) {
             setClient(clientResult.data.dataValues || clientResult.data);
           }
@@ -102,7 +108,8 @@ function ViewCase() {
       ]);
 
       if (paymentsResult.success) setPayments(paymentsResult.data);
-      if (courtSessionsResult.success) setCourtSessions(courtSessionsResult.data);
+      if (courtSessionsResult.success)
+        setCourtSessions(courtSessionsResult.data);
       if (appointmentsResult.success) setAppointments(appointmentsResult.data);
       if (documentsResult.success) setDocuments(documentsResult.data);
       if (expensesResult.success) setExpenses(expensesResult.data);
@@ -164,28 +171,13 @@ function ViewCase() {
     }
   };
 
-  const getCourtTypeLabel = (type) => {
-    if (!type) return "-";
-    return type;
-  };
-
-  const getExpenseCategoryLabel = (category) => {
-    const labels = {
-      court_fees: "رسوم المحكمة",
-      transportation: "مواصلات",
-      documentation: "توثيق",
-      office_supplies: "مستلزمات مكتبية",
-      utilities: "مرافق",
-      salaries: "رواتب",
-      other: "أخرى",
-    };
-    return labels[category] || category;
-  };
-
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
-      generateCasePDF(caseData, client, courtSessions, payments);
-      showSuccess("تم تصدير ملف PDF بنجاح");
+      console.log(client);
+      await generateCasePDF(caseData, client, courtSessions, payments).then(
+        console.log(1)
+      );
+      console.log("here");
     } catch (error) {
       showError("حدث خطأ أثناء تصدير ملف PDF");
       console.error("PDF generation error:", error);
@@ -323,7 +315,8 @@ function ViewCase() {
       {
         accessorKey: "duration",
         header: "المدة",
-        cell: ({ row }) => (row.original.duration ? `${row.original.duration} دقيقة` : "-"),
+        cell: ({ row }) =>
+          row.original.duration ? `${row.original.duration} دقيقة` : "-",
         enableSorting: true,
       },
       {
@@ -538,7 +531,9 @@ function ViewCase() {
             <span className={`badge ${getStatusBadgeClass(caseData.status)}`}>
               {getStatusLabel(caseData.status)}
             </span>
-            <span className={`badge ${getPriorityBadgeClass(caseData.priority)}`}>
+            <span
+              className={`badge ${getPriorityBadgeClass(caseData.priority)}`}
+            >
               {getPriorityLabel(caseData.priority)}
             </span>
           </div>
@@ -589,9 +584,7 @@ function ViewCase() {
 
             <div className="detail-item">
               <span className="detail-label">نوع المحكمة:</span>
-              <span className="detail-value">
-                {getCourtTypeLabel(caseData.courtType)}
-              </span>
+              <span className="detail-value">{caseData.courtType || "-"}</span>
             </div>
 
             <div className="detail-item">
@@ -771,33 +764,48 @@ function ViewCase() {
                 <div className="details-grid">
                   <div className="detail-item">
                     <span className="detail-label">إجمالي المدفوعات:</span>
-                    <span className="detail-value" style={{ color: "#10b981", fontWeight: "bold" }}>
+                    <span
+                      className="detail-value"
+                      style={{ color: "#10b981", fontWeight: "bold" }}
+                    >
                       {formatCurrency(totalPayments)}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">إجمالي المصروفات:</span>
-                    <span className="detail-value" style={{ color: "#ef4444", fontWeight: "bold" }}>
+                    <span
+                      className="detail-value"
+                      style={{ color: "#ef4444", fontWeight: "bold" }}
+                    >
                       {formatCurrency(totalExpenses)}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">إجمالي الفواتير:</span>
-                    <span className="detail-value" style={{ color: "#3b82f6", fontWeight: "bold" }}>
+                    <span
+                      className="detail-value"
+                      style={{ color: "#3b82f6", fontWeight: "bold" }}
+                    >
                       {formatCurrency(totalInvoices)}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">عدد الجلسات:</span>
-                    <span className="detail-value">{courtSessions.length} جلسة</span>
+                    <span className="detail-value">
+                      {courtSessions.length} جلسة
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">عدد المواعيد:</span>
-                    <span className="detail-value">{appointments.length} موعد</span>
+                    <span className="detail-value">
+                      {appointments.length} موعد
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">عدد المستندات:</span>
-                    <span className="detail-value">{documents.length} مستند</span>
+                    <span className="detail-value">
+                      {documents.length} مستند
+                    </span>
                   </div>
                 </div>
 
@@ -816,16 +824,37 @@ function ViewCase() {
                             border: "1px solid #e5e7eb",
                           }}
                         >
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                            <strong>{formatDateTime(session.sessionDate)}</strong>
-                            <span className={`badge ${getStatusBadgeClass(session.status)}`}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <strong>
+                              {formatDateTime(session.sessionDate)}
+                            </strong>
+                            <span
+                              className={`badge ${getStatusBadgeClass(session.status)}`}
+                            >
                               {getStatusLabel(session.status)}
                             </span>
                           </div>
                           <div style={{ fontSize: "14px", color: "#666" }}>
-                            <div><strong>النوع:</strong> {getSessionTypeLabel(session.sessionType)}</div>
-                            {session.court && <div><strong>المحكمة:</strong> {session.court}</div>}
-                            {session.outcome && <div><strong>النتيجة:</strong> {session.outcome}</div>}
+                            <div>
+                              <strong>النوع:</strong>{" "}
+                              {getSessionTypeLabel(session.sessionType)}
+                            </div>
+                            {session.court && (
+                              <div>
+                                <strong>المحكمة:</strong> {session.court}
+                              </div>
+                            )}
+                            {session.outcome && (
+                              <div>
+                                <strong>النتيجة:</strong> {session.outcome}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

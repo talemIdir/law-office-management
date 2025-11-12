@@ -100,3 +100,16 @@ export const getSessionTypeLabel = (type) => {
   };
   return labels[type] || type;
 };
+
+export const getExpenseCategoryLabel = (category) => {
+  const labels = {
+    court_fees: "رسوم المحكمة",
+    transportation: "مواصلات",
+    documentation: "توثيق",
+    office_supplies: "مستلزمات مكتبية",
+    utilities: "مرافق",
+    salaries: "رواتب",
+    other: "أخرى",
+  };
+  return labels[category] || category;
+};
