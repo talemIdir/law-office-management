@@ -491,17 +491,43 @@ export const generateCasePDF = async (
       />
     ).toBlob();
 
+    const fileName = `قضية_${caseData.caseNumber}_${
+      new Date().toISOString().split("T")[0]
+    }.pdf`;
+
     // Create download link
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `قضية_${caseData.caseNumber}_${
-      new Date().toISOString().split("T")[0]
-    }.pdf`;
-    link.click();
+    link.download = fileName;
 
-    // Clean up
-    URL.revokeObjectURL(url);
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Use window focus event to detect when save dialog is closed
+    const handleFocus = () => {
+      window.removeEventListener('focus', handleFocus);
+
+      // Ask user if they want to open the file after save dialog closes
+      const shouldOpen = window.confirm(
+        "تم حفظ الملف بنجاح. هل تريد فتح الملف؟"
+      );
+
+      if (shouldOpen) {
+        // Open PDF in new tab
+        window.open(url, "_blank");
+      }
+
+      // Clean up the blob URL
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+    };
+
+    // Listen for when window regains focus (after save dialog closes)
+    window.addEventListener('focus', handleFocus);
   } catch (error) {
     console.error("Error generating PDF:", error);
     throw error;
