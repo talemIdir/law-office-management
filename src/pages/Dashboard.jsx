@@ -134,7 +134,7 @@ function Dashboard() {
         enableSorting: true,
       },
     ],
-    [],
+    []
   );
 
   // Column definitions for appointments table
@@ -195,7 +195,7 @@ function Dashboard() {
         enableSorting: true,
       },
     ],
-    [],
+    []
   );
 
   if (loading) {
@@ -224,7 +224,7 @@ function Dashboard() {
       {stats && (
         <>
           {/* Statistics Cards */}
-          <div className="stats-grid">
+          <div className="dashboard-stats-grid">
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-title">إجمالي الموكلين</span>
@@ -258,35 +258,22 @@ function Dashboard() {
 
             <div className="stat-card danger">
               <div className="stat-card-header">
-                <span className="stat-card-title">فواتير غير مدفوعة</span>
-                <span className="stat-card-icon">💰</span>
+                <span className="stat-card-title">إجمالي الفواتير</span>
+                <span className="stat-card-icon">🧾</span>
               </div>
-              <div className="stat-card-value">{stats.unpaidInvoices}</div>
-              <div className="stat-card-description">
-                من إجمالي {stats.totalInvoices} فاتورة
-              </div>
+              <div className="stat-card-value">{stats.totalInvoices}</div>
+              <div className="stat-card-description">فاتورة مسجلة</div>
             </div>
 
             <div className="stat-card success">
               <div className="stat-card-header">
-                <span className="stat-card-title">الإيرادات المحصلة</span>
+                <span className="stat-card-title">إجمالي المدفوعات</span>
                 <span className="stat-card-icon">💵</span>
               </div>
               <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
                 {formatCurrency(stats.totalRevenue)}
               </div>
-              <div className="stat-card-description">هذا الشهر</div>
-            </div>
-
-            <div className="stat-card warning">
-              <div className="stat-card-header">
-                <span className="stat-card-title">مستحقات معلقة</span>
-                <span className="stat-card-icon">⏳</span>
-              </div>
-              <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
-                {formatCurrency(stats.pendingRevenue)}
-              </div>
-              <div className="stat-card-description">في انتظار الدفع</div>
+              <div className="stat-card-description">مجموع المبالغ المحصلة</div>
             </div>
           </div>
 
