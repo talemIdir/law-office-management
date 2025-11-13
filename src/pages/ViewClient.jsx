@@ -3,7 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { clientAPI, caseAPI, paymentAPI } from "../utils/api";
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
-import { getStatusLabel, getCaseTypeLabel, getPaymentMethodLabel } from "../utils/labels";
+import {
+  getStatusLabel,
+  getCaseTypeLabel,
+  getPaymentMethodLabel,
+} from "../utils/labels";
 
 function ViewClient() {
   const { id } = useParams();
@@ -23,8 +27,9 @@ function ViewClient() {
     try {
       // Load client data
       const clientResult = await clientAPI.getById(id);
+      console.log(clientResult);
       if (clientResult.success) {
-        setClient(clientResult.data.dataValues);
+        setClient(clientResult.data);
       } else {
         showError("خطأ في تحميل بيانات الموكل");
         navigate("/clients");
@@ -100,8 +105,6 @@ function ViewClient() {
         return "badge-secondary";
     }
   };
-
-
 
   const casesColumns = useMemo(
     () => [

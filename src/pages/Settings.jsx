@@ -86,7 +86,7 @@ function SettingsPage() {
         const existing = existingResult.data?.find((s) => s.key === key);
 
         if (existing) {
-          await settingAPI.update(existing.id, {
+          await settingAPI.update(key, {
             key,
             value,
             category: "office",

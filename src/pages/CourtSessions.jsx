@@ -212,6 +212,7 @@ function CourtSessionsPage() {
   const loadSessions = async () => {
     setLoading(true);
     const result = await courtSessionAPI.getAll();
+    console.log(result);
     if (result.success) {
       setSessions(result.data);
     }
@@ -234,7 +235,7 @@ function CourtSessionsPage() {
         showSuccess(
           selectedSession
             ? "تم تحديث بيانات الجلسة بنجاح"
-            : "تم إضافة الجلسة بنجاح",
+            : "تم إضافة الجلسة بنجاح"
         );
       } else {
         showError("خطأ: " + result.error);
@@ -288,7 +289,8 @@ function CourtSessionsPage() {
       (session.court && session.court.includes(searchTerm)) ||
       (session.courtRoom && session.courtRoom.includes(searchTerm)) ||
       (session.judge && session.judge.includes(searchTerm)) ||
-      (session.caseId && `#${session.caseId}`.includes(searchTerm))
+      (session.case.caseNumber &&
+        `#${session.case.caseNumber}`.includes(searchTerm))
     );
   };
 
@@ -304,7 +306,9 @@ function CourtSessionsPage() {
         accessorKey: "caseId",
         header: "رقم القضية",
         cell: ({ row }) =>
-          row.original.caseId ? `#${row.original.caseId}` : "-",
+          row.original.case.caseNumber
+            ? `${row.original.case.caseNumber}`
+            : "-",
         enableSorting: true,
       },
       {
@@ -373,7 +377,7 @@ function CourtSessionsPage() {
         enableSorting: false,
       },
     ],
-    [],
+    []
   );
 
   if (loading) {
