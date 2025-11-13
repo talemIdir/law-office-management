@@ -1,6 +1,5 @@
 import { Op } from "sequelize";
 import Invoice from "../models/Invoice.js";
-import Payment from "../models/Payment.js";
 import Client from "../models/Client.js";
 import Case from "../models/Case.js";
 
@@ -129,7 +128,6 @@ class InvoiceService {
         include: [
           { model: Client, as: "client" },
           { model: Case, as: "case" },
-          { model: Payment, as: "payments" },
         ],
         order: [["invoiceDate", "DESC"]],
       });
@@ -164,7 +162,6 @@ class InvoiceService {
         include: [
           { model: Client, as: "client" },
           { model: Case, as: "case" },
-          { model: Payment, as: "payments" },
         ],
       });
 
@@ -229,9 +226,6 @@ class InvoiceService {
 
       await invoice.update(updateData);
 
-      // Update status based on payment
-      await this.updateInvoiceStatus(id);
-
       return {
         success: true,
         data: invoice,
@@ -275,65 +269,6 @@ class InvoiceService {
         success: false,
         error: error.message,
         message: "Failed to delete invoice",
-      };
-    }
-  }
-
-  /**
-   * Update invoice status based on payments
-   * @param {number} id - Invoice ID
-   * @returns {Promise<Object>} Result
-   */
-  async updateInvoiceStatus(id) {
-    try {
-      if (!id) {
-        throw new Error("Invoice ID is required");
-      }
-
-      const invoice = await Invoice.findByPk(id, {
-        include: [{ model: Payment, as: "payments" }],
-      });
-
-      if (!invoice) {
-        throw new Error("Invoice not found");
-      }
-
-      const totalPaid =
-        invoice.payments?.reduce(
-          (sum, payment) => sum + parseFloat(payment.amount || 0),
-          0
-        ) || 0;
-
-      const totalAmount = parseFloat(invoice.totalAmount) || 0;
-
-      let status = invoice.status;
-      if (totalPaid >= totalAmount) {
-        status = "paid";
-      } else if (totalPaid > 0) {
-        status = "partially_paid";
-      } else if (invoice.dueDate && new Date(invoice.dueDate) < new Date()) {
-        status = "overdue";
-      } else if (status === "draft") {
-        // Keep draft status
-      } else {
-        status = "sent";
-      }
-
-      await invoice.update({
-        paidAmount: totalPaid,
-        status,
-      });
-
-      return {
-        success: true,
-        data: invoice,
-      };
-    } catch (error) {
-      console.error("Error updating invoice status:", error);
-      return {
-        success: false,
-        error: error.message,
-        message: "Failed to update invoice status",
       };
     }
   }
@@ -425,10 +360,7 @@ class InvoiceService {
 
       const invoices = await Invoice.findAll({
         where: { clientId },
-        include: [
-          { model: Case, as: "case" },
-          { model: Payment, as: "payments" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["invoiceDate", "DESC"]],
       });
 
@@ -460,10 +392,7 @@ class InvoiceService {
 
       const invoices = await Invoice.findAll({
         where: { caseId },
-        include: [
-          { model: Client, as: "client" },
-          { model: Payment, as: "payments" },
-        ],
+        include: [{ model: Client, as: "client" }],
         order: [["invoiceDate", "DESC"]],
       });
 
