@@ -50,7 +50,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointment,
+        data: appointment.toJSON(),
         message: "Appointment created successfully",
       };
     } catch (error) {
@@ -161,7 +161,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointment,
+        data: appointment.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching appointment:", error);
@@ -194,7 +194,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointment,
+        data: appointment.toJSON(),
         message: "Appointment updated successfully",
       };
     } catch (error) {
@@ -265,7 +265,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -304,7 +304,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -348,7 +348,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -469,7 +469,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -501,7 +501,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -533,7 +533,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {

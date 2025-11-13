@@ -36,7 +36,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: session,
+        data: session.toJSON(),
         message: "Court session created successfully",
       };
     } catch (error) {
@@ -157,7 +157,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: session,
+        data: session.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching court session:", error);
@@ -205,7 +205,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: session,
+        data: session.toJSON(),
         message: "Court session updated successfully",
       };
     } catch (error) {
@@ -283,7 +283,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: sessions,
+        data: sessions.map((session) => session.toJSON()),
         count: sessions.length,
       };
     } catch (error) {
@@ -330,7 +330,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: sessions,
+        data: sessions.map((session) => session.toJSON()),
         count: sessions.length,
       };
     } catch (error) {
@@ -361,7 +361,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: sessions,
+        data: sessions.map((session) => session.toJSON()),
         count: sessions.length,
       };
     } catch (error) {

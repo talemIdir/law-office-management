@@ -107,33 +107,12 @@ class SettingService {
    * @param {Object} filters - Filter options
    * @returns {Promise<Object>} List of settings
    */
-  async getAllSettings(filters = {}) {
+  async getAllSettings() {
     try {
-      const where = {};
-
-      if (filters.category) {
-        where.category = filters.category;
-      }
-
-      if (filters.search) {
-        where[Op.or] = [
-          { key: { [Op.like]: `%${filters.search}%` } },
-          { description: { [Op.like]: `%${filters.search}%` } },
-          { category: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
-
-      const settings = await Setting.findAll({
-        where,
-        order: [
-          ["category", "ASC"],
-          ["key", "ASC"],
-        ],
-      });
-
+      const settings = await Setting.findAll();
       return {
         success: true,
-        data: settings,
+        data: settings.map((setting) => setting.toJSON()),
         count: settings.length,
       };
     } catch (error) {

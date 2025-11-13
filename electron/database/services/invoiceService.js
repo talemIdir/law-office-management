@@ -65,7 +65,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoice,
+        data: invoice.toJSON(),
         message: "Invoice created successfully",
       };
     } catch (error) {
@@ -171,7 +171,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoice,
+        data: invoice.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching invoice:", error);
@@ -228,7 +228,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoice,
+        data: invoice.toJSON(),
         message: "Invoice updated successfully",
       };
     } catch (error) {
@@ -294,7 +294,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoices,
+        data: invoices.map((invoice) => invoice.toJSON()),
         count: invoices.length,
       };
     } catch (error) {
@@ -334,7 +334,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoices,
+        data: invoices.map((invoice) => invoice.toJSON()),
         count: invoices.length,
       };
     } catch (error) {
@@ -366,7 +366,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoices,
+        data: invoices.map((invoice) => invoice.toJSON()),
         count: invoices.length,
       };
     } catch (error) {
@@ -398,7 +398,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoices,
+        data: invoices.map((invoice) => invoice.toJSON()),
         count: invoices.length,
       };
     } catch (error) {
@@ -427,7 +427,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoice,
+        data: invoice.toJSON(),
         message: "Invoice sent successfully",
       };
     } catch (error) {

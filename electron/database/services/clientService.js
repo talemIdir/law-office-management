@@ -49,7 +49,7 @@ class ClientService {
       const client = await Client.create(clientData);
       return {
         success: true,
-        data: client,
+        data: client.toJSON(),
         message: "Client created successfully",
       };
     } catch (error) {
@@ -155,7 +155,7 @@ class ClientService {
 
       return {
         success: true,
-        data: client,
+        data: client.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching client:", error);
@@ -204,7 +204,7 @@ class ClientService {
 
       return {
         success: true,
-        data: client,
+        data: client.toJSON(),
         message: "Client updated successfully",
       };
     } catch (error) {
@@ -343,7 +343,7 @@ class ClientService {
 
       return {
         success: true,
-        data: clients,
+        data: clients.map((client) => client.toJSON()),
         count: clients.length,
       };
     } catch (error) {
@@ -369,7 +369,7 @@ class ClientService {
 
       return {
         success: true,
-        data: clients,
+        data: clients.map((client) => client.toJSON()),
         count: clients.length,
       };
     } catch (error) {

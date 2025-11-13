@@ -56,7 +56,7 @@ class CaseService {
 
       return {
         success: true,
-        data: newCase,
+        data: newCase.toJSON(),
         message: "Case created successfully",
       };
     } catch (error) {
@@ -181,7 +181,7 @@ class CaseService {
 
       return {
         success: true,
-        data: caseData,
+        data: caseData.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching case:", error);
@@ -230,7 +230,7 @@ class CaseService {
 
       return {
         success: true,
-        data: caseData,
+        data: caseData.toJSON(),
         message: "Case updated successfully",
       };
     } catch (error) {
@@ -376,7 +376,7 @@ class CaseService {
 
       return {
         success: true,
-        data: cases,
+        data: cases.map((cas) => cas.toJSON()),
         count: cases.length,
       };
     } catch (error) {
@@ -414,7 +414,7 @@ class CaseService {
 
       return {
         success: true,
-        data: cases,
+        data: cases.map((cas) => cas.toJSON()),
         count: cases.length,
       };
     } catch (error) {
@@ -459,7 +459,7 @@ class CaseService {
 
       return {
         success: true,
-        data: cases,
+        data: cases.map((cas) => cas.toJSON()),
         count: cases.length,
       };
     } catch (error) {
@@ -491,7 +491,7 @@ class CaseService {
 
       return {
         success: true,
-        data: cases,
+        data: cases.map((cas) => cas.toJSON()),
         count: cases.length,
       };
     } catch (error) {

@@ -40,7 +40,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payment,
+        data: payment.toJSON(),
         message: "Payment created successfully",
       };
     } catch (error) {
@@ -158,7 +158,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payment,
+        data: payment.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching payment:", error);
@@ -205,7 +205,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payment,
+        data: payment.toJSON(),
         message: "Payment updated successfully",
       };
     } catch (error) {
@@ -273,7 +273,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payments,
+        data: payments.map((payment) => payment.toJSON()),
         count: payments.length,
         total,
       };
@@ -379,7 +379,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payments,
+        data: payments.map((payment) => payment.toJSON()),
         count: payments.length,
       };
     } catch (error) {

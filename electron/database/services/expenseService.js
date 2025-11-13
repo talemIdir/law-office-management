@@ -43,7 +43,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expense,
+        data: expense.toJSON(),
         message: "Expense created successfully",
       };
     } catch (error) {
@@ -144,7 +144,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expense,
+        data: expense.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching expense:", error);
@@ -185,7 +185,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expense,
+        data: expense.toJSON(),
         message: "Expense updated successfully",
       };
     } catch (error) {
@@ -253,7 +253,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expenses,
+        data: expenses.map((expense) => expense.toJSON()),
         count: expenses.length,
         total,
       };
@@ -371,7 +371,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expenses,
+        data: expenses.map((expense) => expense.toJSON()),
         count: expenses.length,
       };
     } catch (error) {
@@ -408,7 +408,7 @@ class ExpenseService {
 
       return {
         success: true,
-        data: expenses,
+        data: expenses.map((expense) => expense.toJSON()),
         count: expenses.length,
         total,
       };

@@ -106,7 +106,7 @@ class UserService {
 
       return {
         success: true,
-        data: users,
+        data: users.map((user) => user.toJSON()),
         count: users.length,
       };
     } catch (error) {
@@ -146,7 +146,7 @@ class UserService {
 
       return {
         success: true,
-        data: user,
+        data: user.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -414,7 +414,7 @@ class UserService {
 
       return {
         success: true,
-        data: users,
+        data: users.map((user) => user.toJSON()),
         count: users.length,
       };
     } catch (error) {
@@ -444,7 +444,7 @@ class UserService {
 
       return {
         success: true,
-        data: lawyers,
+        data: lawyers.map((lawyer) => lawyer.toJSON()),
         count: lawyers.length,
       };
     } catch (error) {

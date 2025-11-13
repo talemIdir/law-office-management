@@ -44,7 +44,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: document,
+        data: document.toJSON(),
         message: "Document created successfully",
       };
     } catch (error) {
@@ -152,7 +152,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: document,
+        data: document.toJSON(),
       };
     } catch (error) {
       console.error("Error fetching document:", error);
@@ -185,7 +185,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: document,
+        data: document.toJSON(),
         message: "Document updated successfully",
       };
     } catch (error) {
@@ -249,7 +249,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {
@@ -281,7 +281,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {
@@ -316,7 +316,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {
@@ -347,7 +347,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {
@@ -389,7 +389,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {

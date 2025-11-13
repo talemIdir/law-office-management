@@ -56,14 +56,14 @@ function ViewCase() {
       // Load case data
       const caseResult = await caseAPI.getById(id);
       if (caseResult.success) {
-        setCaseData(caseResult.data.dataValues || caseResult.data);
+        setCaseData(caseResult.data || caseResult.data);
         // Load client data
-        const clientId = caseResult.data.dataValues.clientId;
+        const clientId = caseResult.data.clientId;
         if (clientId) {
           const clientResult = await clientAPI.getById(clientId);
 
           if (clientResult.success) {
-            setClient(clientResult.data.dataValues || clientResult.data);
+            setClient(clientResult.data || clientResult.data);
           }
         }
       } else {
