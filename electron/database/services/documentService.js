@@ -115,7 +115,7 @@ class DocumentService {
 
       return {
         success: true,
-        data: documents,
+        data: documents.map((document) => document.toJSON()),
         count: documents.length,
       };
     } catch (error) {
@@ -243,9 +243,7 @@ class DocumentService {
 
       const documents = await Document.findAll({
         where: { clientId },
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["uploadDate", "DESC"]],
       });
 
@@ -277,9 +275,7 @@ class DocumentService {
 
       const documents = await Document.findAll({
         where: { caseId },
-        include: [
-          { model: Client, as: "client" },
-        ],
+        include: [{ model: Client, as: "client" }],
         order: [["uploadDate", "DESC"]],
       });
 
@@ -418,12 +414,21 @@ class DocumentService {
         totalDocuments: documents.length,
         totalSize: documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0),
         byType: {
-          contract: documents.filter((d) => d.documentType === "contract").length,
-          court_filing: documents.filter((d) => d.documentType === "court_filing").length,
-          evidence: documents.filter((d) => d.documentType === "evidence").length,
-          correspondence: documents.filter((d) => d.documentType === "correspondence").length,
-          id_document: documents.filter((d) => d.documentType === "id_document").length,
-          power_of_attorney: documents.filter((d) => d.documentType === "power_of_attorney").length,
+          contract: documents.filter((d) => d.documentType === "contract")
+            .length,
+          court_filing: documents.filter(
+            (d) => d.documentType === "court_filing"
+          ).length,
+          evidence: documents.filter((d) => d.documentType === "evidence")
+            .length,
+          correspondence: documents.filter(
+            (d) => d.documentType === "correspondence"
+          ).length,
+          id_document: documents.filter((d) => d.documentType === "id_document")
+            .length,
+          power_of_attorney: documents.filter(
+            (d) => d.documentType === "power_of_attorney"
+          ).length,
           other: documents.filter((d) => d.documentType === "other").length,
         },
       };

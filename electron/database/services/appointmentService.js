@@ -124,7 +124,7 @@ class AppointmentService {
 
       return {
         success: true,
-        data: appointments,
+        data: appointments.map((appointment) => appointment.toJSON()),
         count: appointments.length,
       };
     } catch (error) {
@@ -495,9 +495,7 @@ class AppointmentService {
 
       const appointments = await Appointment.findAll({
         where: { clientId },
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["appointmentDate", "DESC"]],
       });
 
@@ -529,9 +527,7 @@ class AppointmentService {
 
       const appointments = await Appointment.findAll({
         where: { caseId },
-        include: [
-          { model: Client, as: "client" },
-        ],
+        include: [{ model: Client, as: "client" }],
         order: [["appointmentDate", "DESC"]],
       });
 

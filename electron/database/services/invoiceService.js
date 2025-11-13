@@ -136,7 +136,7 @@ class InvoiceService {
 
       return {
         success: true,
-        data: invoices,
+        data: invoices.map((invoice) => invoice.toJSON()),
         count: invoices.length,
       };
     } catch (error) {
@@ -204,7 +204,10 @@ class InvoiceService {
       }
 
       // Check for duplicate invoice number if updating
-      if (updateData.invoiceNumber && updateData.invoiceNumber !== invoice.invoiceNumber) {
+      if (
+        updateData.invoiceNumber &&
+        updateData.invoiceNumber !== invoice.invoiceNumber
+      ) {
         const existing = await Invoice.findOne({
           where: {
             invoiceNumber: updateData.invoiceNumber,
@@ -219,7 +222,8 @@ class InvoiceService {
       // Recalculate total amount if amount or tax amount changed
       if (updateData.amount || updateData.taxAmount) {
         const amount = parseFloat(updateData.amount || invoice.amount) || 0;
-        const taxAmount = parseFloat(updateData.taxAmount || invoice.taxAmount) || 0;
+        const taxAmount =
+          parseFloat(updateData.taxAmount || invoice.taxAmount) || 0;
         updateData.totalAmount = amount + taxAmount;
       }
 
@@ -294,10 +298,11 @@ class InvoiceService {
         throw new Error("Invoice not found");
       }
 
-      const totalPaid = invoice.payments?.reduce(
-        (sum, payment) => sum + parseFloat(payment.amount || 0),
-        0
-      ) || 0;
+      const totalPaid =
+        invoice.payments?.reduce(
+          (sum, payment) => sum + parseFloat(payment.amount || 0),
+          0
+        ) || 0;
 
       const totalAmount = parseFloat(invoice.totalAmount) || 0;
 
@@ -553,11 +558,19 @@ class InvoiceService {
 
       const stats = {
         totalInvoices: invoices.length,
-        totalAmount: invoices.reduce((sum, inv) => sum + parseFloat(inv.totalAmount || 0), 0),
-        totalPaid: invoices.reduce((sum, inv) => sum + parseFloat(inv.paidAmount || 0), 0),
+        totalAmount: invoices.reduce(
+          (sum, inv) => sum + parseFloat(inv.totalAmount || 0),
+          0
+        ),
+        totalPaid: invoices.reduce(
+          (sum, inv) => sum + parseFloat(inv.paidAmount || 0),
+          0
+        ),
         totalPending: 0,
         paidCount: invoices.filter((inv) => inv.status === "paid").length,
-        unpaidCount: invoices.filter((inv) => inv.status === "sent" || inv.status === "partially_paid").length,
+        unpaidCount: invoices.filter(
+          (inv) => inv.status === "sent" || inv.status === "partially_paid"
+        ).length,
         overdueCount: invoices.filter((inv) => inv.status === "overdue").length,
         draftCount: invoices.filter((inv) => inv.status === "draft").length,
       };

@@ -18,6 +18,18 @@ import {
   sequelize,
   Op,
 } from "./database/index.js";
+import {
+  clientService,
+  caseService,
+  courtSessionService,
+  documentService,
+  invoiceService,
+  paymentService,
+  expenseService,
+  appointmentService,
+  userService,
+  settingService,
+} from "./database/services/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -81,16 +93,15 @@ app.on("window-all-closed", () => {
 // IPC Handlers for CRUD operations
 
 // Generic CRUD handlers
-function setupCrudHandlers(modelName, model) {
+function setupCrudHandlers(modelName, service) {
+  // Capitalize first letter for method names
+  const capitalizedName = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+
   // Get all
   ipcMain.handle(`${modelName}:getAll`, async (event, options = {}) => {
     try {
-      const items = await model.findAll({
-        ...options,
-        order: options.order || [["createdAt", "DESC"]],
-      });
-
-      return { success: true, data: items.map((item) => item.toJSON()) };
+      const result = await service[`getAll${capitalizedName}s`](options);
+      return result;
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -99,11 +110,8 @@ function setupCrudHandlers(modelName, model) {
   // Get by ID
   ipcMain.handle(`${modelName}:getById`, async (event, id, options = {}) => {
     try {
-      const item = await model.findByPk(id, options);
-      if (!item) {
-        return { success: false, error: "Item not found" };
-      }
-      return { success: true, data: item };
+      const result = await service[`get${capitalizedName}ById`](id, options);
+      return result;
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -112,8 +120,8 @@ function setupCrudHandlers(modelName, model) {
   // Create
   ipcMain.handle(`${modelName}:create`, async (event, data) => {
     try {
-      const item = await model.create(data);
-      return { success: true, data: item };
+      const result = await service[`create${capitalizedName}`](data);
+      return result;
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -122,12 +130,8 @@ function setupCrudHandlers(modelName, model) {
   // Update
   ipcMain.handle(`${modelName}:update`, async (event, id, data) => {
     try {
-      const item = await model.findByPk(id);
-      if (!item) {
-        return { success: false, error: "Item not found" };
-      }
-      await item.update(data);
-      return { success: true, data: item };
+      const result = await service[`update${capitalizedName}`](id, data);
+      return result;
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -136,39 +140,77 @@ function setupCrudHandlers(modelName, model) {
   // Delete
   ipcMain.handle(`${modelName}:delete`, async (event, id) => {
     try {
-      const item = await model.findByPk(id);
-      if (!item) {
-        return { success: false, error: "Item not found" };
-      }
-      await item.destroy();
-      return { success: true };
+      const result = await service[`delete${capitalizedName}`](id);
+      return result;
     } catch (error) {
       return { success: false, error: error.message };
     }
   });
 
-  // Search
-  ipcMain.handle(`${modelName}:search`, async (event, searchOptions) => {
-    try {
-      const items = await model.findAll(searchOptions);
-      return { success: true, data: items };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  });
+  // Search (if service has search method)
+  if (service[`search${capitalizedName}s`]) {
+    ipcMain.handle(`${modelName}:search`, async (event, searchTerm) => {
+      try {
+        const result = await service[`search${capitalizedName}s`](searchTerm);
+        return result;
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    });
+  }
 }
 
-// Setup CRUD handlers for all models
-setupCrudHandlers("client", Client);
-setupCrudHandlers("case", Case);
-setupCrudHandlers("courtSession", CourtSession);
-setupCrudHandlers("document", Document);
-setupCrudHandlers("invoice", Invoice);
-setupCrudHandlers("payment", Payment);
-setupCrudHandlers("expense", Expense);
-setupCrudHandlers("appointment", Appointment);
-setupCrudHandlers("user", User);
-setupCrudHandlers("setting", Setting);
+// Setup CRUD handlers for all models using services
+setupCrudHandlers("client", clientService);
+setupCrudHandlers("case", caseService);
+setupCrudHandlers("courtSession", courtSessionService);
+setupCrudHandlers("document", documentService);
+setupCrudHandlers("invoice", invoiceService);
+setupCrudHandlers("payment", paymentService);
+setupCrudHandlers("expense", expenseService);
+setupCrudHandlers("appointment", appointmentService);
+setupCrudHandlers("user", userService);
+
+// Settings has special handling (uses key instead of id)
+ipcMain.handle("setting:getAll", async (event, options = {}) => {
+  try {
+    return await settingService.getAllSettings(options);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("setting:getById", async (event, key) => {
+  try {
+    return await settingService.getSetting(key);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("setting:create", async (event, data) => {
+  try {
+    return await settingService.setSetting(data.key, data.value, data);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("setting:update", async (event, key, data) => {
+  try {
+    return await settingService.updateSetting(key, data.value);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("setting:delete", async (event, key) => {
+  try {
+    return await settingService.deleteSetting(key);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
 
 // Special handlers for complex queries
 
@@ -251,7 +293,6 @@ ipcMain.handle("dashboard:getStats", async () => {
       Case.count({ where: { status: ["open", "in_progress"] } }),
       CourtSession.count({
         where: {
-          status: "scheduled",
           sessionDate: { [Op.gte]: new Date() },
         },
       }),
@@ -281,7 +322,6 @@ ipcMain.handle("courtSession:getUpcoming", async (event, limit = 10) => {
   try {
     const sessions = await CourtSession.findAll({
       where: {
-        status: "scheduled",
         sessionDate: { [Op.gte]: new Date() },
       },
       include: [

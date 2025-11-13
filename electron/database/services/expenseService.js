@@ -104,15 +104,13 @@ class ExpenseService {
 
       const expenses = await Expense.findAll({
         where,
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["expenseDate", "DESC"]],
       });
 
       return {
         success: true,
-        data: expenses,
+        data: expenses.map((expense) => expense.toJSON()),
         count: expenses.length,
       };
     } catch (error) {
@@ -137,9 +135,7 @@ class ExpenseService {
       }
 
       const expense = await Expense.findByPk(id, {
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
       });
 
       if (!expense) {
@@ -250,7 +246,10 @@ class ExpenseService {
         order: [["expenseDate", "DESC"]],
       });
 
-      const total = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+      const total = expenses.reduce(
+        (sum, exp) => sum + parseFloat(exp.amount || 0),
+        0
+      );
 
       return {
         success: true,
@@ -297,33 +296,48 @@ class ExpenseService {
 
       const stats = {
         totalExpenses: expenses.length,
-        totalAmount: expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0),
+        totalAmount: expenses.reduce(
+          (sum, exp) => sum + parseFloat(exp.amount || 0),
+          0
+        ),
         byCategory: {
-          court_fees: expenses.filter((e) => e.category === "court_fees")
+          court_fees: expenses
+            .filter((e) => e.category === "court_fees")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          transportation: expenses.filter((e) => e.category === "transportation")
+          transportation: expenses
+            .filter((e) => e.category === "transportation")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          documentation: expenses.filter((e) => e.category === "documentation")
+          documentation: expenses
+            .filter((e) => e.category === "documentation")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          office_supplies: expenses.filter((e) => e.category === "office_supplies")
+          office_supplies: expenses
+            .filter((e) => e.category === "office_supplies")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          utilities: expenses.filter((e) => e.category === "utilities")
+          utilities: expenses
+            .filter((e) => e.category === "utilities")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          salaries: expenses.filter((e) => e.category === "salaries")
+          salaries: expenses
+            .filter((e) => e.category === "salaries")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          other: expenses.filter((e) => e.category === "other")
+          other: expenses
+            .filter((e) => e.category === "other")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
         },
         byPaymentMethod: {
-          cash: expenses.filter((e) => e.paymentMethod === "cash")
+          cash: expenses
+            .filter((e) => e.paymentMethod === "cash")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          check: expenses.filter((e) => e.paymentMethod === "check")
+          check: expenses
+            .filter((e) => e.paymentMethod === "check")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          bank_transfer: expenses.filter((e) => e.paymentMethod === "bank_transfer")
+          bank_transfer: expenses
+            .filter((e) => e.paymentMethod === "bank_transfer")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          credit_card: expenses.filter((e) => e.paymentMethod === "credit_card")
+          credit_card: expenses
+            .filter((e) => e.paymentMethod === "credit_card")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
-          other: expenses.filter((e) => e.paymentMethod === "other")
+          other: expenses
+            .filter((e) => e.paymentMethod === "other")
             .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0),
         },
       };
@@ -350,9 +364,7 @@ class ExpenseService {
   async getRecentExpenses(limit = 10) {
     try {
       const expenses = await Expense.findAll({
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["expenseDate", "DESC"]],
         limit,
       });
@@ -385,13 +397,14 @@ class ExpenseService {
 
       const expenses = await Expense.findAll({
         where: { category },
-        include: [
-          { model: Case, as: "case" },
-        ],
+        include: [{ model: Case, as: "case" }],
         order: [["expenseDate", "DESC"]],
       });
 
-      const total = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+      const total = expenses.reduce(
+        (sum, exp) => sum + parseFloat(exp.amount || 0),
+        0
+      );
 
       return {
         success: true,

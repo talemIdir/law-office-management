@@ -125,7 +125,10 @@ class SettingService {
 
       const settings = await Setting.findAll({
         where,
-        order: [["category", "ASC"], ["key", "ASC"]],
+        order: [
+          ["category", "ASC"],
+          ["key", "ASC"],
+        ],
       });
 
       return {
@@ -174,7 +177,7 @@ class SettingService {
       return {
         success: true,
         data: settingsObject,
-        settings,
+        settings: settings.map((setting) => setting.toJSON()),
         count: settings.length,
       };
     } catch (error) {
@@ -267,7 +270,8 @@ class SettingService {
 
       const results = [];
       for (const [key, value] of Object.entries(settings)) {
-        const stringValue = typeof value === "string" ? value : JSON.stringify(value);
+        const stringValue =
+          typeof value === "string" ? value : JSON.stringify(value);
         const result = await this.setSetting(key, stringValue, { category });
         results.push(result);
       }
@@ -277,7 +281,9 @@ class SettingService {
       return {
         success: allSuccess,
         data: results,
-        message: allSuccess ? "All settings saved successfully" : "Some settings failed to save",
+        message: allSuccess
+          ? "All settings saved successfully"
+          : "Some settings failed to save",
       };
     } catch (error) {
       console.error("Error setting multiple settings:", error);
@@ -442,7 +448,9 @@ class SettingService {
       return {
         success: allSuccess,
         data: results,
-        message: allSuccess ? "Settings imported successfully" : "Some settings failed to import",
+        message: allSuccess
+          ? "Settings imported successfully"
+          : "Some settings failed to import",
       };
     } catch (error) {
       console.error("Error importing settings:", error);

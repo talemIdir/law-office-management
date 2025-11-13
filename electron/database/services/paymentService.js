@@ -101,7 +101,10 @@ class PaymentService {
             model: (await import("../models/Case.js")).default,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -110,7 +113,7 @@ class PaymentService {
 
       return {
         success: true,
-        data: payments,
+        data: payments.map((payment) => payment.toJSON()),
         count: payments.length,
       };
     } catch (error) {
@@ -140,7 +143,10 @@ class PaymentService {
             model: (await import("../models/Case.js")).default,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -260,7 +266,10 @@ class PaymentService {
         order: [["paymentDate", "DESC"]],
       });
 
-      const total = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+      const total = payments.reduce(
+        (sum, p) => sum + parseFloat(p.amount || 0),
+        0
+      );
 
       return {
         success: true,
@@ -307,17 +316,25 @@ class PaymentService {
 
       const stats = {
         totalPayments: payments.length,
-        totalAmount: payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
+        totalAmount: payments.reduce(
+          (sum, p) => sum + parseFloat(p.amount || 0),
+          0
+        ),
         byMethod: {
-          cash: payments.filter((p) => p.paymentMethod === "cash")
+          cash: payments
+            .filter((p) => p.paymentMethod === "cash")
             .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
-          check: payments.filter((p) => p.paymentMethod === "check")
+          check: payments
+            .filter((p) => p.paymentMethod === "check")
             .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
-          bank_transfer: payments.filter((p) => p.paymentMethod === "bank_transfer")
+          bank_transfer: payments
+            .filter((p) => p.paymentMethod === "bank_transfer")
             .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
-          credit_card: payments.filter((p) => p.paymentMethod === "credit_card")
+          credit_card: payments
+            .filter((p) => p.paymentMethod === "credit_card")
             .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
-          other: payments.filter((p) => p.paymentMethod === "other")
+          other: payments
+            .filter((p) => p.paymentMethod === "other")
             .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0),
         },
       };
@@ -349,7 +366,10 @@ class PaymentService {
             model: (await import("../models/Case.js")).default,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],

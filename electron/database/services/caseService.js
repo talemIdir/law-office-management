@@ -133,7 +133,7 @@ class CaseService {
 
       return {
         success: true,
-        data: cases,
+        data: cases.map((cas) => cas.toJSON()),
         count: cases.length,
       };
     } catch (error) {
@@ -211,7 +211,10 @@ class CaseService {
       }
 
       // Check for duplicate case number if updating
-      if (updateData.caseNumber && updateData.caseNumber !== caseData.caseNumber) {
+      if (
+        updateData.caseNumber &&
+        updateData.caseNumber !== caseData.caseNumber
+      ) {
         const existing = await Case.findOne({
           where: {
             caseNumber: updateData.caseNumber,
@@ -299,19 +302,38 @@ class CaseService {
 
       const stats = {
         totalCourtSessions: caseData.courtSessions?.length || 0,
-        completedSessions: caseData.courtSessions?.filter((s) => s.status === "completed").length || 0,
-        upcomingSessions: caseData.courtSessions?.filter(
-          (s) => new Date(s.sessionDate) > new Date() && s.status === "scheduled"
-        ).length || 0,
+        completedSessions:
+          caseData.courtSessions?.filter((s) => s.status === "completed")
+            .length || 0,
+        upcomingSessions:
+          caseData.courtSessions?.filter(
+            (s) =>
+              new Date(s.sessionDate) > new Date() && s.status === "scheduled"
+          ).length || 0,
         totalDocuments: caseData.documents?.length || 0,
         totalInvoices: caseData.invoices?.length || 0,
-        totalBilled: caseData.invoices?.reduce((sum, inv) => sum + parseFloat(inv.totalAmount || 0), 0) || 0,
-        totalPaid: caseData.invoices?.reduce((sum, inv) => sum + parseFloat(inv.paidAmount || 0), 0) || 0,
-        totalExpenses: caseData.expenses?.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0) || 0,
+        totalBilled:
+          caseData.invoices?.reduce(
+            (sum, inv) => sum + parseFloat(inv.totalAmount || 0),
+            0
+          ) || 0,
+        totalPaid:
+          caseData.invoices?.reduce(
+            (sum, inv) => sum + parseFloat(inv.paidAmount || 0),
+            0
+          ) || 0,
+        totalExpenses:
+          caseData.expenses?.reduce(
+            (sum, exp) => sum + parseFloat(exp.amount || 0),
+            0
+          ) || 0,
         totalAppointments: caseData.appointments?.length || 0,
-        upcomingAppointments: caseData.appointments?.filter(
-          (a) => new Date(a.appointmentDate) > new Date() && a.status === "scheduled"
-        ).length || 0,
+        upcomingAppointments:
+          caseData.appointments?.filter(
+            (a) =>
+              new Date(a.appointmentDate) > new Date() &&
+              a.status === "scheduled"
+          ).length || 0,
       };
 
       stats.pendingPayment = stats.totalBilled - stats.totalPaid;
@@ -346,7 +368,10 @@ class CaseService {
           { model: Client, as: "client" },
           { model: User, as: "assignedLawyer" },
         ],
-        order: [["priority", "DESC"], ["createdAt", "DESC"]],
+        order: [
+          ["priority", "DESC"],
+          ["createdAt", "DESC"],
+        ],
       });
 
       return {
@@ -460,9 +485,7 @@ class CaseService {
 
       const cases = await Case.findAll({
         where: { clientId },
-        include: [
-          { model: User, as: "assignedLawyer" },
-        ],
+        include: [{ model: User, as: "assignedLawyer" }],
         order: [["createdAt", "DESC"]],
       });
 

@@ -100,7 +100,10 @@ class CourtSessionService {
             model: Case,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -109,7 +112,7 @@ class CourtSessionService {
 
       return {
         success: true,
-        data: sessions,
+        data: sessions.map((session) => session.toJSON()),
         count: sessions.length,
       };
     } catch (error) {
@@ -139,7 +142,10 @@ class CourtSessionService {
             model: Case,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -192,7 +198,9 @@ class CourtSessionService {
 
       // Update case's next hearing date to next session if exists
       if (updateData.nextSessionDate) {
-        await session.case.update({ nextHearingDate: updateData.nextSessionDate });
+        await session.case.update({
+          nextHearingDate: updateData.nextSessionDate,
+        });
       }
 
       return {
@@ -263,7 +271,10 @@ class CourtSessionService {
             model: Case,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -307,7 +318,10 @@ class CourtSessionService {
             model: Case,
             as: "case",
             include: [
-              { model: (await import("../models/Client.js")).default, as: "client" },
+              {
+                model: (await import("../models/Client.js")).default,
+                as: "client",
+              },
             ],
           },
         ],
@@ -424,7 +438,8 @@ class CourtSessionService {
         لجوابنا: sessions.filter((s) => s.status === "لجوابنا").length,
         في_المداولة: sessions.filter((s) => s.status === "في المداولة").length,
         مؤجلة: sessions.filter((s) => s.status === "مؤجلة").length,
-        جلسة_المحاكمة: sessions.filter((s) => s.status === "جلسة المحاكمة").length,
+        جلسة_المحاكمة: sessions.filter((s) => s.status === "جلسة المحاكمة")
+          .length,
       };
 
       return {

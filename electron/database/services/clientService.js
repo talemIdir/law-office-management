@@ -26,7 +26,9 @@ class ClientService {
       // Validate type-specific required fields
       if (clientData.type === "individual") {
         if (!clientData.firstName || !clientData.lastName) {
-          throw new Error("First name and last name are required for individual clients");
+          throw new Error(
+            "First name and last name are required for individual clients"
+          );
         }
       } else if (clientData.type === "company") {
         if (!clientData.companyName) {
@@ -111,7 +113,7 @@ class ClientService {
 
       return {
         success: true,
-        data: clients,
+        data: clients.map((client) => client.toJSON()),
         count: clients.length,
       };
     } catch (error) {
@@ -183,7 +185,10 @@ class ClientService {
       }
 
       // Check for duplicate national ID if updating
-      if (updateData.nationalId && updateData.nationalId !== client.nationalId) {
+      if (
+        updateData.nationalId &&
+        updateData.nationalId !== client.nationalId
+      ) {
         const existing = await Client.findOne({
           where: {
             nationalId: updateData.nationalId,
@@ -269,15 +274,29 @@ class ClientService {
 
       const stats = {
         totalCases: client.cases?.length || 0,
-        activeCases: client.cases?.filter((c) => c.status === "open" || c.status === "in_progress").length || 0,
+        activeCases:
+          client.cases?.filter(
+            (c) => c.status === "open" || c.status === "in_progress"
+          ).length || 0,
         totalInvoices: client.invoices?.length || 0,
-        totalAmount: client.invoices?.reduce((sum, inv) => sum + parseFloat(inv.totalAmount || 0), 0) || 0,
-        paidAmount: client.invoices?.reduce((sum, inv) => sum + parseFloat(inv.paidAmount || 0), 0) || 0,
+        totalAmount:
+          client.invoices?.reduce(
+            (sum, inv) => sum + parseFloat(inv.totalAmount || 0),
+            0
+          ) || 0,
+        paidAmount:
+          client.invoices?.reduce(
+            (sum, inv) => sum + parseFloat(inv.paidAmount || 0),
+            0
+          ) || 0,
         pendingAmount: 0,
         totalAppointments: client.appointments?.length || 0,
-        upcomingAppointments: client.appointments?.filter(
-          (a) => new Date(a.appointmentDate) > new Date() && a.status === "scheduled"
-        ).length || 0,
+        upcomingAppointments:
+          client.appointments?.filter(
+            (a) =>
+              new Date(a.appointmentDate) > new Date() &&
+              a.status === "scheduled"
+          ).length || 0,
       };
 
       stats.pendingAmount = stats.totalAmount - stats.paidAmount;
