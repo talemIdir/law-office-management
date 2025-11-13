@@ -15,11 +15,6 @@ const CourtSession = sequelize.define(
       allowNull: false,
       comment: "تاريخ ووقت الجلسة",
     },
-    sessionType: {
-      type: DataTypes.ENUM("hearing", "verdict", "procedural", "other"),
-      defaultValue: "hearing",
-      comment: "نوع الجلسة",
-    },
     court: {
       type: DataTypes.STRING,
       comment: "المحكمة",
@@ -49,8 +44,16 @@ const CourtSession = sequelize.define(
       comment: "ملاحظات",
     },
     status: {
-      type: DataTypes.ENUM("scheduled", "completed", "postponed", "cancelled"),
-      defaultValue: "scheduled",
+      type: DataTypes.ENUM(
+        "في التقرير",
+        "في المرافعة",
+        "لجواب الخصم",
+        "لجوابنا",
+        "في المداولة",
+        "مؤجلة",
+        "جلسة المحاكمة"
+      ),
+      defaultValue: "في التقرير",
       comment: "حالة الجلسة",
     },
   },

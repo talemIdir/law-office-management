@@ -8,7 +8,6 @@ function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
   const [formData, setFormData] = useState({
     sessionDate: "",
-    sessionType: "hearing",
     court: "",
     courtRoom: "",
     judge: "",
@@ -16,7 +15,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
     outcome: "",
     nextSessionDate: "",
     notes: "",
-    status: "scheduled",
+    status: "في التقرير",
     caseId: "",
     ...session,
   });
@@ -74,38 +73,21 @@ function CourtSessionModal({ session, onClose, onSave }) {
               </select>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label required">تاريخ ووقت الجلسة</label>
-                <input
-                  type="datetime-local"
-                  name="sessionDate"
-                  className="form-control"
-                  value={formData.sessionDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label required">نوع الجلسة</label>
-                <select
-                  name="sessionType"
-                  className="form-select"
-                  value={formData.sessionType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="hearing">جلسة استماع</option>
-                  <option value="verdict">جلسة حكم</option>
-                  <option value="procedural">جلسة إجرائية</option>
-                  <option value="other">أخرى</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label className="form-label required">تاريخ ووقت الجلسة</label>
+              <input
+                type="datetime-local"
+                name="sessionDate"
+                className="form-control"
+                value={formData.sessionDate}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">المحكمة</label>
+                <label className="form-label">الجهة القضائية</label>
                 <input
                   type="text"
                   name="court"
@@ -127,7 +109,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">القاضي</label>
+              <label className="form-label">قاضي الجلسة</label>
               <input
                 type="text"
                 name="judge"
@@ -178,10 +160,13 @@ function CourtSessionModal({ session, onClose, onSave }) {
                   value={formData.status}
                   onChange={handleChange}
                 >
-                  <option value="scheduled">مجدولة</option>
-                  <option value="completed">مكتملة</option>
-                  <option value="postponed">مؤجلة</option>
-                  <option value="cancelled">ملغاة</option>
+                  <option value="في التقرير">في التقرير</option>
+                  <option value="في المرافعة">في المرافعة</option>
+                  <option value="لجواب الخصم">لجواب الخصم</option>
+                  <option value="لجوابنا">لجوابنا</option>
+                  <option value="في المداولة">في المداولة</option>
+                  <option value="مؤجلة">مؤجلة</option>
+                  <option value="جلسة المحاكمة">جلسة المحاكمة</option>
                 </select>
               </div>
             </div>
@@ -218,7 +203,6 @@ function CourtSessionsPage() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -308,11 +292,6 @@ function CourtSessionsPage() {
     );
   };
 
-  const filteredByType = useMemo(() => {
-    if (filterType === "all") return sessions;
-    return sessions.filter((s) => s.sessionType === filterType);
-  }, [sessions, filterType]);
-
   const columns = useMemo(
     () => [
       {
@@ -329,21 +308,8 @@ function CourtSessionsPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "sessionType",
-        header: "النوع",
-        cell: ({ row }) => (
-          <span className="badge badge-info">
-            {row.original.sessionType === "hearing" && "جلسة استماع"}
-            {row.original.sessionType === "verdict" && "جلسة حكم"}
-            {row.original.sessionType === "procedural" && "جلسة إجرائية"}
-            {row.original.sessionType === "other" && "أخرى"}
-          </span>
-        ),
-        enableSorting: true,
-      },
-      {
         accessorKey: "court",
-        header: "المحكمة",
+        header: "الجهة القضائية",
         cell: ({ row }) => row.original.court || "-",
         enableSorting: true,
       },
@@ -355,7 +321,7 @@ function CourtSessionsPage() {
       },
       {
         accessorKey: "judge",
-        header: "القاضي",
+        header: "قاضي الجلسة",
         cell: ({ row }) => row.original.judge || "-",
         enableSorting: true,
       },
@@ -365,19 +331,22 @@ function CourtSessionsPage() {
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === "scheduled"
-                ? "badge-warning"
-                : row.original.status === "completed"
-                  ? "badge-success"
-                  : row.original.status === "postponed"
-                    ? "badge-info"
-                    : "badge-danger"
+              row.original.status === "في التقرير"
+                ? "badge-info"
+                : row.original.status === "في المرافعة"
+                  ? "badge-primary"
+                  : row.original.status === "لجواب الخصم"
+                    ? "badge-warning"
+                    : row.original.status === "لجوابنا"
+                      ? "badge-warning"
+                      : row.original.status === "في المداولة"
+                        ? "badge-info"
+                        : row.original.status === "مؤجلة"
+                          ? "badge-secondary"
+                          : "badge-success"
             }`}
           >
-            {row.original.status === "scheduled" && "مجدولة"}
-            {row.original.status === "completed" && "مكتملة"}
-            {row.original.status === "postponed" && "مؤجلة"}
-            {row.original.status === "cancelled" && "ملغاة"}
+            {row.original.status}
           </span>
         ),
         enableSorting: true,
@@ -437,31 +406,22 @@ function CourtSessionsPage() {
           <select
             className="form-select"
             style={{ width: "200px" }}
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="all">جميع الأنواع</option>
-            <option value="hearing">جلسة استماع</option>
-            <option value="verdict">جلسة حكم</option>
-            <option value="procedural">جلسة إجرائية</option>
-            <option value="other">أخرى</option>
-          </select>
-          <select
-            className="form-select"
-            style={{ width: "200px" }}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">جميع الحالات</option>
-            <option value="scheduled">مجدولة</option>
-            <option value="completed">مكتملة</option>
-            <option value="postponed">مؤجلة</option>
-            <option value="cancelled">ملغاة</option>
+            <option value="في التقرير">في التقرير</option>
+            <option value="في المرافعة">في المرافعة</option>
+            <option value="لجواب الخصم">لجواب الخصم</option>
+            <option value="لجوابنا">لجوابنا</option>
+            <option value="في المداولة">في المداولة</option>
+            <option value="مؤجلة">مؤجلة</option>
+            <option value="جلسة المحاكمة">جلسة المحاكمة</option>
           </select>
         </div>
 
         <DataTable
-          data={filteredByType}
+          data={sessions}
           columns={columns}
           searchTerm={searchTerm}
           filterValue={filterStatus}
@@ -470,7 +430,7 @@ function CourtSessionsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== "all" || filterType !== "all"
+            searchTerm || filterStatus !== "all"
               ? "لم يتم العثور على جلسات مطابقة للبحث"
               : "لم يتم إضافة أي جلسات بعد"
           }
