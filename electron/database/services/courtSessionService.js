@@ -31,10 +31,8 @@ class CourtSessionService {
 
       const session = await CourtSession.create(sessionData);
 
-      // Update case's next hearing date if this is a scheduled session
-      if (session.status === "scheduled") {
-        await caseData.update({ nextHearingDate: sessionData.sessionDate });
-      }
+      // Update case's next hearing date
+      await caseData.update({ nextHearingDate: sessionData.sessionDate });
 
       return {
         success: true,
@@ -63,10 +61,6 @@ class CourtSessionService {
       // Apply filters
       if (filters.status) {
         where.status = filters.status;
-      }
-
-      if (filters.sessionType) {
-        where.sessionType = filters.sessionType;
       }
 
       if (filters.caseId) {
@@ -191,13 +185,13 @@ class CourtSessionService {
 
       await session.update(updateData);
 
-      // Update case's next hearing date if session date changed and status is scheduled
-      if (updateData.sessionDate && session.status === "scheduled") {
+      // Update case's next hearing date if session date changed
+      if (updateData.sessionDate) {
         await session.case.update({ nextHearingDate: updateData.sessionDate });
       }
 
-      // If session is completed, update case's next hearing date to next session if exists
-      if (updateData.status === "completed" && updateData.nextSessionDate) {
+      // Update case's next hearing date to next session if exists
+      if (updateData.nextSessionDate) {
         await session.case.update({ nextHearingDate: updateData.nextSessionDate });
       }
 
@@ -263,7 +257,6 @@ class CourtSessionService {
           sessionDate: {
             [Op.between]: [new Date(), endDate],
           },
-          status: "scheduled",
         },
         include: [
           {
@@ -368,34 +361,6 @@ class CourtSessionService {
   }
 
   /**
-   * Complete a court session
-   * @param {number} id - Court session ID
-   * @param {Object} outcomeData - Session outcome data
-   * @returns {Promise<Object>} Result
-   */
-  async completeSession(id, outcomeData = {}) {
-    try {
-      if (!id) {
-        throw new Error("Court session ID is required");
-      }
-
-      const updateData = {
-        status: "completed",
-        ...outcomeData,
-      };
-
-      return await this.updateCourtSession(id, updateData);
-    } catch (error) {
-      console.error("Error completing session:", error);
-      return {
-        success: false,
-        error: error.message,
-        message: "Failed to complete session",
-      };
-    }
-  }
-
-  /**
    * Postpone a court session
    * @param {number} id - Court session ID
    * @param {string} newDate - New session date
@@ -411,7 +376,7 @@ class CourtSessionService {
       }
 
       return await this.updateCourtSession(id, {
-        status: "postponed",
+        status: "مؤجلة",
         nextSessionDate: newDate,
       });
     } catch (error) {
@@ -420,24 +385,6 @@ class CourtSessionService {
         success: false,
         error: error.message,
         message: "Failed to postpone session",
-      };
-    }
-  }
-
-  /**
-   * Cancel a court session
-   * @param {number} id - Court session ID
-   * @returns {Promise<Object>} Result
-   */
-  async cancelSession(id) {
-    try {
-      return await this.updateCourtSession(id, { status: "cancelled" });
-    } catch (error) {
-      console.error("Error cancelling session:", error);
-      return {
-        success: false,
-        error: error.message,
-        message: "Failed to cancel session",
       };
     }
   }
@@ -471,16 +418,13 @@ class CourtSessionService {
 
       const stats = {
         totalSessions: sessions.length,
-        scheduled: sessions.filter((s) => s.status === "scheduled").length,
-        completed: sessions.filter((s) => s.status === "completed").length,
-        postponed: sessions.filter((s) => s.status === "postponed").length,
-        cancelled: sessions.filter((s) => s.status === "cancelled").length,
-        byType: {
-          hearing: sessions.filter((s) => s.sessionType === "hearing").length,
-          verdict: sessions.filter((s) => s.sessionType === "verdict").length,
-          procedural: sessions.filter((s) => s.sessionType === "procedural").length,
-          other: sessions.filter((s) => s.sessionType === "other").length,
-        },
+        في_التقرير: sessions.filter((s) => s.status === "في التقرير").length,
+        في_المرافعة: sessions.filter((s) => s.status === "في المرافعة").length,
+        لجواب_الخصم: sessions.filter((s) => s.status === "لجواب الخصم").length,
+        لجوابنا: sessions.filter((s) => s.status === "لجوابنا").length,
+        في_المداولة: sessions.filter((s) => s.status === "في المداولة").length,
+        مؤجلة: sessions.filter((s) => s.status === "مؤجلة").length,
+        جلسة_المحاكمة: sessions.filter((s) => s.status === "جلسة المحاكمة").length,
       };
 
       return {
