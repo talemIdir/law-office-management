@@ -16,6 +16,7 @@ import {
   User,
   Setting,
   sequelize,
+  Op,
 } from "./database/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -242,9 +243,7 @@ ipcMain.handle("dashboard:getStats", async () => {
       activeCases,
       upcomingSessions,
       totalInvoices,
-      unpaidInvoices,
       totalRevenue,
-      pendingRevenue,
     ] = await Promise.all([
       Client.count(),
       Client.count({ where: { status: "active" } }),
@@ -253,15 +252,11 @@ ipcMain.handle("dashboard:getStats", async () => {
       CourtSession.count({
         where: {
           status: "scheduled",
-          sessionDate: { [sequelize.Op.gte]: new Date() },
+          sessionDate: { [Op.gte]: new Date() },
         },
       }),
       Invoice.count(),
-      Invoice.count({ where: { status: ["sent", "overdue"] } }),
-      Invoice.sum("totalAmount", { where: { status: "paid" } }) || 0,
-      Invoice.sum("totalAmount", {
-        where: { status: ["sent", "overdue", "partially_paid"] },
-      }) || 0,
+      Payment.sum("amount") || 0,
     ]);
 
     return {
@@ -273,9 +268,7 @@ ipcMain.handle("dashboard:getStats", async () => {
         activeCases,
         upcomingSessions,
         totalInvoices,
-        unpaidInvoices,
         totalRevenue,
-        pendingRevenue,
       },
     };
   } catch (error) {
@@ -289,7 +282,7 @@ ipcMain.handle("courtSession:getUpcoming", async (event, limit = 10) => {
     const sessions = await CourtSession.findAll({
       where: {
         status: "scheduled",
-        sessionDate: { [sequelize.Op.gte]: new Date() },
+        sessionDate: { [Op.gte]: new Date() },
       },
       include: [
         {
@@ -301,7 +294,9 @@ ipcMain.handle("courtSession:getUpcoming", async (event, limit = 10) => {
       order: [["sessionDate", "ASC"]],
       limit,
     });
-    return { success: true, data: sessions };
+    // Convert Sequelize instances to plain objects to avoid serialization issues
+    const plainSessions = sessions.map(session => session.toJSON());
+    return { success: true, data: plainSessions };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -313,7 +308,7 @@ ipcMain.handle("appointment:getUpcoming", async (event, limit = 10) => {
     const appointments = await Appointment.findAll({
       where: {
         status: "scheduled",
-        appointmentDate: { [sequelize.Op.gte]: new Date() },
+        appointmentDate: { [Op.gte]: new Date() },
       },
       include: [
         { model: Client, as: "client" },
@@ -322,7 +317,9 @@ ipcMain.handle("appointment:getUpcoming", async (event, limit = 10) => {
       order: [["appointmentDate", "ASC"]],
       limit,
     });
-    return { success: true, data: appointments };
+    // Convert Sequelize instances to plain objects to avoid serialization issues
+    const plainAppointments = appointments.map(appointment => appointment.toJSON());
+    return { success: true, data: plainAppointments };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -335,31 +332,37 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
       Invoice.findAll({
         where: {
           invoiceDate: {
-            [sequelize.Op.between]: [startDate, endDate],
+            [Op.between]: [startDate, endDate],
           },
         },
-        include: [{ model: Client, as: "client" }],
+        include: [
+          { model: Client, as: "client" },
+          { model: Case, as: "case" }
+        ],
       }),
       Payment.findAll({
         where: {
           paymentDate: {
-            [sequelize.Op.between]: [startDate, endDate],
+            [Op.between]: [startDate, endDate],
           },
         },
       }),
       Expense.findAll({
         where: {
           expenseDate: {
-            [sequelize.Op.between]: [startDate, endDate],
+            [Op.between]: [startDate, endDate],
           },
         },
       }),
     ]);
 
-    const totalInvoiced = invoices.reduce(
-      (sum, inv) => sum + parseFloat(inv.totalAmount),
-      0
-    );
+    // Calculate total invoiced by summing case amounts with tax
+    const totalInvoiced = invoices.reduce((sum, inv) => {
+      const caseAmount = inv.case ? parseFloat(inv.case.amount || 0) : 0;
+      const taxAmount = (caseAmount * parseFloat(inv.taxPercentage || 0)) / 100;
+      return sum + caseAmount + taxAmount;
+    }, 0);
+
     const totalPaid = payments.reduce(
       (sum, pay) => sum + parseFloat(pay.amount),
       0
@@ -370,12 +373,17 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
     );
     const netIncome = totalPaid - totalExpenses;
 
+    // Convert Sequelize instances to plain objects
+    const plainInvoices = invoices.map(inv => inv.toJSON());
+    const plainPayments = payments.map(pay => pay.toJSON());
+    const plainExpenses = expenses.map(exp => exp.toJSON());
+
     return {
       success: true,
       data: {
-        invoices,
-        payments,
-        expenses,
+        invoices: plainInvoices,
+        payments: plainPayments,
+        expenses: plainExpenses,
         totalInvoiced,
         totalPaid,
         totalExpenses,

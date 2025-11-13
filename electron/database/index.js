@@ -1,5 +1,6 @@
 // Import database configuration
 import { sequelize, initDatabase } from "./config.js";
+import { Op } from "sequelize";
 
 // Import all models
 import Client from "./models/Client.js";
@@ -21,6 +22,7 @@ setupAssociations();
 
 // Export everything
 export {
+  Op,
   sequelize,
   initDatabase,
   Client,
