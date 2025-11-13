@@ -3,7 +3,7 @@ import { invoiceAPI, clientAPI, caseAPI, paymentAPI, settingAPI } from "../utils
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
-import { generateInvoicePDF } from "../utils/pdfGenerator.jsx";
+import { generateInvoicePDF } from "../utils/pdf/index.jsx";
 
 function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);

@@ -30,7 +30,7 @@ import {
   formatCurrency,
   formatFileSize,
 } from "../utils/formatters";
-import { generateCasePDF } from "../utils/pdfGenerator.jsx";
+import { generateCasePDF } from "../utils/pdf/index.jsx";
 import { showSuccess } from "../utils/toast";
 
 function ViewCase() {
