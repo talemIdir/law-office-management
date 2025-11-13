@@ -21,7 +21,6 @@ import {
   getDocumentTypeLabel,
   getPriorityLabel,
   getClientRoleLabel,
-  getSessionTypeLabel,
   getExpenseCategoryLabel,
 } from "../utils/labels";
 import {
@@ -251,16 +250,6 @@ function ViewCase() {
         enableSorting: true,
       },
       {
-        accessorKey: "sessionType",
-        header: "نوع الجلسة",
-        cell: ({ row }) => (
-          <span className="badge badge-info">
-            {getSessionTypeLabel(row.original.sessionType)}
-          </span>
-        ),
-        enableSorting: true,
-      },
-      {
         accessorKey: "court",
         header: "المحكمة",
         cell: ({ row }) => row.original.court || "-",
@@ -283,7 +272,7 @@ function ViewCase() {
         header: "الحالة",
         cell: ({ row }) => (
           <span className={`badge ${getStatusBadgeClass(row.original.status)}`}>
-            {getStatusLabel(row.original.status)}
+            {row.original.status}
           </span>
         ),
         enableSorting: true,
@@ -848,8 +837,7 @@ function ViewCase() {
                           </div>
                           <div style={{ fontSize: "14px", color: "#666" }}>
                             <div>
-                              <strong>النوع:</strong>{" "}
-                              {getSessionTypeLabel(session.sessionType)}
+                              <strong>الحالة:</strong> {session.status}
                             </div>
                             {session.court && (
                               <div>

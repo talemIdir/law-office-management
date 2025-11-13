@@ -7,7 +7,6 @@ import {
   getPaymentMethodLabel,
   getPriorityLabel,
   getClientRoleLabel,
-  getSessionTypeLabel,
 } from "../labels";
 import { formatDate, formatDateTime, formatCurrency } from "../formatters";
 
@@ -212,22 +211,19 @@ export const CaseReportDocument = ({
               </Text>
               <View style={styles.dataTable}>
                 <View style={styles.dataTableHeader}>
-                  <Text style={[styles.dataTableCell, { width: "20%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "22%" }]}>
                     التاريخ
                   </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
-                    النوع
-                  </Text>
-                  <Text style={[styles.dataTableCell, { width: "20%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "22%" }]}>
                     المحكمة
                   </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "18%" }]}>
                     القاضي
                   </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "18%" }]}>
                     الحالة
                   </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "20%" }]}>
                     النتيجة
                   </Text>
                 </View>
@@ -239,22 +235,19 @@ export const CaseReportDocument = ({
                       index % 2 === 0 && styles.dataTableRowEven,
                     ]}
                   >
-                    <Text style={[styles.dataTableCell, { width: "20%" }]}>
+                    <Text style={[styles.dataTableCell, { width: "22%" }]}>
                       {formatDateTime(session.sessionDate)}
                     </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
-                      {getSessionTypeLabel(session.sessionType) || "-"}
-                    </Text>
-                    <Text style={[styles.dataTableCell, { width: "20%" }]}>
+                    <Text style={[styles.dataTableCell, { width: "22%" }]}>
                       {session.court || "-"}
                     </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                    <Text style={[styles.dataTableCell, { width: "18%" }]}>
                       {session.judge || "-"}
                     </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
-                      {getStatusLabel(session.status) || "-"}
+                    <Text style={[styles.dataTableCell, { width: "18%" }]}>
+                      {session.status || "-"}
                     </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                    <Text style={[styles.dataTableCell, { width: "20%" }]}>
                       {session.outcome || "-"}
                     </Text>
                   </View>
