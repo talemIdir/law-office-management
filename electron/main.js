@@ -50,6 +50,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webviewTag: true,
     },
     show: false,
     backgroundColor: "#f5f5f5",
@@ -60,7 +61,10 @@ function createWindow() {
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    // Use loadURL with file protocol for better path resolution
+    mainWindow.loadURL(
+      `file://${path.join(__dirname, "../dist/index.html").replace(/\\/g, "/")}`
+    );
   }
 
   mainWindow.once("ready-to-show", () => {

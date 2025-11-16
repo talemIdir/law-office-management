@@ -20,6 +20,7 @@ import InvoicesPage from "./pages/Invoices";
 import AppointmentsPage from "./pages/Appointments";
 import ReportsPage from "./pages/Reports";
 import ElectronicLitigationPage from "./pages/ElectronicLitigation";
+import ElectronicServicesPage from "./pages/ElectronicServices";
 import SettingsPage from "./pages/Settings";
 
 function Sidebar() {
@@ -35,6 +36,7 @@ function Sidebar() {
     { path: "/appointments", label: "المواعيد", icon: "📅" },
     { path: "/reports", label: "التقارير", icon: "📈" },
     { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡" },
+    { path: "/electronic-services", label: "الخدمات الإلكترونية", icon: "🌐" },
     { path: "/settings", label: "الإعدادات", icon: "⚙️" },
   ];
 
@@ -133,6 +135,10 @@ const router = createHashRouter([
       {
         path: "electronic-litigation",
         element: <ElectronicLitigationPage />,
+      },
+      {
+        path: "electronic-services",
+        element: <ElectronicServicesPage />,
       },
       {
         path: "settings",
