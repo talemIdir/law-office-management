@@ -92,3 +92,19 @@ export const getFinancialReport = async (startDate, endDate) => {
   if (!ipcRenderer) return { success: false, error: "Electron not available" };
   return await ipcRenderer.invoke("reports:financial", startDate, endDate);
 };
+
+// Document-specific operations
+export const selectFile = async () => {
+  if (!ipcRenderer) return { success: false, error: "Electron not available" };
+  return await ipcRenderer.invoke("dialog:selectFile");
+};
+
+export const copyDocumentFile = async (sourceFilePath, clientName, caseNumber, documentTitle) => {
+  if (!ipcRenderer) return { success: false, error: "Electron not available" };
+  return await ipcRenderer.invoke("document:copyFile", sourceFilePath, clientName, caseNumber, documentTitle);
+};
+
+export const openDocumentFile = async (filePath) => {
+  if (!ipcRenderer) return { success: false, error: "Electron not available" };
+  return await ipcRenderer.invoke("document:openFile", filePath);
+};

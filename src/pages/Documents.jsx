@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { documentAPI, clientAPI, caseAPI } from "../utils/api";
+import {
+  documentAPI,
+  clientAPI,
+  caseAPI,
+  selectFile,
+  copyDocumentFile,
+  openDocumentFile,
+} from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
@@ -7,12 +14,15 @@ import DataTable from "../components/DataTable";
 function DocumentModal({ document, onClose, onSave }) {
   const [clients, setClients] = useState([]);
   const [cases, setCases] = useState([]);
+  const [filteredCases, setFilteredCases] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     documentType: "other",
     filePath: "",
     fileName: "",
+    fileSize: 0,
     notes: "",
     clientId: "",
     caseId: "",
@@ -23,6 +33,29 @@ function DocumentModal({ document, onClose, onSave }) {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Filter cases when clientId changes
+    if (formData.clientId) {
+      const clientCases = cases.filter(
+        (c) => c.clientId === parseInt(formData.clientId)
+      );
+      setFilteredCases(clientCases);
+
+      // Reset caseId if the selected case doesn't belong to the new client
+      const currentCaseValid = clientCases.some(
+        (c) => c.id === parseInt(formData.caseId)
+      );
+      if (!currentCaseValid && formData.caseId) {
+        setFormData({ ...formData, caseId: "" });
+      }
+    } else {
+      setFilteredCases([]);
+      if (formData.caseId) {
+        setFormData({ ...formData, caseId: "" });
+      }
+    }
+  }, [formData.clientId, cases]);
+
   const loadData = async () => {
     const [clientsResult, casesResult] = await Promise.all([
       clientAPI.getAll(),
@@ -32,9 +65,77 @@ function DocumentModal({ document, onClose, onSave }) {
     if (casesResult.success) setCases(casesResult.data);
   };
 
+  const handleSelectFile = async () => {
+    try {
+      const result = await selectFile();
+      if (result.success && result.data) {
+        setSelectedFile(result.data);
+        setFormData({
+          ...formData,
+          fileName: result.data.fileName,
+          fileSize: result.data.fileSize,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      showError("فشل في اختيار الملف");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+
+    // Validate that client and case are selected for file copying
+    if (selectedFile && (!formData.clientId || !formData.caseId)) {
+      showError("يجب اختيار الموكل والقضية عند رفع ملف");
+      return;
+    }
+
+    let finalFormData = { ...formData };
+
+    // If a file was selected, copy it to the documents folder
+    if (selectedFile && formData.clientId && formData.caseId) {
+      try {
+        // Get client and case names for folder structure
+        const client = clients.find(
+          (c) => c.id === parseInt(formData.clientId)
+        );
+        const caseData = cases.find((c) => c.id === parseInt(formData.caseId));
+
+        if (!client || !caseData) {
+          showError("لم يتم العثور على بيانات الموكل أو القضية");
+          return;
+        }
+
+        const clientName =
+          client.type === "company"
+            ? client.companyName
+            : `${client.firstName}_${client.lastName}`;
+        const caseNumber = caseData.caseNumber;
+
+        // Copy file to organized folder structure
+        const copyResult = await copyDocumentFile(
+          selectedFile.filePath,
+          clientName,
+          caseNumber,
+          formData.title
+        );
+
+        if (copyResult.success && copyResult.data) {
+          finalFormData.filePath = copyResult.data.filePath;
+          finalFormData.fileName = copyResult.data.fileName;
+          finalFormData.fileSize = copyResult.data.fileSize;
+        } else {
+          showError("فشل في نسخ الملف: " + copyResult.error);
+          return;
+        }
+      } catch (error) {
+        showError("حدث خطأ أثناء نسخ الملف");
+        return;
+      }
+    }
+
+    onSave(finalFormData);
   };
 
   const handleChange = (e) => {
@@ -122,9 +223,14 @@ function DocumentModal({ document, onClose, onSave }) {
                   className="form-select"
                   value={formData.caseId}
                   onChange={handleChange}
+                  disabled={!formData.clientId}
                 >
-                  <option value="">اختر القضية</option>
-                  {cases.map((c) => (
+                  <option value="">
+                    {formData.clientId
+                      ? "اختر القضية"
+                      : "اختر الموكل أولاً"}
+                  </option>
+                  {filteredCases.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.caseNumber} - {c.title}
                     </option>
@@ -133,27 +239,35 @@ function DocumentModal({ document, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">اسم الملف</label>
-                <input
-                  type="text"
-                  name="fileName"
-                  className="form-control"
-                  value={formData.fileName}
-                  onChange={handleChange}
-                />
+            <div className="form-group">
+              <label className="form-label">اختيار الملف</label>
+              <div
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleSelectFile}
+                >
+                  📎 اختيار ملف
+                </button>
+                {selectedFile && (
+                  <span style={{ color: "#28a745", fontSize: "14px" }}>
+                    ✓ {selectedFile.fileName} (
+                    {Math.round(selectedFile.fileSize / 1024)} KB)
+                  </span>
+                )}
               </div>
-              <div className="form-group">
-                <label className="form-label">مسار الملف</label>
-                <input
-                  type="text"
-                  name="filePath"
-                  className="form-control"
-                  value={formData.filePath}
-                  onChange={handleChange}
-                />
-              </div>
+              <small
+                style={{
+                  color: "#666",
+                  fontSize: "12px",
+                  marginTop: "5px",
+                  display: "block",
+                }}
+              >
+                سيتم حفظ الملف في: documents/اسم_الموكل/رقم_القضية/عنوان_المستند
+              </small>
             </div>
 
             <div className="form-group">
@@ -219,7 +333,7 @@ function DocumentsPage() {
         showSuccess(
           selectedDocument
             ? "تم تحديث بيانات المستند بنجاح"
-            : "تم إضافة المستند بنجاح",
+            : "تم إضافة المستند بنجاح"
         );
       } else {
         showError("خطأ: " + result.error);
@@ -256,6 +370,22 @@ function DocumentsPage() {
   const handleAdd = () => {
     setSelectedDocument(null);
     setShowModal(true);
+  };
+
+  const handleOpenFile = async (filePath) => {
+    if (!filePath) {
+      showError("لا يوجد ملف مرتبط بهذا المستند");
+      return;
+    }
+    try {
+      const result = await openDocumentFile(filePath);
+      console.log(result);
+      if (!result.success) {
+        showError("فشل في فتح الملف");
+      }
+    } catch (error) {
+      showError("حدث خطأ أثناء فتح الملف");
+    }
   };
 
   const formatDate = (date) => {
@@ -299,10 +429,25 @@ function DocumentsPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "fileName",
-        header: "اسم الملف",
-        cell: ({ row }) => row.original.fileName || "-",
-        enableSorting: true,
+        accessorKey: "client",
+        header: "الموكل",
+        cell: ({ row }) => {
+          const client = row.original.client;
+          if (!client) return "-";
+          return client.type === "company"
+            ? client.companyName
+            : `${client.firstName} ${client.lastName}`;
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: "case",
+        header: "القضية",
+        cell: ({ row }) => {
+          const caseData = row.original.case;
+          return caseData ? `${caseData.caseNumber}` : "-";
+        },
+        enableSorting: false,
       },
       {
         accessorKey: "uploadDate",
@@ -316,6 +461,15 @@ function DocumentsPage() {
         header: "الإجراءات",
         cell: ({ row }) => (
           <div className="action-buttons">
+            {row.original.filePath && (
+              <button
+                className="btn btn-sm btn-success"
+                onClick={() => handleOpenFile(row.original.filePath)}
+                title="فتح الملف"
+              >
+                📄 فتح
+              </button>
+            )}
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
@@ -333,7 +487,7 @@ function DocumentsPage() {
         enableSorting: false,
       },
     ],
-    [],
+    []
   );
 
   if (loading) {

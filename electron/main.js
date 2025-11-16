@@ -1,8 +1,9 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import started from "electron-squirrel-startup";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import fs from "fs/promises";
 import {
   initDatabase,
   Client,
@@ -444,6 +445,99 @@ ipcMain.handle("export:data", async (event, type, filters) => {
   try {
     // Implementation for exporting data to PDF/Excel
     return { success: true, message: "Export functionality to be implemented" };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// File dialog handler for selecting documents
+ipcMain.handle("dialog:selectFile", async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ["openFile"],
+      filters: [
+        { name: "Documents", extensions: ["pdf", "doc", "docx", "txt"] },
+        { name: "Images", extensions: ["jpg", "jpeg", "png", "gif", "bmp"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
+
+    if (result.canceled) {
+      return { success: false, canceled: true };
+    }
+
+    const filePath = result.filePaths[0];
+    const fileName = path.basename(filePath);
+    const stats = await fs.stat(filePath);
+
+    return {
+      success: true,
+      data: {
+        filePath,
+        fileName,
+        fileSize: stats.size,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Copy file to documents folder with organized structure
+ipcMain.handle("document:copyFile", async (event, sourceFilePath, clientName, caseNumber, documentTitle) => {
+  try {
+    // Sanitize folder names by replacing invalid characters
+    const sanitizeFolderName = (name) => {
+      // Replace forward slashes, backslashes, colons, and other invalid characters
+      return name.replace(/[\/\\:*?"<>|]/g, '_');
+    };
+
+    // Get the app's user data path
+    const userDataPath = app.getPath("userData");
+
+    // Sanitize client name and case number for folder names
+    const sanitizedClientName = sanitizeFolderName(clientName);
+    const sanitizedCaseNumber = sanitizeFolderName(caseNumber);
+    const sanitizedDocTitle = sanitizeFolderName(documentTitle);
+
+    // Create documents folder structure: documents/clientName/caseNumber/
+    const documentsDir = path.join(userDataPath, "documents", sanitizedClientName, sanitizedCaseNumber);
+
+    // Create directories if they don't exist
+    await fs.mkdir(documentsDir, { recursive: true });
+
+    // Get file extension from source file
+    const fileExt = path.extname(sourceFilePath);
+
+    // Create new filename using document title
+    const newFileName = `${sanitizedDocTitle}${fileExt}`;
+    const destinationPath = path.join(documentsDir, newFileName);
+
+    // Copy the file
+    await fs.copyFile(sourceFilePath, destinationPath);
+
+    // Get file stats
+    const stats = await fs.stat(destinationPath);
+
+    return {
+      success: true,
+      data: {
+        filePath: destinationPath,
+        fileName: newFileName,
+        fileSize: stats.size,
+      },
+    };
+  } catch (error) {
+    console.error("Error copying file:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Open file in default application
+ipcMain.handle("document:openFile", async (event, filePath) => {
+  try {
+    await shell.openPath(filePath);
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }

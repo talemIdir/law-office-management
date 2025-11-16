@@ -41,6 +41,8 @@ contextBridge.exposeInMainWorld("api", {
       "document:update",
       "document:delete",
       "document:search",
+      "document:copyFile",
+      "document:openFile",
 
       // Invoice operations
       "invoice:getAll",
@@ -98,6 +100,9 @@ contextBridge.exposeInMainWorld("api", {
 
       // Export operations
       "export:data",
+
+      // Dialog operations
+      "dialog:selectFile",
     ];
 
     if (validChannels.includes(channel)) {

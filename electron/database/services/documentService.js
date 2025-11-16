@@ -40,6 +40,28 @@ class DocumentService {
         }
       }
 
+      // Set file name to title if not provided
+      if (!documentData.fileName && documentData.title) {
+        documentData.fileName = documentData.title;
+      }
+
+      // Detect MIME type from file extension if not provided
+      if (!documentData.mimeType && documentData.fileName) {
+        const ext = documentData.fileName.split('.').pop()?.toLowerCase();
+        const mimeTypes = {
+          'pdf': 'application/pdf',
+          'doc': 'application/msword',
+          'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'txt': 'text/plain',
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'gif': 'image/gif',
+          'bmp': 'image/bmp',
+        };
+        documentData.mimeType = mimeTypes[ext] || 'application/octet-stream';
+      }
+
       const document = await Document.create(documentData);
 
       return {
