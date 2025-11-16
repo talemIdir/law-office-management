@@ -18,29 +18,34 @@ import {
   getSessionTypeLabel,
 } from "./labels";
 import { formatDate, formatDateTime, formatCurrency } from "./formatters";
+import TajawalRegular from "../fonts/Tajawal-Regular.ttf";
+import TajawalLight from "../fonts/Tajawal-Light.ttf";
+import TajawalMedium from "../fonts/Tajawal-Medium.ttf";
+import TajawalBold from "../fonts/Tajawal-Bold.ttf";
+import TajawalExtraBold from "../fonts/Tajawal-ExtraBold.ttf";
 
 // Register Tajawal font
 Font.register({
   family: "Tajawal",
   fonts: [
     {
-      src: "/src/fonts/Tajawal-Regular.ttf",
+      src: TajawalRegular,
       fontWeight: 400,
     },
     {
-      src: "/src/fonts/Tajawal-Light.ttf",
+      src: TajawalLight,
       fontWeight: 300,
     },
     {
-      src: "/src/fonts/Tajawal-Medium.ttf",
+      src: TajawalMedium,
       fontWeight: 500,
     },
     {
-      src: "/src/fonts/Tajawal-Bold.ttf",
+      src: TajawalBold,
       fontWeight: 700,
     },
     {
-      src: "/src/fonts/Tajawal-ExtraBold.ttf",
+      src: TajawalExtraBold,
       fontWeight: 800,
     },
   ],

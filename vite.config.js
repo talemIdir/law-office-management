@@ -11,5 +11,18 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // Keep fonts in assets folder with hash
+          if (assetInfo.name.endsWith('.ttf') ||
+              assetInfo.name.endsWith('.woff') ||
+              assetInfo.name.endsWith('.woff2')) {
+            return 'assets/[name]-[hash][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
   },
 });
