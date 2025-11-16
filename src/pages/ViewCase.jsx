@@ -10,6 +10,7 @@ import {
   expenseAPI,
   invoiceAPI,
   settingAPI,
+  openDocumentFile,
 } from "../utils/api";
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
@@ -82,28 +83,22 @@ function ViewCase() {
         invoicesResult,
       ] = await Promise.all([
         paymentAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["paymentDate", "DESC"]],
+          caseId: parseInt(id),
         }),
         courtSessionAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["sessionDate", "DESC"]],
+          caseId: parseInt(id),
         }),
         appointmentAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["appointmentDate", "DESC"]],
+          caseId: parseInt(id),
         }),
         documentAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["uploadDate", "DESC"]],
+          caseId: parseInt(id),
         }),
         expenseAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["expenseDate", "DESC"]],
+          caseId: parseInt(id),
         }),
         invoiceAPI.getAll({
-          where: { caseId: parseInt(id) },
-          order: [["invoiceDate", "DESC"]],
+          caseId: parseInt(id),
         }),
       ]);
 
@@ -196,6 +191,21 @@ function ViewCase() {
     } catch (error) {
       showError("حدث خطأ أثناء تصدير ملف PDF");
       console.error("PDF generation error:", error);
+    }
+  };
+
+  const handleOpenFile = async (filePath) => {
+    if (!filePath) {
+      showError("لا يوجد ملف مرتبط بهذا المستند");
+      return;
+    }
+    try {
+      const result = await openDocumentFile(filePath);
+      if (!result.success) {
+        showError("فشل في فتح الملف");
+      }
+    } catch (error) {
+      showError("حدث خطأ أثناء فتح الملف");
     }
   };
 
@@ -378,6 +388,28 @@ function ViewCase() {
         accessorKey: "description",
         header: "الوصف",
         cell: ({ row }) => row.original.description || "-",
+        enableSorting: false,
+      },
+      {
+        id: "actions",
+        header: "الإجراءات",
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            {row.original.filePath ? (
+              <button
+                className="btn btn-sm btn-success"
+                onClick={() => handleOpenFile(row.original.filePath)}
+                title="فتح الملف"
+              >
+                📄 فتح
+              </button>
+            ) : (
+              <span style={{ color: "#999", fontSize: "12px" }}>
+                لا يوجد ملف
+              </span>
+            )}
+          </div>
+        ),
         enableSorting: false,
       },
     ],
