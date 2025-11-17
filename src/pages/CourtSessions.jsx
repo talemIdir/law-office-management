@@ -490,17 +490,15 @@ function CourtSessionsPage() {
               value={filterDateTo}
               onChange={(e) => setFilterDateTo(e.target.value)}
             />
-            {(filterDateFrom || filterDateTo) && (
-              <button
-                className="btn btn-outline"
-                onClick={() => {
-                  setFilterDateFrom("");
-                  setFilterDateTo("");
-                }}
-              >
-                مسح التاريخ
-              </button>
-            )}
+            <button
+              className="btn btn-outline"
+              onClick={() => {
+                setFilterDateFrom(getDefaultDateFrom());
+                setFilterDateTo(getDefaultDateTo());
+              }}
+            >
+              أسبوع من اليوم
+            </button>
           </div>
         </div>
 
