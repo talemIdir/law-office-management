@@ -122,7 +122,7 @@ function ExpenseModal({ expense, onClose, onSave }) {
               <textarea
                 name="description"
                 className="form-textarea"
-                value={formData.description}
+                value={formData.description || ""}
                 onChange={handleChange}
                 rows="3"
                 required
@@ -164,7 +164,7 @@ function ExpenseModal({ expense, onClose, onSave }) {
               <textarea
                 name="notes"
                 className="form-textarea"
-                value={formData.notes}
+                value={formData.notes || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>

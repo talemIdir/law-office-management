@@ -218,7 +218,7 @@ function ClientModal({ client, onClose, onSave }) {
               <textarea
                 name="notes"
                 className="form-textarea"
-                value={formData.notes}
+                value={formData.notes || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>

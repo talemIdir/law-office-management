@@ -206,7 +206,7 @@ function SettingsPage() {
             <textarea
               name="officeAddress"
               className="form-textarea"
-              value={settings.officeAddress}
+              value={settings.officeAddress || ""}
               onChange={handleChange}
               rows="2"
               placeholder="العنوان الكامل للمكتب..."

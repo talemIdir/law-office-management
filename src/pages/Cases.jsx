@@ -118,7 +118,7 @@ function CaseModal({ caseData, onClose, onSave }) {
               <textarea
                 name="description"
                 className="form-textarea"
-                value={formData.description}
+                value={formData.description || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>
@@ -306,7 +306,7 @@ function CaseModal({ caseData, onClose, onSave }) {
               <textarea
                 name="notes"
                 className="form-textarea"
-                value={formData.notes}
+                value={formData.notes || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>

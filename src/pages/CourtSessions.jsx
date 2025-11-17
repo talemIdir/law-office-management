@@ -124,7 +124,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
               <textarea
                 name="attendees"
                 className="form-textarea"
-                value={formData.attendees}
+                value={formData.attendees || ""}
                 onChange={handleChange}
                 rows="2"
               ></textarea>
@@ -135,7 +135,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
               <textarea
                 name="outcome"
                 className="form-textarea"
-                value={formData.outcome}
+                value={formData.outcome || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>
@@ -176,7 +176,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
               <textarea
                 name="notes"
                 className="form-textarea"
-                value={formData.notes}
+                value={formData.notes || ""}
                 onChange={handleChange}
                 rows="3"
               ></textarea>
