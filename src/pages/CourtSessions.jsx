@@ -203,6 +203,21 @@ function CourtSessionsPage() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // Set default date filters: today and one week ahead
+  const getDefaultDateFrom = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getDefaultDateTo = () => {
+    const oneWeekAhead = new Date();
+    oneWeekAhead.setDate(oneWeekAhead.getDate() + 7);
+    return oneWeekAhead.toISOString().split('T')[0];
+  };
+
+  const [filterDateFrom, setFilterDateFrom] = useState(getDefaultDateFrom());
+  const [filterDateTo, setFilterDateTo] = useState(getDefaultDateTo());
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -293,6 +308,39 @@ function CourtSessionsPage() {
         `#${session.case.caseNumber}`.includes(searchTerm))
     );
   };
+
+  // Filter sessions to show only today and future sessions, with optional date range
+  const filteredSessions = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const filtered = sessions.filter((session) => {
+      const sessionDate = new Date(session.sessionDate);
+
+      // Filter by date range (default to today and after)
+      if (filterDateFrom) {
+        const fromDate = new Date(filterDateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (sessionDate < fromDate) return false;
+      } else {
+        // Default: only show today and future sessions
+        if (sessionDate < today) return false;
+      }
+
+      if (filterDateTo) {
+        const toDate = new Date(filterDateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (sessionDate > toDate) return false;
+      }
+
+      return true;
+    });
+
+    // Sort by date ascending (earliest first)
+    return filtered.sort((a, b) => {
+      return new Date(a.sessionDate) - new Date(b.sessionDate);
+    });
+  }, [sessions, filterDateFrom, filterDateTo]);
 
   const columns = useMemo(
     () => [
@@ -424,8 +472,40 @@ function CourtSessionsPage() {
           </select>
         </div>
 
+        <div className="search-container" style={{ marginTop: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <label style={{ whiteSpace: "nowrap" }}>من تاريخ:</label>
+            <input
+              type="date"
+              className="form-control"
+              style={{ width: "180px" }}
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+            />
+            <label style={{ whiteSpace: "nowrap" }}>إلى تاريخ:</label>
+            <input
+              type="date"
+              className="form-control"
+              style={{ width: "180px" }}
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+            />
+            {(filterDateFrom || filterDateTo) && (
+              <button
+                className="btn btn-outline"
+                onClick={() => {
+                  setFilterDateFrom("");
+                  setFilterDateTo("");
+                }}
+              >
+                مسح التاريخ
+              </button>
+            )}
+          </div>
+        </div>
+
         <DataTable
-          data={sessions}
+          data={filteredSessions}
           columns={columns}
           searchTerm={searchTerm}
           filterValue={filterStatus}
@@ -434,7 +514,7 @@ function CourtSessionsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== "all"
+            searchTerm || filterStatus !== "all" || filterDateFrom || filterDateTo
               ? "لم يتم العثور على جلسات مطابقة للبحث"
               : "لم يتم إضافة أي جلسات بعد"
           }
