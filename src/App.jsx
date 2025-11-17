@@ -17,6 +17,7 @@ import ViewCase from "./pages/ViewCase";
 import CourtSessionsPage from "./pages/CourtSessions";
 import DocumentsPage from "./pages/Documents";
 import InvoicesPage from "./pages/Invoices";
+import ExpensesPage from "./pages/Expenses";
 import AppointmentsPage from "./pages/Appointments";
 import ReportsPage from "./pages/Reports";
 import ElectronicLitigationPage from "./pages/ElectronicLitigation";
@@ -33,6 +34,7 @@ function Sidebar() {
     { path: "/court-sessions", label: "الجلسات", icon: "🏛️" },
     { path: "/documents", label: "المستندات", icon: "📁" },
     { path: "/invoices", label: "الفواتير والمدفوعات", icon: "💰" },
+    { path: "/expenses", label: "المصروفات", icon: "💸" },
     { path: "/appointments", label: "المواعيد", icon: "📅" },
     { path: "/reports", label: "التقارير", icon: "📈" },
     { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡" },
@@ -123,6 +125,10 @@ const router = createHashRouter([
       {
         path: "invoices",
         element: <InvoicesPage />,
+      },
+      {
+        path: "expenses",
+        element: <ExpensesPage />,
       },
       {
         path: "appointments",
