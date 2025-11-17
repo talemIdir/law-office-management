@@ -3,7 +3,6 @@ import { appointmentAPI, clientAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
-import CalendarView from "../components/CalendarView";
 import { getStatusLabel, getAppointmentTypeLabel } from "../utils/labels";
 
 function AppointmentModal({ appointment, onClose, onSave }) {
@@ -218,7 +217,6 @@ function AppointmentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
-  const [viewMode, setViewMode] = useState("table"); // "table" or "calendar"
 
   // Set default date filters: today and one week ahead
   const getDefaultDateFrom = () => {
@@ -304,23 +302,6 @@ function AppointmentsPage() {
 
   const handleAdd = () => {
     setSelectedAppointment(null);
-    setShowModal(true);
-  };
-
-  // Handle calendar event click (edit appointment)
-  const handleCalendarEventSelect = (appointment) => {
-    handleEdit(appointment);
-  };
-
-  // Handle calendar slot click (create new appointment)
-  const handleCalendarSlotSelect = (slotInfo) => {
-    // Format the date for datetime-local input (YYYY-MM-DDThh:mm)
-    const startDate = new Date(slotInfo.start);
-    const formattedDate = startDate.toISOString().slice(0, 16);
-
-    setSelectedAppointment({
-      appointmentDate: formattedDate,
-    });
     setShowModal(true);
   };
 
@@ -489,120 +470,93 @@ function AppointmentsPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المواعيد</h1>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div className="btn-group">
-            <button
-              className={`btn ${viewMode === "table" ? "btn-primary" : "btn-outline"}`}
-              onClick={() => setViewMode("table")}
-            >
-              📋 جدول
-            </button>
-            <button
-              className={`btn ${viewMode === "calendar" ? "btn-primary" : "btn-outline"}`}
-              onClick={() => setViewMode("calendar")}
-            >
-              📅 تقويم
-            </button>
-          </div>
-          <button className="btn btn-primary" onClick={handleAdd}>
-            ➕ إضافة موعد جديد
-          </button>
-        </div>
+        <button className="btn btn-primary" onClick={handleAdd}>
+          ➕ إضافة موعد جديد
+        </button>
       </div>
 
       <div className="card">
-        {viewMode === "table" ? (
-          <>
-            <div className="search-container">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="🔍 البحث عن موعد..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <select
-                className="form-select"
-                style={{ width: "180px" }}
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="all">جميع الأنواع</option>
-                <option value="consultation">استشارة</option>
-                <option value="meeting">اجتماع</option>
-                <option value="court_session">جلسة محكمة</option>
-                <option value="other">أخرى</option>
-              </select>
-              <select
-                className="form-select"
-                style={{ width: "180px" }}
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">جميع الحالات</option>
-                <option value="scheduled">مجدول</option>
-                <option value="completed">مكتمل</option>
-                <option value="cancelled">ملغى</option>
-                <option value="rescheduled">معاد جدولة</option>
-              </select>
-            </div>
-
-            <div className="search-container" style={{ marginTop: "10px" }}>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <label style={{ whiteSpace: "nowrap" }}>من تاريخ:</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  style={{ width: "180px" }}
-                  value={filterDateFrom}
-                  onChange={(e) => setFilterDateFrom(e.target.value)}
-                />
-                <label style={{ whiteSpace: "nowrap" }}>إلى تاريخ:</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  style={{ width: "180px" }}
-                  value={filterDateTo}
-                  onChange={(e) => setFilterDateTo(e.target.value)}
-                />
-                {(filterDateFrom || filterDateTo) && (
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => {
-                      setFilterDateFrom(getDefaultDateFrom());
-                      setFilterDateTo(getDefaultDateTo());
-                    }}
-                  >
-                    إعادة تعيين
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <DataTable
-              data={filteredByType}
-              columns={columns}
-              searchTerm={searchTerm}
-              filterValue={filterStatus}
-              filterKey="status"
-              globalFilterFn={globalFilterFn}
-              pageSize={10}
-              showPagination={true}
-              emptyMessage={
-                searchTerm || filterStatus !== "all" || filterType !== "all"
-                  ? "لم يتم العثور على مواعيد مطابقة للبحث"
-                  : "لم يتم إضافة أي مواعيد بعد"
-              }
-            />
-          </>
-        ) : (
-          <CalendarView
-            appointments={appointments}
-            clients={clients}
-            onSelectEvent={handleCalendarEventSelect}
-            onSelectSlot={handleCalendarSlotSelect}
+        <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 البحث عن موعد..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-        )}
+          <select
+            className="form-select"
+            style={{ width: "180px" }}
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="all">جميع الأنواع</option>
+            <option value="consultation">استشارة</option>
+            <option value="meeting">اجتماع</option>
+            <option value="court_session">جلسة محكمة</option>
+            <option value="other">أخرى</option>
+          </select>
+          <select
+            className="form-select"
+            style={{ width: "180px" }}
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">جميع الحالات</option>
+            <option value="scheduled">مجدول</option>
+            <option value="completed">مكتمل</option>
+            <option value="cancelled">ملغى</option>
+            <option value="rescheduled">معاد جدولة</option>
+          </select>
+        </div>
+
+        <div className="search-container" style={{ marginTop: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <label style={{ whiteSpace: "nowrap" }}>من تاريخ:</label>
+            <input
+              type="date"
+              className="form-control"
+              style={{ width: "180px" }}
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+            />
+            <label style={{ whiteSpace: "nowrap" }}>إلى تاريخ:</label>
+            <input
+              type="date"
+              className="form-control"
+              style={{ width: "180px" }}
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+            />
+            {(filterDateFrom || filterDateTo) && (
+              <button
+                className="btn btn-outline"
+                onClick={() => {
+                  setFilterDateFrom(getDefaultDateFrom());
+                  setFilterDateTo(getDefaultDateTo());
+                }}
+              >
+                إعادة تعيين
+              </button>
+            )}
+          </div>
+        </div>
+
+        <DataTable
+          data={filteredByType}
+          columns={columns}
+          searchTerm={searchTerm}
+          filterValue={filterStatus}
+          filterKey="status"
+          globalFilterFn={globalFilterFn}
+          pageSize={10}
+          showPagination={true}
+          emptyMessage={
+            searchTerm || filterStatus !== "all" || filterType !== "all"
+              ? "لم يتم العثور على مواعيد مطابقة للبحث"
+              : "لم يتم إضافة أي مواعيد بعد"
+          }
+        />
       </div>
 
       {showModal && (

@@ -3,13 +3,18 @@ import {
   getDashboardStats,
   getUpcomingCourtSessions,
   getUpcomingAppointments,
+  courtSessionAPI,
+  appointmentAPI,
+  clientAPI,
 } from "../utils/api";
 import DataTable from "../components/DataTable";
+import CalendarView from "../components/CalendarView";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
-  const [upcomingSessions, setUpcomingSessions] = useState([]);
-  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [allSessions, setAllSessions] = useState([]);
+  const [allAppointments, setAllAppointments] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,16 +24,19 @@ function Dashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, sessionsRes, appointmentsRes] = await Promise.all([
-        getDashboardStats(),
-        getUpcomingCourtSessions(5),
-        getUpcomingAppointments(5),
-      ]);
+      const [statsRes, allSessionsRes, allAppointmentsRes, clientsRes] =
+        await Promise.all([
+          getDashboardStats(),
+          courtSessionAPI.getAll(),
+          appointmentAPI.getAll(),
+          clientAPI.getAll(),
+        ]);
 
       if (statsRes.success) setStats(statsRes.data);
-      if (sessionsRes.success) setUpcomingSessions(sessionsRes.data);
-      if (appointmentsRes.success)
-        setUpcomingAppointments(appointmentsRes.data);
+      if (allSessionsRes.success) setAllSessions(allSessionsRes.data);
+      if (allAppointmentsRes.success)
+        setAllAppointments(allAppointmentsRes.data);
+      if (clientsRes.success) setClients(clientsRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -45,158 +53,6 @@ function Dashboard() {
       }).format(amount) + " دج"
     );
   };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("ar-DZ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatDateTime = (date) => {
-    return new Date(date).toLocaleString("ar-DZ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Column definitions for court sessions table
-  const courtSessionsColumns = useMemo(
-    () => [
-      {
-        accessorKey: "sessionDate",
-        header: "التاريخ",
-        cell: ({ row }) => formatDateTime(row.original.sessionDate),
-        enableSorting: true,
-      },
-      {
-        accessorKey: "case.title",
-        header: "القضية",
-        cell: ({ row }) => row.original.case?.title || "-",
-        enableSorting: false,
-      },
-      {
-        accessorKey: "case.client",
-        header: "الموكل",
-        cell: ({ row }) => {
-          const client = row.original.case?.client;
-          if (!client) return "-";
-          return client.type === "company"
-            ? client.companyName
-            : `${client.firstName} ${client.lastName}`;
-        },
-        enableSorting: false,
-      },
-      {
-        accessorKey: "court",
-        header: "المحكمة",
-        cell: ({ row }) => row.original.court || "-",
-        enableSorting: true,
-      },
-      {
-        accessorKey: "sessionType",
-        header: "النوع",
-        cell: ({ row }) => {
-          const typeMap = {
-            hearing: "جلسة استماع",
-            verdict: "جلسة حكم",
-            procedural: "جلسة إجرائية",
-            other: "أخرى",
-          };
-          return (
-            <span className="badge badge-info">
-              {typeMap[row.original.sessionType] || row.original.sessionType}
-            </span>
-          );
-        },
-        enableSorting: true,
-      },
-      {
-        accessorKey: "status",
-        header: "الحالة",
-        cell: ({ row }) => {
-          const statusMap = {
-            scheduled: "مجدولة",
-            completed: "مكتملة",
-            postponed: "مؤجلة",
-            cancelled: "ملغاة",
-          };
-          return (
-            <span className="badge badge-warning">
-              {statusMap[row.original.status] || row.original.status}
-            </span>
-          );
-        },
-        enableSorting: true,
-      },
-    ],
-    []
-  );
-
-  // Column definitions for appointments table
-  const appointmentsColumns = useMemo(
-    () => [
-      {
-        accessorKey: "appointmentDate",
-        header: "التاريخ",
-        cell: ({ row }) => formatDateTime(row.original.appointmentDate),
-        enableSorting: true,
-      },
-      {
-        accessorKey: "title",
-        header: "العنوان",
-        enableSorting: true,
-      },
-      {
-        accessorKey: "client",
-        header: "الموكل",
-        cell: ({ row }) => {
-          const client = row.original.client;
-          if (!client) return "-";
-          return client.type === "company"
-            ? client.companyName
-            : `${client.firstName} ${client.lastName}`;
-        },
-        enableSorting: false,
-      },
-      {
-        accessorKey: "case.title",
-        header: "القضية",
-        cell: ({ row }) => row.original.case?.title || "-",
-        enableSorting: false,
-      },
-      {
-        accessorKey: "appointmentType",
-        header: "النوع",
-        cell: ({ row }) => {
-          const typeMap = {
-            consultation: "استشارة",
-            meeting: "اجتماع",
-            court_session: "جلسة محكمة",
-            other: "أخرى",
-          };
-          return (
-            <span className="badge badge-primary">
-              {typeMap[row.original.appointmentType] ||
-                row.original.appointmentType}
-            </span>
-          );
-        },
-        enableSorting: true,
-      },
-      {
-        accessorKey: "location",
-        header: "الموقع",
-        cell: ({ row }) => row.original.location || "-",
-        enableSorting: true,
-      },
-    ],
-    []
-  );
 
   if (loading) {
     return (
@@ -277,30 +133,18 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Upcoming Court Sessions */}
+          {/* Calendar View */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">الجلسات القادمة</h3>
+              <h3 className="card-title">التقويم - الجلسات والمواعيد</h3>
             </div>
-            <DataTable
-              data={upcomingSessions}
-              columns={courtSessionsColumns}
-              showPagination={false}
-              emptyMessage="لا توجد جلسات قادمة"
-            />
-          </div>
-
-          {/* Upcoming Appointments */}
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">المواعيد القادمة</h3>
+            <div style={{ padding: "1rem" }}>
+              <CalendarView
+                appointments={allAppointments}
+                courtSessions={allSessions}
+                clients={clients}
+              />
             </div>
-            <DataTable
-              data={upcomingAppointments}
-              columns={appointmentsColumns}
-              showPagination={false}
-              emptyMessage="لا توجد مواعيد قادمة"
-            />
           </div>
         </>
       )}

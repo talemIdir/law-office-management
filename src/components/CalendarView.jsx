@@ -82,10 +82,10 @@ const messages = {
   showMore: (total) => `+ ${total} موعد آخر`,
 };
 
-function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
-  // Transform appointments to calendar events
+function CalendarView({ appointments = [], courtSessions = [], clients = [], onSelectEvent, onSelectSlot }) {
+  // Transform appointments and court sessions to calendar events
   const events = useMemo(() => {
-    return appointments.map((appointment) => {
+    const appointmentEvents = appointments.map((appointment) => {
       const startDate = new Date(appointment.appointmentDate);
       const endDate = new Date(
         startDate.getTime() + appointment.duration * 60000
@@ -104,47 +104,91 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
       }
 
       return {
-        id: appointment.id,
+        id: `appointment-${appointment.id}`,
         title: appointment.title,
         start: startDate,
         end: endDate,
+        type: 'appointment',
         resource: {
           ...appointment,
           clientName,
         },
       };
     });
-  }, [appointments, clients]);
 
-  // Custom event style based on appointment type and status
+    const courtSessionEvents = courtSessions.map((session) => {
+      const startDate = new Date(session.sessionDate);
+      const endDate = new Date(startDate.getTime() + 60 * 60000); // Default 1 hour duration
+
+      // Get client name from case
+      let clientName = "";
+      if (session.case?.client) {
+        const client = session.case.client;
+        clientName =
+          client.type === "company"
+            ? client.companyName
+            : `${client.firstName} ${client.lastName}`;
+      }
+
+      return {
+        id: `session-${session.id}`,
+        title: `جلسة: ${session.case?.title || 'غير محدد'}`,
+        start: startDate,
+        end: endDate,
+        type: 'courtSession',
+        resource: {
+          ...session,
+          clientName,
+        },
+      };
+    });
+
+    return [...appointmentEvents, ...courtSessionEvents];
+  }, [appointments, courtSessions, clients]);
+
+  // Custom event style based on type and status
   const eventStyleGetter = (event) => {
     let backgroundColor = "#2c5f2d"; // Default green
 
-    const appointment = event.resource;
+    const resource = event.resource;
 
-    // Color based on appointment type
-    switch (appointment.appointmentType) {
-      case "consultation":
-        backgroundColor = "#3b82f6"; // Blue
-        break;
-      case "meeting":
-        backgroundColor = "#2c5f2d"; // Green
-        break;
-      case "court_session":
-        backgroundColor = "#dc2626"; // Red
-        break;
-      case "other":
-        backgroundColor = "#9333ea"; // Purple
-        break;
-    }
+    // Different colors for court sessions vs appointments
+    if (event.type === 'courtSession') {
+      backgroundColor = "#dc2626"; // Red for court sessions
 
-    // Adjust opacity based on status
-    if (appointment.status === "completed") {
-      backgroundColor += "80"; // 50% opacity
-    } else if (appointment.status === "cancelled") {
-      backgroundColor = "#6b7280"; // Gray
-    } else if (appointment.status === "rescheduled") {
-      backgroundColor += "cc"; // 80% opacity
+      // Adjust opacity based on status
+      if (resource.status === "completed" || resource.status === "مكتملة") {
+        backgroundColor += "80"; // 50% opacity
+      } else if (resource.status === "cancelled" || resource.status === "ملغاة") {
+        backgroundColor = "#6b7280"; // Gray
+      } else if (resource.status === "postponed" || resource.status === "مؤجلة") {
+        backgroundColor += "cc"; // 80% opacity
+      }
+    } else {
+      // Color based on appointment type
+      switch (resource.appointmentType) {
+        case "consultation":
+          backgroundColor = "#3b82f6"; // Blue
+          break;
+        case "meeting":
+          backgroundColor = "#2c5f2d"; // Green
+          break;
+        case "court_session":
+          backgroundColor = "#dc2626"; // Red
+          break;
+        case "other":
+          backgroundColor = "#9333ea"; // Purple
+          break;
+      }
+
+      // Adjust opacity based on status
+      if (resource.status === "completed") {
+        backgroundColor += "80"; // 50% opacity
+      } else if (resource.status === "cancelled") {
+        backgroundColor = "#6b7280"; // Gray
+      } else if (resource.status === "rescheduled") {
+        backgroundColor += "cc"; // 80% opacity
+      }
     }
 
     return {
@@ -198,6 +242,18 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
               style={{
                 width: "20px",
                 height: "20px",
+                background: "#dc2626",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            ></span>
+            <span>جلسات المحكمة</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
                 background: "#3b82f6",
                 borderRadius: "3px",
                 display: "inline-block",
@@ -216,18 +272,6 @@ function CalendarView({ appointments, clients, onSelectEvent, onSelectSlot }) {
               }}
             ></span>
             <span>{getAppointmentTypeLabel("meeting")}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span
-              style={{
-                width: "20px",
-                height: "20px",
-                background: "#dc2626",
-                borderRadius: "3px",
-                display: "inline-block",
-              }}
-            ></span>
-            <span>{getAppointmentTypeLabel("court_session")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
