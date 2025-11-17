@@ -219,6 +219,21 @@ function AppointmentsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [viewMode, setViewMode] = useState("table"); // "table" or "calendar"
+
+  // Set default date filters: today and one week ahead
+  const getDefaultDateFrom = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getDefaultDateTo = () => {
+    const oneWeekAhead = new Date();
+    oneWeekAhead.setDate(oneWeekAhead.getDate() + 7);
+    return oneWeekAhead.toISOString().split('T')[0];
+  };
+
+  const [filterDateFrom, setFilterDateFrom] = useState(getDefaultDateFrom());
+  const [filterDateTo, setFilterDateTo] = useState(getDefaultDateTo());
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -336,10 +351,43 @@ function AppointmentsPage() {
     );
   };
 
+  // Filter appointments to show only today and future appointments, with optional date range
+  const filteredAppointments = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const filtered = appointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.appointmentDate);
+
+      // Filter by date range (default to today and after)
+      if (filterDateFrom) {
+        const fromDate = new Date(filterDateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (appointmentDate < fromDate) return false;
+      } else {
+        // Default: only show today and future appointments
+        if (appointmentDate < today) return false;
+      }
+
+      if (filterDateTo) {
+        const toDate = new Date(filterDateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (appointmentDate > toDate) return false;
+      }
+
+      return true;
+    });
+
+    // Sort by date ascending (earliest first)
+    return filtered.sort((a, b) => {
+      return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+    });
+  }, [appointments, filterDateFrom, filterDateTo]);
+
   const filteredByType = useMemo(() => {
-    if (filterType === "all") return appointments;
-    return appointments.filter((a) => a.appointmentType === filterType);
-  }, [appointments, filterType]);
+    if (filterType === "all") return filteredAppointments;
+    return filteredAppointments.filter((a) => a.appointmentType === filterType);
+  }, [filteredAppointments, filterType]);
 
   const columns = useMemo(
     () => [
@@ -497,6 +545,38 @@ function AppointmentsPage() {
                 <option value="cancelled">ملغى</option>
                 <option value="rescheduled">معاد جدولة</option>
               </select>
+            </div>
+
+            <div className="search-container" style={{ marginTop: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <label style={{ whiteSpace: "nowrap" }}>من تاريخ:</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  style={{ width: "180px" }}
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                />
+                <label style={{ whiteSpace: "nowrap" }}>إلى تاريخ:</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  style={{ width: "180px" }}
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                />
+                {(filterDateFrom || filterDateTo) && (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      setFilterDateFrom(getDefaultDateFrom());
+                      setFilterDateTo(getDefaultDateTo());
+                    }}
+                  >
+                    إعادة تعيين
+                  </button>
+                )}
+              </div>
             </div>
 
             <DataTable
