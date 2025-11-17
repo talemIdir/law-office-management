@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { getFinancialReport, caseAPI, clientAPI } from "../utils/api";
+import { caseAPI, clientAPI, paymentAPI, expenseAPI } from "../utils/api";
 import { showError, showWarning } from "../utils/toast";
 import DataTable from "../components/DataTable";
-import { getCaseTypeLabel, getPaymentMethodLabel, getStatusLabel } from "../utils/labels";
+import {
+  getCaseTypeLabel,
+  getPaymentMethodLabel,
+  getStatusLabel,
+  getExpenseCategoryLabel,
+} from "../utils/labels";
 
 function ReportsPage() {
   const [reportType, setReportType] = useState("financial");
@@ -32,12 +37,75 @@ function ReportsPage() {
 
   const generateFinancialReport = async () => {
     setLoading(true);
-    const result = await getFinancialReport(startDate, endDate);
-    if (result.success) {
-      setReportData(result.data);
-    } else {
-      showError("خطأ: " + result.error);
+
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      // Get all cases, payments, and expenses
+      const [casesResult, paymentsResult, expensesResult] = await Promise.all([
+        caseAPI.getAll(),
+        paymentAPI.getAll(),
+        expenseAPI.getAll(),
+      ]);
+
+      if (
+        !casesResult.success ||
+        !paymentsResult.success ||
+        !expensesResult.success
+      ) {
+        showError("خطأ في تحميل البيانات");
+        setLoading(false);
+        return;
+      }
+
+      // Filter cases within date range
+      const filteredCases = casesResult.data.filter((c) => {
+        const caseDate = new Date(c.startDate || c.createdAt);
+        return caseDate >= start && caseDate <= end;
+      });
+
+      // Filter payments within date range
+      const filteredPayments = paymentsResult.data.filter((p) => {
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= start && paymentDate <= end;
+      });
+
+      // Filter expenses within date range
+      const filteredExpenses = expensesResult.data.filter((e) => {
+        const expenseDate = new Date(e.expenseDate);
+        return expenseDate >= start && expenseDate <= end;
+      });
+
+      // Calculate totals
+      const totalCaseAmount = filteredCases.reduce(
+        (sum, c) => sum + (parseFloat(c.amount) || 0),
+        0
+      );
+      const totalPaid = filteredPayments.reduce(
+        (sum, p) => sum + (parseFloat(p.amount) || 0),
+        0
+      );
+      const totalExpenses = filteredExpenses.reduce(
+        (sum, e) => sum + (parseFloat(e.amount) || 0),
+        0
+      );
+      const netIncome = totalPaid - totalExpenses;
+
+      setReportData({
+        totalCaseAmount,
+        totalPaid,
+        totalExpenses,
+        netIncome,
+        cases: filteredCases,
+        payments: filteredPayments,
+        expenses: filteredExpenses,
+      });
+    } catch (error) {
+      showError("خطأ: " + error.message);
     }
+
     setLoading(false);
   };
 
@@ -129,43 +197,108 @@ function ReportsPage() {
     return new Date(date).toLocaleDateString("ar-DZ");
   };
 
-
-  // Column definitions for invoices table
-  const invoicesColumns = useMemo(
+  // Column definitions for cases table
+  const casesColumns = useMemo(
     () => [
       {
-        accessorKey: "invoiceNumber",
-        header: "رقم الفاتورة",
+        accessorKey: "caseNumber",
+        header: "رقم القضية",
         enableSorting: true,
       },
       {
-        accessorKey: "invoiceDate",
-        header: "التاريخ",
-        cell: ({ row }) => formatDate(row.original.invoiceDate),
+        accessorKey: "title",
+        header: "العنوان",
         enableSorting: true,
       },
       {
-        accessorKey: "totalAmount",
-        header: "المبلغ",
-        cell: ({ row }) => formatCurrency(row.original.totalAmount),
+        accessorKey: "caseType",
+        header: "النوع",
+        cell: ({ row }) => getCaseTypeLabel(row.original.caseType),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "amount",
+        header: "المبلغ المتوقع",
+        cell: ({ row }) => formatCurrency(row.original.amount),
         enableSorting: true,
       },
       {
         accessorKey: "status",
         header: "الحالة",
         cell: ({ row }) => (
-          <span
-            className={`badge ${
-              row.original.status === "paid" ? "badge-success" : "badge-warning"
-            }`}
-          >
-            {row.original.status === "paid" ? "مدفوعة" : "غير مدفوعة"}
+          <span className="badge badge-info">
+            {getStatusLabel(row.original.status)}
           </span>
         ),
         enableSorting: true,
       },
     ],
-    [],
+    []
+  );
+
+  // Column definitions for payments table
+  const paymentsColumns = useMemo(
+    () => [
+      {
+        accessorKey: "paymentDate",
+        header: "التاريخ",
+        cell: ({ row }) => formatDate(row.original.paymentDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "amount",
+        header: "المبلغ",
+        cell: ({ row }) => formatCurrency(row.original.amount),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "paymentMethod",
+        header: "طريقة الدفع",
+        cell: ({ row }) => getPaymentMethodLabel(row.original.paymentMethod),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "notes",
+        header: "ملاحظات",
+        cell: ({ row }) => row.original.notes || "-",
+        enableSorting: false,
+      },
+    ],
+    []
+  );
+
+  // Column definitions for expenses table
+  const expensesColumns = useMemo(
+    () => [
+      {
+        accessorKey: "expenseDate",
+        header: "التاريخ",
+        cell: ({ row }) => formatDate(row.original.expenseDate),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "category",
+        header: "الفئة",
+        cell: ({ row }) => (
+          <span className="badge badge-secondary">
+            {getExpenseCategoryLabel(row.original.category)}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "description",
+        header: "الوصف",
+        enableSorting: true,
+      },
+      {
+        accessorKey: "amount",
+        header: "المبلغ",
+        cell: ({ row }) => formatCurrency(row.original.amount),
+        enableSorting: true,
+      },
+    ],
+    []
   );
 
   // Column definitions for cases by type table
@@ -184,7 +317,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    [],
+    []
   );
 
   // Column definitions for cases by status table
@@ -203,7 +336,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    [],
+    []
   );
 
   // Column definitions for clients by status table
@@ -222,7 +355,7 @@ function ReportsPage() {
         enableSorting: true,
       },
     ],
-    [],
+    []
   );
 
   return (
@@ -278,17 +411,17 @@ function ReportsPage() {
 
       {reportData && reportType === "financial" && (
         <>
-          <div className="stats-grid">
-            <div className="stat-card success">
+          <div className="report-stats-grid">
+            <div className="stat-card info">
               <div className="stat-card-header">
-                <span className="stat-card-title">إجمالي الفواتير</span>
-                <span className="stat-card-icon">💵</span>
+                <span className="stat-card-title">مبالغ القضايا المتوقعة</span>
+                <span className="stat-card-icon">⚖️</span>
               </div>
               <div className="stat-card-value">
-                {formatCurrency(reportData.totalInvoiced)}
+                {formatCurrency(reportData.totalCaseAmount || 0)}
               </div>
               <div className="stat-card-description">
-                عدد الفواتير: {reportData.invoices.length}
+                عدد القضايا: {reportData.cases?.length || 0}
               </div>
             </div>
 
@@ -298,10 +431,10 @@ function ReportsPage() {
                 <span className="stat-card-icon">💰</span>
               </div>
               <div className="stat-card-value">
-                {formatCurrency(reportData.totalPaid)}
+                {formatCurrency(reportData.totalPaid || 0)}
               </div>
               <div className="stat-card-description">
-                عدد الدفعات: {reportData.payments.length}
+                عدد الدفعات: {reportData.payments?.length || 0}
               </div>
             </div>
 
@@ -311,35 +444,57 @@ function ReportsPage() {
                 <span className="stat-card-icon">💳</span>
               </div>
               <div className="stat-card-value">
-                {formatCurrency(reportData.totalExpenses)}
+                {formatCurrency(reportData.totalExpenses || 0)}
               </div>
               <div className="stat-card-description">
-                عدد المصروفات: {reportData.expenses.length}
+                عدد المصروفات: {reportData.expenses?.length || 0}
               </div>
             </div>
 
-            <div className="stat-card info">
+            <div className="stat-card warning">
               <div className="stat-card-header">
                 <span className="stat-card-title">صافي الدخل</span>
                 <span className="stat-card-icon">📈</span>
               </div>
               <div className="stat-card-value">
-                {formatCurrency(reportData.netIncome)}
+                {formatCurrency(reportData.netIncome || 0)}
               </div>
               <div className="stat-card-description">
-                {reportData.netIncome >= 0 ? "ربح" : "خسارة"}
+                {(reportData.netIncome || 0) >= 0 ? "ربح" : "خسارة"}
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h3 className="card-title">تفاصيل الفواتير</h3>
+            <h3 className="card-title">تفاصيل القضايا</h3>
             <DataTable
-              data={reportData.invoices}
-              columns={invoicesColumns}
+              data={reportData.cases || []}
+              columns={casesColumns}
               showPagination={true}
               pageSize={10}
-              emptyMessage="لا توجد فواتير في هذه الفترة"
+              emptyMessage="لا توجد قضايا في هذه الفترة"
+            />
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">تفاصيل المدفوعات</h3>
+            <DataTable
+              data={reportData.payments || []}
+              columns={paymentsColumns}
+              showPagination={true}
+              pageSize={10}
+              emptyMessage="لا توجد مدفوعات في هذه الفترة"
+            />
+          </div>
+
+          <div className="card">
+            <h3 className="card-title">تفاصيل المصروفات</h3>
+            <DataTable
+              data={reportData.expenses || []}
+              columns={expensesColumns}
+              showPagination={true}
+              pageSize={10}
+              emptyMessage="لا توجد مصروفات في هذه الفترة"
             />
           </div>
         </>
@@ -353,7 +508,9 @@ function ReportsPage() {
                 <span className="stat-card-title">إجمالي القضايا</span>
                 <span className="stat-card-icon">⚖️</span>
               </div>
-              <div className="stat-card-value">{reportData.totalCases}</div>
+              <div className="stat-card-value">
+                {reportData.totalCases || 0}
+              </div>
               <div className="stat-card-description">في الفترة المحددة</div>
             </div>
           </div>
@@ -361,9 +518,13 @@ function ReportsPage() {
           <div className="card">
             <h3 className="card-title">القضايا حسب النوع</h3>
             <DataTable
-              data={Object.entries(reportData.casesByType).map(
-                ([type, count]) => ({ type, count }),
-              )}
+              data={
+                reportData.casesByType
+                  ? Object.entries(reportData.casesByType).map(
+                      ([type, count]) => ({ type, count })
+                    )
+                  : []
+              }
               columns={casesByTypeColumns}
               showPagination={false}
               emptyMessage="لا توجد بيانات"
@@ -373,9 +534,13 @@ function ReportsPage() {
           <div className="card">
             <h3 className="card-title">القضايا حسب الحالة</h3>
             <DataTable
-              data={Object.entries(reportData.casesByStatus).map(
-                ([status, count]) => ({ status, count }),
-              )}
+              data={
+                reportData.casesByStatus
+                  ? Object.entries(reportData.casesByStatus).map(
+                      ([status, count]) => ({ status, count })
+                    )
+                  : []
+              }
               columns={casesByStatusColumns}
               showPagination={false}
               emptyMessage="لا توجد بيانات"
@@ -392,7 +557,9 @@ function ReportsPage() {
                 <span className="stat-card-title">إجمالي الموكلين</span>
                 <span className="stat-card-icon">👥</span>
               </div>
-              <div className="stat-card-value">{reportData.totalClients}</div>
+              <div className="stat-card-value">
+                {reportData.totalClients || 0}
+              </div>
               <div className="stat-card-description">في الفترة المحددة</div>
             </div>
 
@@ -402,7 +569,7 @@ function ReportsPage() {
                 <span className="stat-card-icon">👤</span>
               </div>
               <div className="stat-card-value">
-                {reportData.clientsByType.individual}
+                {reportData.clientsByType?.individual || 0}
               </div>
               <div className="stat-card-description">موكلين أفراد</div>
             </div>
@@ -413,7 +580,7 @@ function ReportsPage() {
                 <span className="stat-card-icon">🏢</span>
               </div>
               <div className="stat-card-value">
-                {reportData.clientsByType.company}
+                {reportData.clientsByType?.company || 0}
               </div>
               <div className="stat-card-description">موكلين شركات</div>
             </div>
@@ -422,9 +589,13 @@ function ReportsPage() {
           <div className="card">
             <h3 className="card-title">الموكلين حسب الحالة</h3>
             <DataTable
-              data={Object.entries(reportData.clientsByStatus).map(
-                ([status, count]) => ({ status, count }),
-              )}
+              data={
+                reportData.clientsByStatus
+                  ? Object.entries(reportData.clientsByStatus).map(
+                      ([status, count]) => ({ status, count })
+                    )
+                  : []
+              }
               columns={clientsByStatusColumns}
               showPagination={false}
               emptyMessage="لا توجد بيانات"
