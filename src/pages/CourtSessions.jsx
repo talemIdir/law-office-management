@@ -13,7 +13,6 @@ function CourtSessionModal({ session, onClose, onSave }) {
     judge: "",
     attendees: "",
     outcome: "",
-    nextSessionDate: "",
     notes: "",
     status: "في التقرير",
     caseId: "",
@@ -26,7 +25,7 @@ function CourtSessionModal({ session, onClose, onSave }) {
 
   const loadCases = async () => {
     const result = await caseAPI.getAll({
-      where: { status: ["open", "in_progress"] },
+      where: { status: ["first_instance", "in_settlement", "in_appeal"] },
     });
     if (result.success) {
       setCases(result.data);
@@ -141,34 +140,22 @@ function CourtSessionModal({ session, onClose, onSave }) {
               ></textarea>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">موعد الجلسة القادمة</label>
-                <input
-                  type="datetime-local"
-                  name="nextSessionDate"
-                  className="form-control"
-                  value={formData.nextSessionDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">الحالة</label>
-                <select
-                  name="status"
-                  className="form-select"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="في التقرير">في التقرير</option>
-                  <option value="في المرافعة">في المرافعة</option>
-                  <option value="لجواب الخصم">لجواب الخصم</option>
-                  <option value="لجوابنا">لجوابنا</option>
-                  <option value="في المداولة">في المداولة</option>
-                  <option value="مؤجلة">مؤجلة</option>
-                  <option value="جلسة المحاكمة">جلسة المحاكمة</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label className="form-label">الحالة</label>
+              <select
+                name="status"
+                className="form-select"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="في التقرير">في التقرير</option>
+                <option value="في المرافعة">في المرافعة</option>
+                <option value="لجواب الخصم">لجواب الخصم</option>
+                <option value="لجوابنا">لجوابنا</option>
+                <option value="في المداولة">في المداولة</option>
+                <option value="مؤجلة">مؤجلة</option>
+                <option value="جلسة المحاكمة">جلسة المحاكمة</option>
+              </select>
             </div>
 
             <div className="form-group">

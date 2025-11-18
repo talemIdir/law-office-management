@@ -119,33 +119,26 @@ function ViewCase() {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "active":
-      case "open":
-      case "won":
       case "completed":
       case "paid":
+      case "closed":
         return "badge-success";
-      case "in_progress":
+      case "first_instance":
       case "scheduled":
         return "badge-info";
-      case "inactive":
-      case "closed":
+      case "in_settlement":
+      case "in_appeal":
       case "postponed":
       case "rescheduled":
+      case "pending":
+      case "partial":
         return "badge-warning";
-      case "lost":
+      case "extraordinary_appeal":
+      case "overdue":
+        return "badge-danger";
       case "archived":
       case "cancelled":
         return "badge-secondary";
-      case "settled":
-        return "badge-primary";
-      case "appealed":
-        return "badge-info";
-      case "pending":
-        return "badge-warning";
-      case "partial":
-        return "badge-warning";
-      case "overdue":
-        return "badge-danger";
       default:
         return "badge-secondary";
     }
@@ -269,12 +262,6 @@ function ViewCase() {
         accessorKey: "courtRoom",
         header: "القاعة",
         cell: ({ row }) => row.original.courtRoom || "-",
-        enableSorting: true,
-      },
-      {
-        accessorKey: "judge",
-        header: "القاضي",
-        cell: ({ row }) => row.original.judge || "-",
         enableSorting: true,
       },
       {
@@ -598,7 +585,7 @@ function ViewCase() {
             </div>
 
             <div className="detail-item">
-              <span className="detail-label">دور الموكل:</span>
+              <span className="detail-label">صفة الموكل:</span>
               <span className="detail-value">
                 {getClientRoleLabel(caseData.clientRole)}
               </span>
@@ -615,19 +602,14 @@ function ViewCase() {
             </div>
 
             <div className="detail-item">
-              <span className="detail-label">القاضي:</span>
-              <span className="detail-value">{caseData.judge || "-"}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">الطرف المقابل:</span>
+              <span className="detail-label">الخصم:</span>
               <span className="detail-value">
                 {caseData.opposingParty || "-"}
               </span>
             </div>
 
             <div className="detail-item">
-              <span className="detail-label">محامي الطرف المقابل:</span>
+              <span className="detail-label">محامي الخصم:</span>
               <span className="detail-value">
                 {caseData.opposingLawyer || "-"}
               </span>
@@ -648,14 +630,7 @@ function ViewCase() {
             </div>
 
             <div className="detail-item">
-              <span className="detail-label">الجلسة القادمة:</span>
-              <span className="detail-value">
-                {formatDateTime(caseData.nextHearingDate)}
-              </span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">المبلغ المطالب به:</span>
+              <span className="detail-label">الأتعاب المتفق عليها:</span>
               <span className="detail-value">
                 {formatCurrency(caseData.amount)}
               </span>

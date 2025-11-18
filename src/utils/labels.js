@@ -5,13 +5,11 @@ export const getStatusLabel = (status) => {
     active: "نشط",
     inactive: "غير نشط",
     archived: "مؤرشف",
-    open: "مفتوحة",
-    in_progress: "قيد المعالجة",
-    won: "مكسوبة",
-    lost: "مخسورة",
-    settled: "مسوّاة",
+    first_instance: "على مستوى الدرجة الأولى",
+    in_settlement: "في إطار التسوية",
     closed: "مغلقة",
-    appealed: "مستأنفة",
+    in_appeal: "في الاستئناف",
+    extraordinary_appeal: "طعن غير عادي",
     scheduled: "مجدول",
     completed: "مكتمل",
     cancelled: "ملغى",
@@ -36,12 +34,17 @@ export const getAppointmentTypeLabel = (type) => {
 
 export const getCaseTypeLabel = (type) => {
   const labels = {
-    civil: "مدني",
-    criminal: "جنائي",
-    commercial: "تجاري",
-    family: "أسري",
-    labor: "عمالي",
-    administrative: "إداري",
+    civil: "المدني",
+    social: "الإجتماعي",
+    real_estate: "العقاري",
+    family: "شؤون الأسرة",
+    commercial: "التجاري",
+    maritime: "البحري",
+    urgent: "الاستعجالي",
+    misdemeanor: "الجنح",
+    violations: "المخالفات",
+    juveniles: "الأحداث",
+    penalty_enforcement: "تطبيق العقوبات",
     other: "أخرى",
   };
   return labels[type] || type;
@@ -79,10 +82,8 @@ export const getDocumentTypeLabel = (type) => {
 
 export const getPriorityLabel = (priority) => {
   const labels = {
-    urgent: "عاجل",
-    high: "عالية",
-    medium: "متوسطة",
-    low: "منخفضة",
+    normal: "عادي",
+    urgent: "قضاء استعجالي",
   };
   return labels[priority] || priority;
 };

@@ -276,7 +276,7 @@ class ClientService {
         totalCases: client.cases?.length || 0,
         activeCases:
           client.cases?.filter(
-            (c) => c.status === "open" || c.status === "in_progress"
+            (c) => c.status === "first_instance" || c.status === "in_settlement" || c.status === "in_appeal"
           ).length || 0,
         totalInvoices: client.invoices?.length || 0,
         totalAmount:

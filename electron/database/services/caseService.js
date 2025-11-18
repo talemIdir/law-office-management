@@ -361,7 +361,7 @@ class CaseService {
       const cases = await Case.findAll({
         where: {
           status: {
-            [Op.in]: ["open", "in_progress"],
+            [Op.in]: ["first_instance", "in_settlement", "in_appeal"],
           },
         },
         include: [
@@ -399,23 +399,12 @@ class CaseService {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + days);
 
-      const cases = await Case.findAll({
-        where: {
-          nextHearingDate: {
-            [Op.between]: [new Date(), endDate],
-          },
-        },
-        include: [
-          { model: Client, as: "client" },
-          { model: User, as: "assignedLawyer" },
-        ],
-        order: [["nextHearingDate", "ASC"]],
-      });
-
+      // This function is deprecated - nextHearingDate field has been removed
+      // Use court sessions to track upcoming hearings instead
       return {
         success: true,
-        data: cases.map((cas) => cas.toJSON()),
-        count: cases.length,
+        data: [],
+        count: 0,
       };
     } catch (error) {
       console.error("Error fetching upcoming hearings:", error);
@@ -539,7 +528,7 @@ class CaseService {
   async reopenCase(id) {
     try {
       return await this.updateCase(id, {
-        status: "in_progress",
+        status: "first_instance",
         endDate: null,
       });
     } catch (error) {

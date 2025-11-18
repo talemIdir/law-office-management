@@ -71,15 +71,13 @@ const Case = sequelize.define(
     },
     status: {
       type: DataTypes.ENUM(
-        "open",
-        "in_progress",
-        "won",
-        "lost",
-        "settled",
+        "first_instance",
+        "in_settlement",
         "closed",
-        "appealed",
+        "in_appeal",
+        "extraordinary_appeal",
       ),
-      defaultValue: "open",
+      defaultValue: "first_instance",
       comment: "حالة القضية",
     },
     priority: {
@@ -95,13 +93,9 @@ const Case = sequelize.define(
       type: DataTypes.DATEONLY,
       comment: "تاريخ انتهاء القضية",
     },
-    nextHearingDate: {
-      type: DataTypes.DATE,
-      comment: "موعد الجلسة القادمة",
-    },
     amount: {
       type: DataTypes.DECIMAL(15, 2),
-      comment: "المبلغ المطالب به",
+      comment: "الأتعاب المتفق عليها",
     },
     notes: {
       type: DataTypes.TEXT,

@@ -35,10 +35,6 @@ const CourtSession = sequelize.define(
       type: DataTypes.TEXT,
       comment: "نتيجة الجلسة",
     },
-    nextSessionDate: {
-      type: DataTypes.DATE,
-      comment: "موعد الجلسة القادمة",
-    },
     notes: {
       type: DataTypes.TEXT,
       comment: "ملاحظات",

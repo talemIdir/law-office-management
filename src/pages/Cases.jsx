@@ -5,7 +5,7 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import PaymentModal from "../components/PaymentModal";
-import { getStatusLabel, getCaseTypeLabel } from "../utils/labels";
+import { getStatusLabel, getCaseTypeLabel, getPriorityLabel } from "../utils/labels";
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -20,11 +20,9 @@ function CaseModal({ caseData, onClose, onSave }) {
     opposingParty: "",
     opposingLawyer: "",
     clientRole: "plaintiff",
-    status: "open",
-    priority: "medium",
+    status: "first_instance",
+    priority: "normal",
     startDate: "",
-    endDate: "",
-    nextHearingDate: "",
     amount: "",
     notes: "",
     clientId: "",
@@ -134,17 +132,22 @@ function CaseModal({ caseData, onClose, onSave }) {
                   onChange={handleChange}
                   required
                 >
-                  <option value="civil">مدني</option>
-                  <option value="criminal">جنائي</option>
-                  <option value="commercial">تجاري</option>
-                  <option value="administrative">إداري</option>
-                  <option value="family">أسري</option>
-                  <option value="labor">عمالي</option>
+                  <option value="civil">المدني</option>
+                  <option value="social">الإجتماعي</option>
+                  <option value="real_estate">العقاري</option>
+                  <option value="family">شؤون الأسرة</option>
+                  <option value="commercial">التجاري</option>
+                  <option value="maritime">البحري</option>
+                  <option value="urgent">الاستعجالي</option>
+                  <option value="misdemeanor">الجنح</option>
+                  <option value="violations">المخالفات</option>
+                  <option value="juveniles">الأحداث</option>
+                  <option value="penalty_enforcement">تطبيق العقوبات</option>
                   <option value="other">أخرى</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label required">دور الموكل</label>
+                <label className="form-label required">صفة الموكل</label>
                 <select
                   name="clientRole"
                   className="form-select"
@@ -188,17 +191,7 @@ function CaseModal({ caseData, onClose, onSave }) {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">القاضي</label>
-                <input
-                  type="text"
-                  name="judge"
-                  className="form-control"
-                  value={formData.judge}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">الطرف المقابل</label>
+                <label className="form-label">الخصم</label>
                 <input
                   type="text"
                   name="opposingParty"
@@ -207,17 +200,16 @@ function CaseModal({ caseData, onClose, onSave }) {
                   onChange={handleChange}
                 />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">محامي الطرف المقابل</label>
-              <input
-                type="text"
-                name="opposingLawyer"
-                className="form-control"
-                value={formData.opposingLawyer}
-                onChange={handleChange}
-              />
+              <div className="form-group">
+                <label className="form-label">محامي الخصم</label>
+                <input
+                  type="text"
+                  name="opposingLawyer"
+                  className="form-control"
+                  value={formData.opposingLawyer}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
             <div className="form-row">
@@ -229,13 +221,11 @@ function CaseModal({ caseData, onClose, onSave }) {
                   value={formData.status}
                   onChange={handleChange}
                 >
-                  <option value="open">مفتوحة</option>
-                  <option value="in_progress">قيد المعالجة</option>
-                  <option value="won">كسب</option>
-                  <option value="lost">خسارة</option>
-                  <option value="settled">تسوية</option>
+                  <option value="first_instance">على مستوى الدرجة الأولى</option>
+                  <option value="in_settlement">في إطار التسوية</option>
                   <option value="closed">مغلقة</option>
-                  <option value="appealed">استئناف</option>
+                  <option value="in_appeal">في الاستئناف</option>
+                  <option value="extraordinary_appeal">طعن غير عادي</option>
                 </select>
               </div>
               <div className="form-group">
@@ -246,17 +236,15 @@ function CaseModal({ caseData, onClose, onSave }) {
                   value={formData.priority}
                   onChange={handleChange}
                 >
-                  <option value="low">منخفضة</option>
-                  <option value="medium">متوسطة</option>
-                  <option value="high">عالية</option>
-                  <option value="urgent">عاجلة</option>
+                  <option value="normal">عادي</option>
+                  <option value="urgent">قضاء استعجالي</option>
                 </select>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">تاريخ البداية</label>
+                <label className="form-label">تاريخ التكليف</label>
                 <input
                   type="date"
                   name="startDate"
@@ -266,30 +254,7 @@ function CaseModal({ caseData, onClose, onSave }) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">تاريخ الانتهاء</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  className="form-control"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">موعد الجلسة القادمة</label>
-                <input
-                  type="datetime-local"
-                  name="nextHearingDate"
-                  className="form-control"
-                  value={formData.nextHearingDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">المبلغ المطالب به (دج)</label>
+                <label className="form-label">الأتعاب المتفق عليها (دج)</label>
                 <input
                   type="number"
                   name="amount"
@@ -508,15 +473,17 @@ function CasesPage() {
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.status === "won"
-                ? "badge-success"
-                : row.original.status === "lost"
-                  ? "badge-danger"
-                  : row.original.status === "in_progress"
-                    ? "badge-info"
-                    : row.original.status === "settled"
-                      ? "badge-success"
-                      : "badge-warning"
+              row.original.status === "first_instance"
+                ? "badge-info"
+                : row.original.status === "in_settlement"
+                  ? "badge-warning"
+                  : row.original.status === "closed"
+                    ? "badge-success"
+                    : row.original.status === "in_appeal"
+                      ? "badge-warning"
+                      : row.original.status === "extraordinary_appeal"
+                        ? "badge-danger"
+                        : "badge-secondary"
             }`}
           >
             {getStatusLabel(row.original.status)}
@@ -532,15 +499,10 @@ function CasesPage() {
             className={`badge ${
               row.original.priority === "urgent"
                 ? "badge-danger"
-                : row.original.priority === "high"
-                  ? "badge-warning"
-                  : "badge-info"
+                : "badge-info"
             }`}
           >
-            {row.original.priority === "low" && "منخفضة"}
-            {row.original.priority === "medium" && "متوسطة"}
-            {row.original.priority === "high" && "عالية"}
-            {row.original.priority === "urgent" && "عاجلة"}
+            {getPriorityLabel(row.original.priority)}
           </span>
         ),
         enableSorting: true,
@@ -639,13 +601,11 @@ function CasesPage() {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">جميع الحالات</option>
-            <option value="open">مفتوحة</option>
-            <option value="in_progress">قيد المعالجة</option>
-            <option value="won">كسب</option>
-            <option value="lost">خسارة</option>
-            <option value="settled">تسوية</option>
+            <option value="first_instance">على مستوى الدرجة الأولى</option>
+            <option value="in_settlement">في إطار التسوية</option>
             <option value="closed">مغلقة</option>
-            <option value="appealed">استئناف</option>
+            <option value="in_appeal">في الاستئناف</option>
+            <option value="extraordinary_appeal">طعن غير عادي</option>
           </select>
         </div>
 

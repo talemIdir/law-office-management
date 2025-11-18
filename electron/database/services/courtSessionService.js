@@ -31,9 +31,6 @@ class CourtSessionService {
 
       const session = await CourtSession.create(sessionData);
 
-      // Update case's next hearing date
-      await caseData.update({ nextHearingDate: sessionData.sessionDate });
-
       return {
         success: true,
         data: session.toJSON(),
@@ -190,18 +187,6 @@ class CourtSessionService {
       }
 
       await session.update(updateData);
-
-      // Update case's next hearing date if session date changed
-      if (updateData.sessionDate) {
-        await session.case.update({ nextHearingDate: updateData.sessionDate });
-      }
-
-      // Update case's next hearing date to next session if exists
-      if (updateData.nextSessionDate) {
-        await session.case.update({
-          nextHearingDate: updateData.nextSessionDate,
-        });
-      }
 
       return {
         success: true,
@@ -391,7 +376,6 @@ class CourtSessionService {
 
       return await this.updateCourtSession(id, {
         status: "مؤجلة",
-        nextSessionDate: newDate,
       });
     } catch (error) {
       console.error("Error postponing session:", error);

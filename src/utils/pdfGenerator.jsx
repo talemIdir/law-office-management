@@ -283,24 +283,20 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
             <Text style={styles.tableCol1}>نوع المحكمة</Text>
             <Text style={styles.tableCol2}>{caseData.courtType || "-"}</Text>
           </View>
-          <View style={[styles.tableRow, styles.tableRowEven]}>
-            <Text style={styles.tableCol1}>القاضي</Text>
-            <Text style={styles.tableCol2}>{caseData.judge || "-"}</Text>
-          </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCol1}>دور الموكل</Text>
+            <Text style={styles.tableCol1}>صفة الموكل</Text>
             <Text style={styles.tableCol2}>
               {getClientRoleLabel(caseData.clientRole)}
             </Text>
           </View>
           <View style={[styles.tableRow, styles.tableRowEven]}>
-            <Text style={styles.tableCol1}>الطرف المقابل</Text>
+            <Text style={styles.tableCol1}>الخصم</Text>
             <Text style={styles.tableCol2}>
               {caseData.opposingParty || "-"}
             </Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCol1}>محامي الطرف المقابل</Text>
+            <Text style={styles.tableCol1}>محامي الخصم</Text>
             <Text style={styles.tableCol2}>
               {caseData.opposingLawyer || "-"}
             </Text>
@@ -316,13 +312,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
             <Text style={styles.tableCol2}>{formatDate(caseData.endDate)}</Text>
           </View>
           <View style={[styles.tableRow, styles.tableRowEven]}>
-            <Text style={styles.tableCol1}>الجلسة القادمة</Text>
-            <Text style={styles.tableCol2}>
-              {formatDateTime(caseData.nextHearingDate)}
-            </Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCol1}>المبلغ المطالب به</Text>
+            <Text style={styles.tableCol1}>الأتعاب المتفق عليها</Text>
             <Text style={styles.tableCol2}>
               {formatCurrency(caseData.amount)}
             </Text>
@@ -377,10 +367,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
                   <Text style={[styles.dataTableCell, { width: "20%" }]}>
                     المحكمة
                   </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
-                    القاضي
-                  </Text>
-                  <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                  <Text style={[styles.dataTableCell, { width: "20%" }]}>
                     الحالة
                   </Text>
                   <Text style={[styles.dataTableCell, { width: "15%" }]}>
@@ -404,10 +391,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
                     <Text style={[styles.dataTableCell, { width: "20%" }]}>
                       {session.court || "-"}
                     </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
-                      {session.judge || "-"}
-                    </Text>
-                    <Text style={[styles.dataTableCell, { width: "15%" }]}>
+                    <Text style={[styles.dataTableCell, { width: "20%" }]}>
                       {getStatusLabel(session.status) || "-"}
                     </Text>
                     <Text style={[styles.dataTableCell, { width: "15%" }]}>
