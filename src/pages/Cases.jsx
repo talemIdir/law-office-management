@@ -5,17 +5,31 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import PaymentModal from "../components/PaymentModal";
-import { getStatusLabel, getCaseTypeLabel, getPriorityLabel } from "../utils/labels";
+import {
+  getStatusLabel,
+  getCaseTypeLabel,
+  getPriorityLabel,
+  getJurisdictionTypeLabel,
+} from "../utils/labels";
 
 function CaseModal({ caseData, onClose, onSave }) {
   const [clients, setClients] = useState([]);
+  const [judicialCouncils, setJudicialCouncils] = useState([]);
+  const [administrativeAppealCourts, setAdministrativeAppealCourts] = useState(
+    []
+  );
+  const [commercialCourts, setCommercialCourts] = useState([]);
+  const [courts, setCourts] = useState([]);
   const [formData, setFormData] = useState({
     caseNumber: "",
     title: "",
     description: "",
     caseType: "civil",
-    court: "",
-    courtType: "محكمة ابتدائية",
+    jurisdictionType: "",
+    judicialCouncilId: "",
+    administrativeAppealCourtId: "",
+    courtId: "",
+    courtName: "",
     judge: "",
     opposingParty: "",
     opposingLawyer: "",
@@ -31,12 +45,86 @@ function CaseModal({ caseData, onClose, onSave }) {
 
   useEffect(() => {
     loadClients();
+    loadJurisdictionalData();
   }, []);
+
+  useEffect(() => {
+    if (formData.jurisdictionType) {
+      loadCourtsForJurisdiction();
+    }
+  }, [
+    formData.jurisdictionType,
+    formData.judicialCouncilId,
+    formData.administrativeAppealCourtId,
+  ]);
 
   const loadClients = async () => {
     const result = await clientAPI.getAll({ where: { status: "active" } });
     if (result.success) {
       setClients(result.data);
+    }
+  };
+
+  const loadJurisdictionalData = async () => {
+    const { ipcRenderer } = window.require("electron");
+
+    // Load judicial councils (for ordinary jurisdiction)
+    const councilsResult = await ipcRenderer.invoke(
+      "jurisdiction:getAllJudicialCouncils"
+    );
+    if (councilsResult.success) {
+      setJudicialCouncils(councilsResult.data);
+    }
+
+    // Load administrative appeal courts
+    const adminAppealResult = await ipcRenderer.invoke(
+      "jurisdiction:getAllAdministrativeAppealCourts"
+    );
+    if (adminAppealResult.success) {
+      setAdministrativeAppealCourts(adminAppealResult.data);
+    }
+
+    // Load commercial courts
+    const commercialResult = await ipcRenderer.invoke(
+      "jurisdiction:getAllCommercialCourts"
+    );
+    if (commercialResult.success) {
+      setCommercialCourts(commercialResult.data);
+    }
+  };
+
+  const loadCourtsForJurisdiction = async () => {
+    const { ipcRenderer } = window.require("electron");
+
+    if (
+      formData.jurisdictionType === "ordinary" &&
+      formData.judicialCouncilId
+    ) {
+      // Load first degree courts for selected judicial council
+      const result = await ipcRenderer.invoke(
+        "jurisdiction:getCourtsByCouncilId",
+        parseInt(formData.judicialCouncilId)
+      );
+      if (result.success) {
+        setCourts(result.data);
+      }
+    } else if (
+      formData.jurisdictionType === "administrative" &&
+      formData.administrativeAppealCourtId
+    ) {
+      // Load administrative courts for selected appeal court
+      const result = await ipcRenderer.invoke(
+        "jurisdiction:getAdminCourtsByAppealCourtId",
+        parseInt(formData.administrativeAppealCourtId)
+      );
+      if (result.success) {
+        setCourts(result.data);
+      }
+    } else if (formData.jurisdictionType === "commercial") {
+      // Commercial courts don't have a hierarchy, just show the list
+      setCourts(commercialCourts);
+    } else {
+      setCourts([]);
     }
   };
 
@@ -46,7 +134,43 @@ function CaseModal({ caseData, onClose, onSave }) {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // If jurisdiction type changes, reset related fields
+    if (name === "jurisdictionType") {
+      setFormData({
+        ...formData,
+        jurisdictionType: value,
+        judicialCouncilId: "",
+        administrativeAppealCourtId: "",
+        courtId: "",
+        courtName: "",
+      });
+      setCourts([]);
+    }
+    // If council/appeal court changes, reset court selection
+    else if (
+      name === "judicialCouncilId" ||
+      name === "administrativeAppealCourtId"
+    ) {
+      setFormData({
+        ...formData,
+        [name]: value,
+        courtId: "",
+        courtName: "",
+      });
+    }
+    // If court is selected, save its name for display
+    else if (name === "courtId") {
+      const selectedCourt = courts.find((c) => c.id === parseInt(value));
+      setFormData({
+        ...formData,
+        courtId: value,
+        courtName: selectedCourt ? selectedCourt.name : "",
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   return (
@@ -161,33 +285,123 @@ function CaseModal({ caseData, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">المحكمة</label>
-                <input
-                  type="text"
-                  name="court"
-                  className="form-control"
-                  value={formData.court}
-                  onChange={handleChange}
-                />
+            <div className="form-group">
+              <label className="form-label">نوع القضاء</label>
+              <select
+                name="jurisdictionType"
+                className="form-select"
+                value={formData.jurisdictionType}
+                onChange={handleChange}
+              >
+                <option value="">اختر نوع القضاء</option>
+                <option value="ordinary">القضاء العادي</option>
+                <option value="administrative">القضاء الإداري</option>
+                <option value="commercial">القضاء التجاري المتخصص</option>
+              </select>
+            </div>
+
+            {formData.jurisdictionType === "ordinary" && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">المجلس القضائي</label>
+                  <select
+                    name="judicialCouncilId"
+                    className="form-select"
+                    value={formData.judicialCouncilId}
+                    onChange={handleChange}
+                  >
+                    <option value="">اختر المجلس القضائي</option>
+                    {judicialCouncils.map((council) => (
+                      <option key={council.id} value={council.id}>
+                        {council.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {formData.judicialCouncilId && (
+                  <div className="form-group">
+                    <label className="form-label">المحكمة</label>
+                    <select
+                      name="courtId"
+                      className="form-select"
+                      value={formData.courtId}
+                      onChange={handleChange}
+                    >
+                      <option value="">اختر المحكمة</option>
+                      {courts.map((court, index) => (
+                        <option
+                          key={`ordinary-court-${court.id || index}`}
+                          value={court.id}
+                        >
+                          {court.name} {court.isBranch ? "(فرع)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
+            )}
+
+            {formData.jurisdictionType === "administrative" && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">محكمة الاستئناف الإدارية</label>
+                  <select
+                    name="administrativeAppealCourtId"
+                    className="form-select"
+                    value={formData.administrativeAppealCourtId}
+                    onChange={handleChange}
+                  >
+                    <option value="">اختر محكمة الاستئناف الإدارية</option>
+                    {administrativeAppealCourts.map((court) => (
+                      <option key={court.id} value={court.id}>
+                        {court.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {formData.administrativeAppealCourtId && (
+                  <div className="form-group">
+                    <label className="form-label">المحكمة الإدارية</label>
+                    <select
+                      name="courtId"
+                      className="form-select"
+                      value={formData.courtId}
+                      onChange={handleChange}
+                    >
+                      <option value="">اختر المحكمة الإدارية</option>
+                      {courts.map((court, index) => (
+                        <option
+                          key={`admin-court-${court.id || index}`}
+                          value={court.id}
+                        >
+                          {court.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {formData.jurisdictionType === "commercial" && (
               <div className="form-group">
-                <label className="form-label">نوع المحكمة</label>
+                <label className="form-label">المحكمة التجارية</label>
                 <select
-                  name="courtType"
+                  name="courtId"
                   className="form-select"
-                  value={formData.courtType}
+                  value={formData.courtId}
                   onChange={handleChange}
                 >
-                  <option value="محكمة ابتدائية">محكمة ابتدائية</option>
-                  <option value="محكمة استئناف">محكمة استئناف</option>
-                  <option value="المحكمة العليا">المحكمة العليا</option>
-                  <option value="مجلس الدولة">مجلس الدولة</option>
-                  <option value="محكمة الجنايات">محكمة الجنايات</option>
+                  <option value="">اختر المحكمة التجارية</option>
+                  {commercialCourts.map((court, index) => (
+                    <option key={`commercial-court-${court.id || index}`} value={court.id}>
+                      {court.name}
+                    </option>
+                  ))}
                 </select>
               </div>
-            </div>
+            )}
 
             <div className="form-row">
               <div className="form-group">
@@ -221,7 +435,9 @@ function CaseModal({ caseData, onClose, onSave }) {
                   value={formData.status}
                   onChange={handleChange}
                 >
-                  <option value="first_instance">على مستوى الدرجة الأولى</option>
+                  <option value="first_instance">
+                    على مستوى الدرجة الأولى
+                  </option>
                   <option value="in_settlement">في إطار التسوية</option>
                   <option value="closed">مغلقة</option>
                   <option value="in_appeal">في الاستئناف</option>
@@ -462,9 +678,18 @@ function CasesPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "court",
+        accessorKey: "courtName",
         header: "المحكمة",
-        cell: ({ row }) => row.original.court || "-",
+        cell: ({ row }) => (
+          <div>
+            {row.original.jurisdictionType && (
+              <div className="text-muted" style={{ fontSize: "0.85em" }}>
+                {getJurisdictionTypeLabel(row.original.jurisdictionType)}
+              </div>
+            )}
+            <div>{row.original.courtName || "-"}</div>
+          </div>
+        ),
         enableSorting: true,
       },
       {
@@ -497,9 +722,7 @@ function CasesPage() {
         cell: ({ row }) => (
           <span
             className={`badge ${
-              row.original.priority === "urgent"
-                ? "badge-danger"
-                : "badge-info"
+              row.original.priority === "urgent" ? "badge-danger" : "badge-info"
             }`}
           >
             {getPriorityLabel(row.original.priority)}

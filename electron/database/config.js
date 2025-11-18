@@ -14,7 +14,11 @@ function getCustomDataPath() {
 
   try {
     const appDataPath = app.getPath("appData");
-    const configPath = path.join(appDataPath, "law-office-management", "data-path.txt");
+    const configPath = path.join(
+      appDataPath,
+      "law-office-management",
+      "data-path.txt"
+    );
 
     if (fs.existsSync(configPath)) {
       const dataPath = fs.readFileSync(configPath, "utf8").trim();
@@ -71,6 +75,17 @@ async function initDatabase() {
     // Sync all models
     await sequelize.sync({ alter: false });
     console.log("Database synchronized successfully.");
+
+    // Auto-seed jurisdictional data on first run
+    try {
+      const { seedJurisdictionalData } = await import(
+        "./jurisdictionalSeed.js"
+      );
+      await seedJurisdictionalData();
+    } catch (seedError) {
+      console.error("Error seeding jurisdictional data:", seedError);
+      // Don't fail initialization if seeding fails
+    }
 
     return true;
   } catch (error) {

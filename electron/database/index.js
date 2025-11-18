@@ -13,6 +13,11 @@ import Expense from "./models/Expense.js";
 import Appointment from "./models/Appointment.js";
 import User from "./models/User.js";
 import Setting from "./models/Setting.js";
+import JudicialCouncil from "./models/JudicialCouncil.js";
+import FirstDegreeCourt from "./models/FirstDegreeCourt.js";
+import AdministrativeAppealCourt from "./models/AdministrativeAppealCourt.js";
+import AdministrativeCourt from "./models/AdministrativeCourt.js";
+import SpecializedCommercialCourt from "./models/SpecializedCommercialCourt.js";
 
 // Import and setup associations
 import setupAssociations from "./associations.js";
@@ -35,4 +40,9 @@ export {
   Appointment,
   User,
   Setting,
+  JudicialCouncil,
+  FirstDegreeCourt,
+  AdministrativeAppealCourt,
+  AdministrativeCourt,
+  SpecializedCommercialCourt,
 };

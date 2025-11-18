@@ -92,6 +92,15 @@ export const getClientRoleLabel = (role) => {
   return role === "plaintiff" ? "مدعي" : "مدعى عليه";
 };
 
+export const getJurisdictionTypeLabel = (type) => {
+  const labels = {
+    ordinary: "القضاء العادي",
+    administrative: "القضاء الإداري",
+    commercial: "القضاء التجاري المتخصص",
+  };
+  return labels[type] || type;
+};
+
 export const getSessionTypeLabel = (type) => {
   const labels = {
     hearing: "جلسة استماع",

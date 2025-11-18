@@ -7,6 +7,11 @@ import Payment from "./models/Payment.js";
 import Expense from "./models/Expense.js";
 import Appointment from "./models/Appointment.js";
 import User from "./models/User.js";
+import JudicialCouncil from "./models/JudicialCouncil.js";
+import FirstDegreeCourt from "./models/FirstDegreeCourt.js";
+import AdministrativeAppealCourt from "./models/AdministrativeAppealCourt.js";
+import AdministrativeCourt from "./models/AdministrativeCourt.js";
+import SpecializedCommercialCourt from "./models/SpecializedCommercialCourt.js";
 
 // Define all model relationships
 function setupAssociations() {
@@ -95,6 +100,29 @@ function setupAssociations() {
   Case.belongsTo(User, {
     foreignKey: "assignedLawyerId",
     as: "assignedLawyer",
+  });
+
+  // Jurisdictional relationships
+  // JudicialCouncil - FirstDegreeCourt (One-to-Many)
+  JudicialCouncil.hasMany(FirstDegreeCourt, {
+    foreignKey: "councilId",
+    as: "courts",
+    onDelete: "CASCADE",
+  });
+  FirstDegreeCourt.belongsTo(JudicialCouncil, {
+    foreignKey: "councilId",
+    as: "council",
+  });
+
+  // AdministrativeAppealCourt - AdministrativeCourt (One-to-Many)
+  AdministrativeAppealCourt.hasMany(AdministrativeCourt, {
+    foreignKey: "appealCourtId",
+    as: "courts",
+    onDelete: "CASCADE",
+  });
+  AdministrativeCourt.belongsTo(AdministrativeAppealCourt, {
+    foreignKey: "appealCourtId",
+    as: "appealCourt",
   });
 }
 

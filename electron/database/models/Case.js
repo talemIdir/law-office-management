@@ -38,19 +38,32 @@ const Case = sequelize.define(
       allowNull: false,
       comment: "نوع القضية: مدني، جنائي، تجاري، إداري، أسري، عمالي، أخرى",
     },
-    court: {
-      type: DataTypes.STRING,
-      comment: "المحكمة",
-    },
-    courtType: {
+    jurisdictionType: {
       type: DataTypes.ENUM(
-        "محكمة ابتدائية",
-        "محكمة استئناف",
-        "المحكمة العليا",
-        "مجلس الدولة",
-        "محكمة الجنايات",
+        "ordinary",
+        "administrative",
+        "commercial",
       ),
-      comment: "نوع المحكمة",
+      comment: "نوع القضاء: عادي، إداري، تجاري",
+    },
+    judicialCouncilId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "معرف المجلس القضائي (للقضاء العادي)",
+    },
+    administrativeAppealCourtId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "معرف محكمة الاستئناف الإدارية (للقضاء الإداري)",
+    },
+    courtId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "معرف المحكمة",
+    },
+    courtName: {
+      type: DataTypes.STRING,
+      comment: "اسم المحكمة (للعرض)",
     },
     judge: {
       type: DataTypes.STRING,

@@ -31,6 +31,7 @@ import {
   userService,
   settingService,
 } from "./database/services/index.js";
+import jurisdictionalService from "./database/services/jurisdictionalService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -445,6 +446,111 @@ ipcMain.handle("export:data", async (event, type, filters) => {
   try {
     // Implementation for exporting data to PDF/Excel
     return { success: true, message: "Export functionality to be implemented" };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Jurisdictional data handlers
+ipcMain.handle("jurisdiction:getAllJudicialCouncils", async () => {
+  try {
+    const councils = await jurisdictionalService.getAllJudicialCouncils();
+    // Convert Sequelize instances to plain objects to avoid serialization issues
+    const plainCouncils = councils.map(council => council.toJSON());
+    return { success: true, data: plainCouncils };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getJudicialCouncilById", async (event, id) => {
+  try {
+    const council = await jurisdictionalService.getJudicialCouncilById(id);
+    return { success: true, data: council ? council.toJSON() : null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAllFirstDegreeCourts", async (event, filters = {}) => {
+  try {
+    const courts = await jurisdictionalService.getAllFirstDegreeCourts(filters);
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getCourtsByCouncilId", async (event, councilId) => {
+  try {
+    const courts = await jurisdictionalService.getCourtsByCouncilId(councilId);
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAllAdministrativeAppealCourts", async () => {
+  try {
+    const courts = await jurisdictionalService.getAllAdministrativeAppealCourts();
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAllAdministrativeCourts", async (event, filters = {}) => {
+  try {
+    const courts = await jurisdictionalService.getAllAdministrativeCourts(filters);
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAdminCourtsByAppealCourtId", async (event, appealCourtId) => {
+  try {
+    const courts = await jurisdictionalService.getAdminCourtsByAppealCourtId(appealCourtId);
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAllCommercialCourts", async () => {
+  try {
+    const courts = await jurisdictionalService.getAllCommercialCourts();
+    const plainCourts = courts.map(court => court.toJSON());
+    return { success: true, data: plainCourts };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getCommercialCourtById", async (event, id) => {
+  try {
+    const court = await jurisdictionalService.getCommercialCourtById(id);
+    return { success: true, data: court ? court.toJSON() : null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("jurisdiction:getAllCourts", async () => {
+  try {
+    const courts = await jurisdictionalService.getAllCourts();
+    // Convert all court types to plain objects
+    const plainCourts = {
+      firstDegreeCourts: courts.firstDegreeCourts.map(c => c.toJSON()),
+      administrativeCourts: courts.administrativeCourts.map(c => c.toJSON()),
+      commercialCourts: courts.commercialCourts.map(c => c.toJSON())
+    };
+    return { success: true, data: plainCourts };
   } catch (error) {
     return { success: false, error: error.message };
   }
