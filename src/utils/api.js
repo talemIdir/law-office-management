@@ -108,3 +108,47 @@ export const openDocumentFile = async (filePath) => {
   if (!ipcRenderer) return { success: false, error: "Electron not available" };
   return await ipcRenderer.invoke("document:openFile", filePath);
 };
+
+// Jurisdictional/Courts API
+export const jurisdictionAPI = {
+  getAllJudicialCouncils: async () => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllJudicialCouncils");
+  },
+  getJudicialCouncilById: async (id) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getJudicialCouncilById", id);
+  },
+  getAllFirstDegreeCourts: async (filters = {}) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllFirstDegreeCourts", filters);
+  },
+  getCourtsByCouncilId: async (councilId) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getCourtsByCouncilId", councilId);
+  },
+  getAllAdministrativeAppealCourts: async () => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllAdministrativeAppealCourts");
+  },
+  getAllAdministrativeCourts: async (filters = {}) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllAdministrativeCourts", filters);
+  },
+  getAdminCourtsByAppealCourtId: async (appealCourtId) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAdminCourtsByAppealCourtId", appealCourtId);
+  },
+  getAllCommercialCourts: async () => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllCommercialCourts");
+  },
+  getCommercialCourtById: async (id) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getCommercialCourtById", id);
+  },
+  getAllCourts: async () => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("jurisdiction:getAllCourts");
+  }
+};

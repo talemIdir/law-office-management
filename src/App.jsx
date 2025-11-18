@@ -22,6 +22,7 @@ import AppointmentsPage from "./pages/Appointments";
 import ReportsPage from "./pages/Reports";
 import ElectronicLitigationPage from "./pages/ElectronicLitigation";
 import ElectronicServicesPage from "./pages/ElectronicServices";
+import CourtsDirectory from "./pages/CourtsDirectory";
 import SettingsPage from "./pages/Settings";
 
 function Sidebar() {
@@ -39,6 +40,7 @@ function Sidebar() {
     { path: "/reports", label: "التقارير", icon: "📈" },
     { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡" },
     { path: "/electronic-services", label: "الخدمات الإلكترونية", icon: "🌐" },
+    { path: "/courts-directory", label: "فهرس المحاكم", icon: "📖" },
     { path: "/settings", label: "الإعدادات", icon: "⚙️" },
   ];
 
@@ -117,6 +119,10 @@ const router = createHashRouter([
       {
         path: "court-sessions",
         element: <CourtSessionsPage />,
+      },
+      {
+        path: "courts-directory",
+        element: <CourtsDirectory />,
       },
       {
         path: "documents",

@@ -3,6 +3,15 @@ import FirstDegreeCourt from '../models/FirstDegreeCourt.js';
 import AdministrativeAppealCourt from '../models/AdministrativeAppealCourt.js';
 import AdministrativeCourt from '../models/AdministrativeCourt.js';
 import SpecializedCommercialCourt from '../models/SpecializedCommercialCourt.js';
+import {
+  serializeJudicialCouncil,
+  serializeFirstDegreeCourt,
+  serializeAdministrativeAppealCourt,
+  serializeAdministrativeCourt,
+  serializeSpecializedCommercialCourt,
+  serializeList,
+  serializeAllCourts
+} from '../serializers/jurisdictionalSerializers.js';
 
 /**
  * Service for managing jurisdictional data (courts and councils)
@@ -10,38 +19,72 @@ import SpecializedCommercialCourt from '../models/SpecializedCommercialCourt.js'
 class JurisdictionalService {
   /**
    * Get all judicial councils
+   * @returns {Promise<Object>} Success response with councils data
    */
   async getAllJudicialCouncils() {
     try {
-      return await JudicialCouncil.findAll({
+      const councils = await JudicialCouncil.findAll({
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(councils, serializeJudicialCouncil),
+        count: councils.length,
+        message: 'Judicial councils fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching judicial councils:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch judicial councils'
+      };
     }
   }
 
   /**
    * Get a judicial council by ID with its courts
+   * @param {number} id - Council ID
+   * @returns {Promise<Object>} Success response with council data
    */
   async getJudicialCouncilById(id) {
     try {
-      return await JudicialCouncil.findByPk(id, {
+      if (!id) {
+        throw new Error('Council ID is required');
+      }
+
+      const council = await JudicialCouncil.findByPk(id, {
         include: [{
           model: FirstDegreeCourt,
           as: 'courts',
           order: [['name', 'ASC']]
         }]
       });
+
+      if (!council) {
+        throw new Error('Judicial council not found');
+      }
+
+      return {
+        success: true,
+        data: serializeJudicialCouncil(council),
+        message: 'Judicial council fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching judicial council:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch judicial council'
+      };
     }
   }
 
   /**
    * Get all first degree courts
+   * @param {Object} filters - Optional filters (councilId, isBranch)
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getAllFirstDegreeCourts(filters = {}) {
     try {
@@ -55,7 +98,7 @@ class JurisdictionalService {
         where.isBranch = filters.isBranch;
       }
 
-      return await FirstDegreeCourt.findAll({
+      const courts = await FirstDegreeCourt.findAll({
         where,
         include: [{
           model: JudicialCouncil,
@@ -63,43 +106,85 @@ class JurisdictionalService {
         }],
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeFirstDegreeCourt),
+        count: courts.length,
+        message: 'First degree courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching first degree courts:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch first degree courts'
+      };
     }
   }
 
   /**
    * Get courts by judicial council ID
+   * @param {number} councilId - Council ID
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getCourtsByCouncilId(councilId) {
     try {
-      return await FirstDegreeCourt.findAll({
+      if (!councilId) {
+        throw new Error('Council ID is required');
+      }
+
+      const courts = await FirstDegreeCourt.findAll({
         where: { councilId },
         order: [['isBranch', 'ASC'], ['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeFirstDegreeCourt),
+        count: courts.length,
+        message: 'Courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching courts by council:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch courts by council'
+      };
     }
   }
 
   /**
    * Get all administrative appeal courts
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getAllAdministrativeAppealCourts() {
     try {
-      return await AdministrativeAppealCourt.findAll({
+      const courts = await AdministrativeAppealCourt.findAll({
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeAdministrativeAppealCourt),
+        count: courts.length,
+        message: 'Administrative appeal courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching administrative appeal courts:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch administrative appeal courts'
+      };
     }
   }
 
   /**
    * Get all administrative courts
+   * @param {Object} filters - Optional filters (appealCourtId)
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getAllAdministrativeCourts(filters = {}) {
     try {
@@ -109,7 +194,7 @@ class JurisdictionalService {
         where.appealCourtId = filters.appealCourtId;
       }
 
-      return await AdministrativeCourt.findAll({
+      const courts = await AdministrativeCourt.findAll({
         where,
         include: [{
           model: AdministrativeAppealCourt,
@@ -117,56 +202,117 @@ class JurisdictionalService {
         }],
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeAdministrativeCourt),
+        count: courts.length,
+        message: 'Administrative courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching administrative courts:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch administrative courts'
+      };
     }
   }
 
   /**
    * Get administrative courts by appeal court ID
+   * @param {number} appealCourtId - Appeal court ID
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getAdminCourtsByAppealCourtId(appealCourtId) {
     try {
-      return await AdministrativeCourt.findAll({
+      if (!appealCourtId) {
+        throw new Error('Appeal court ID is required');
+      }
+
+      const courts = await AdministrativeCourt.findAll({
         where: { appealCourtId },
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeAdministrativeCourt),
+        count: courts.length,
+        message: 'Administrative courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching administrative courts by appeal court:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch administrative courts by appeal court'
+      };
     }
   }
 
   /**
    * Get all specialized commercial courts
+   * @returns {Promise<Object>} Success response with courts data
    */
   async getAllCommercialCourts() {
     try {
-      return await SpecializedCommercialCourt.findAll({
+      const courts = await SpecializedCommercialCourt.findAll({
         order: [['name', 'ASC']]
       });
+
+      return {
+        success: true,
+        data: serializeList(courts, serializeSpecializedCommercialCourt),
+        count: courts.length,
+        message: 'Commercial courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching commercial courts:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch commercial courts'
+      };
     }
   }
 
   /**
    * Get a commercial court by ID
+   * @param {number} id - Court ID
+   * @returns {Promise<Object>} Success response with court data
    */
   async getCommercialCourtById(id) {
     try {
-      return await SpecializedCommercialCourt.findByPk(id);
+      if (!id) {
+        throw new Error('Commercial court ID is required');
+      }
+
+      const court = await SpecializedCommercialCourt.findByPk(id);
+
+      if (!court) {
+        throw new Error('Commercial court not found');
+      }
+
+      return {
+        success: true,
+        data: serializeSpecializedCommercialCourt(court),
+        message: 'Commercial court fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching commercial court:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch commercial court'
+      };
     }
   }
 
   /**
    * Get all courts (for dropdowns)
    * Returns a unified list of all court types
+   * @returns {Promise<Object>} Success response with all courts data
    */
   async getAllCourts() {
     try {
@@ -183,14 +329,24 @@ class JurisdictionalService {
         })
       ]);
 
-      return {
+      const courtsData = {
         firstDegreeCourts: firstDegree,
         administrativeCourts: administrative,
         commercialCourts: commercial
       };
+
+      return {
+        success: true,
+        data: serializeAllCourts(courtsData),
+        message: 'All courts fetched successfully'
+      };
     } catch (error) {
       console.error('Error fetching all courts:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch all courts'
+      };
     }
   }
 }
