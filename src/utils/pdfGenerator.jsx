@@ -485,7 +485,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
                 ))}
               </View>
               <View style={styles.totalRow}>
-                <Text>إجمالي المدفوعات: {formatCurrency(totalPayments)}</Text>
+                <Text>اجمالي المدفوعات: {formatCurrency(totalPayments)}</Text>
               </View>
             </>
           )}

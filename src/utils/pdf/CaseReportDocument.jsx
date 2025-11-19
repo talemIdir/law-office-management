@@ -291,7 +291,7 @@ export const CaseReportDocument = ({
                 ))}
               </View>
               <View style={styles.totalRow}>
-                <Text>إجمالي المدفوعات: {formatCurrency(totalPayments)}</Text>
+                <Text>إجمالي المدفوعات : {formatCurrency(totalPayments)}</Text>
               </View>
             </>
           )}

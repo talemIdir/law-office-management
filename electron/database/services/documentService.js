@@ -2,13 +2,78 @@ import { Op } from "sequelize";
 import Document from "../models/Document.js";
 import Client from "../models/Client.js";
 import Case from "../models/Case.js";
+import fs from "fs/promises";
+import path from "path";
 
 /**
  * Document Service
  * Handles all business logic for document operations
  */
 
+// File validation constants
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/bmp',
+];
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'bmp'];
+const DANGEROUS_EXTENSIONS = ['exe', 'bat', 'cmd', 'sh', 'ps1', 'vbs', 'js', 'jar', 'app', 'deb', 'rpm'];
+
 class DocumentService {
+  /**
+   * Validate file for security and size
+   * @param {Object} fileData - File data containing fileName, fileSize, mimeType
+   * @returns {Object} Validation result
+   */
+  validateFile(fileData) {
+    const { fileName, fileSize, mimeType } = fileData;
+
+    // Check if file exists
+    if (!fileName) {
+      return { valid: false, error: "اسم الملف مطلوب" };
+    }
+
+    // Extract file extension
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (!ext) {
+      return { valid: false, error: "امتداد الملف غير صالح" };
+    }
+
+    // Check for dangerous file types
+    if (DANGEROUS_EXTENSIONS.includes(ext)) {
+      return { valid: false, error: `نوع الملف .${ext} غير مسموح به لأسباب أمنية` };
+    }
+
+    // Check if extension is allowed
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return { valid: false, error: `امتداد الملف .${ext} غير مسموح به. الأنواع المسموحة: ${ALLOWED_EXTENSIONS.join(', ')}` };
+    }
+
+    // Check MIME type if provided
+    if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
+      return { valid: false, error: "نوع الملف غير مدعوم" };
+    }
+
+    // Check file size
+    if (fileSize) {
+      if (fileSize > MAX_FILE_SIZE) {
+        const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
+        const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+        return {
+          valid: false,
+          error: `حجم الملف (${fileSizeMB} ميجابايت) يتجاوز الحد الأقصى المسموح به (${maxSizeMB} ميجابايت)`
+        };
+      }
+    }
+
+    return { valid: true };
+  }
   /**
    * Create a new document
    * @param {Object} documentData - Document data
@@ -22,6 +87,19 @@ class DocumentService {
       }
       if (!documentData.documentType) {
         throw new Error("Document type is required");
+      }
+
+      // Validate file if fileName is provided
+      if (documentData.fileName) {
+        const validation = this.validateFile({
+          fileName: documentData.fileName,
+          fileSize: documentData.fileSize,
+          mimeType: documentData.mimeType
+        });
+
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
       }
 
       // Verify client exists if clientId is provided
@@ -236,6 +314,19 @@ class DocumentService {
         throw new Error("Document not found");
       }
 
+      // Delete physical file if it exists
+      if (document.filePath) {
+        try {
+          await fs.unlink(document.filePath);
+          console.log(`Physical file deleted: ${document.filePath}`);
+        } catch (fileError) {
+          // Log warning but don't fail the operation if file doesn't exist
+          console.warn(`Warning: Could not delete physical file: ${fileError.message}`);
+          // File might already be deleted or moved - continue with DB deletion
+        }
+      }
+
+      // Delete database record
       await document.destroy();
 
       return {

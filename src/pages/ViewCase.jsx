@@ -14,6 +14,7 @@ import {
 } from "../utils/api";
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
+import DocumentModal from "../components/DocumentModal";
 import {
   getStatusLabel,
   getCaseTypeLabel,
@@ -47,6 +48,8 @@ function ViewCase() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   useEffect(() => {
     loadCaseData();
@@ -157,6 +160,28 @@ function ViewCase() {
         return "badge-secondary";
       default:
         return "badge-secondary";
+    }
+  };
+
+  const handleAddDocument = () => {
+    setSelectedDocument(null);
+    setShowDocumentModal(true);
+  };
+
+  const handleSaveDocument = async (formData) => {
+    try {
+      const result = await documentAPI.create(formData);
+      if (result.success) {
+        showSuccess("تم إضافة المستند بنجاح");
+        setShowDocumentModal(false);
+        // Reload documents
+        const documentsResult = await documentAPI.getAll({ caseId: parseInt(id) });
+        if (documentsResult.success) setDocuments(documentsResult.data);
+      } else {
+        showError("خطأ: " + result.error);
+      }
+    } catch (error) {
+      showError("حدث خطأ أثناء حفظ المستند");
     }
   };
 
@@ -819,13 +844,20 @@ function ViewCase() {
             )}
 
             {activeTab === "documents" && (
-              <DataTable
-                data={documents}
-                columns={documentsColumns}
-                pageSize={10}
-                showPagination={true}
-                emptyMessage="لا توجد مستندات لهذه القضية"
-              />
+              <>
+                <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-end" }}>
+                  <button className="btn btn-primary" onClick={handleAddDocument}>
+                    ➕ إضافة مستند
+                  </button>
+                </div>
+                <DataTable
+                  data={documents}
+                  columns={documentsColumns}
+                  pageSize={10}
+                  showPagination={true}
+                  emptyMessage="لا توجد مستندات لهذه القضية"
+                />
+              </>
             )}
 
             {activeTab === "expenses" && (
@@ -850,6 +882,19 @@ function ViewCase() {
           </div>
         </div>
       </div>
+
+      {showDocumentModal && (
+        <DocumentModal
+          document={selectedDocument}
+          onClose={() => {
+            setShowDocumentModal(false);
+            setSelectedDocument(null);
+          }}
+          onSave={handleSaveDocument}
+          preSelectedClientId={caseData?.clientId}
+          preSelectedCaseId={parseInt(id)}
+        />
+      )}
     </div>
   );
 }

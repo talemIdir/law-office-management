@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { clientAPI, caseAPI, paymentAPI } from "../utils/api";
-import { showError } from "../utils/toast";
+import { clientAPI, caseAPI, paymentAPI, documentAPI, openDocumentFile } from "../utils/api";
+import { showError, showSuccess } from "../utils/toast";
 import DataTable from "../components/DataTable";
+import DocumentModal from "../components/DocumentModal";
 import {
   getStatusLabel,
   getCaseTypeLabel,
   getPaymentMethodLabel,
+  getDocumentTypeLabel,
 } from "../utils/labels";
+import { formatFileSize } from "../utils/formatters";
 
 function ViewClient() {
   const { id } = useParams();
@@ -15,8 +18,11 @@ function ViewClient() {
   const [client, setClient] = useState(null);
   const [cases, setCases] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("cases");
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   useEffect(() => {
     loadClientData();
@@ -65,6 +71,14 @@ function ViewClient() {
           });
           setPayments(paymentsWithCases);
         }
+      }
+
+      // Load documents for this client
+      const documentsResult = await documentAPI.getAll({
+        clientId: parseInt(id),
+      });
+      if (documentsResult.success) {
+        setDocuments(documentsResult.data);
       }
     } catch (error) {
       showError("حدث خطأ أثناء تحميل البيانات");
@@ -211,6 +225,90 @@ function ViewClient() {
     []
   );
 
+  const handleAddDocument = () => {
+    setSelectedDocument(null);
+    setShowDocumentModal(true);
+  };
+
+  const handleSaveDocument = async (formData) => {
+    try {
+      const result = await documentAPI.create(formData);
+      if (result.success) {
+        showSuccess("تم إضافة المستند بنجاح");
+        setShowDocumentModal(false);
+        // Reload documents
+        const documentsResult = await documentAPI.getAll({ clientId: parseInt(id) });
+        if (documentsResult.success) setDocuments(documentsResult.data);
+      } else {
+        showError("خطأ: " + result.error);
+      }
+    } catch (error) {
+      showError("حدث خطأ أثناء حفظ المستند");
+    }
+  };
+
+  const documentsColumns = useMemo(
+    () => [
+      {
+        accessorKey: "title",
+        header: "عنوان المستند",
+        enableSorting: true,
+      },
+      {
+        accessorKey: "documentType",
+        header: "النوع",
+        cell: ({ row }) => (
+          <span className="badge badge-secondary">
+            {getDocumentTypeLabel(row.original.documentType)}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "case",
+        header: "القضية",
+        cell: ({ row }) => row.original.case ? `${row.original.case.caseNumber} - ${row.original.case.title}` : "-",
+        enableSorting: false,
+      },
+      {
+        accessorKey: "fileName",
+        header: "اسم الملف",
+        cell: ({ row }) => row.original.fileName || "-",
+        enableSorting: true,
+      },
+      {
+        accessorKey: "fileSize",
+        header: "حجم الملف",
+        cell: ({ row }) => row.original.fileSize ? formatFileSize(row.original.fileSize) : "-",
+        enableSorting: true,
+      },
+      {
+        accessorKey: "uploadDate",
+        header: "تاريخ الرفع",
+        cell: ({ row }) => formatDate(row.original.uploadDate),
+        enableSorting: true,
+      },
+      {
+        id: "actions",
+        header: "الإجراءات",
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            {row.original.filePath && (
+              <button
+                className="btn btn-sm btn-info"
+                onClick={() => openDocumentFile(row.original.filePath)}
+              >
+                👁️ فتح
+              </button>
+            )}
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    []
+  );
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -282,6 +380,14 @@ function ViewClient() {
         </div>
 
         <div className="stat-card">
+          <div className="stat-icon">📁</div>
+          <div className="stat-content">
+            <div className="stat-value">{documents.length}</div>
+            <div className="stat-label">المستندات</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
           <div className="stat-icon">📊</div>
           <div className="stat-content">
             <div className="stat-value">
@@ -313,6 +419,12 @@ function ViewClient() {
               onClick={() => setActiveTab("payments")}
             >
               💰 المدفوعات ({payments.length})
+            </button>
+            <button
+              className={`tab-button ${activeTab === "documents" ? "active" : ""}`}
+              onClick={() => setActiveTab("documents")}
+            >
+              📁 المستندات ({documents.length})
             </button>
           </div>
 
@@ -437,9 +549,38 @@ function ViewClient() {
                 emptyMessage="لا توجد مدفوعات لهذا الموكل"
               />
             )}
+
+            {activeTab === "documents" && (
+              <>
+                <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-end" }}>
+                  <button className="btn btn-primary" onClick={handleAddDocument}>
+                    ➕ إضافة مستند
+                  </button>
+                </div>
+                <DataTable
+                  data={documents}
+                  columns={documentsColumns}
+                  pageSize={10}
+                  showPagination={true}
+                  emptyMessage="لا توجد مستندات لهذا الموكل"
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {showDocumentModal && (
+        <DocumentModal
+          document={selectedDocument}
+          onClose={() => {
+            setShowDocumentModal(false);
+            setSelectedDocument(null);
+          }}
+          onSave={handleSaveDocument}
+          preSelectedClientId={parseInt(id)}
+        />
+      )}
     </div>
   );
 }
