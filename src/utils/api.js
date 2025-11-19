@@ -109,6 +109,26 @@ export const openDocumentFile = async (filePath) => {
   return await ipcRenderer.invoke("document:openFile", filePath);
 };
 
+// Authentication API
+export const authAPI = {
+  login: async (username, password) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("auth:login", username, password);
+  },
+  logout: async () => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("auth:logout");
+  },
+  getCurrentUser: async () => {
+    if (!ipcRenderer) return null;
+    return await ipcRenderer.invoke("auth:getCurrentUser");
+  },
+  changePassword: async (oldPassword, newPassword) => {
+    if (!ipcRenderer) return { success: false, error: "Electron not available" };
+    return await ipcRenderer.invoke("auth:changePassword", oldPassword, newPassword);
+  },
+};
+
 // Jurisdictional/Courts API
 export const jurisdictionAPI = {
   getAllJudicialCouncils: async () => {

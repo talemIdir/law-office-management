@@ -143,10 +143,13 @@ async function seedDatabase() {
     await cleanupDatabase();
 
     console.log("👤 Creating users...");
+    // Import bcrypt for password hashing
+    const bcrypt = await import("bcrypt");
+
     const users = await User.bulkCreate([
       {
         username: "admin",
-        password: "admin123", // In production, this should be hashed
+        password: await bcrypt.hash("admin123", 10),
         fullName: "أحمد بن محمد",
         email: "admin@lawoffice.dz",
         role: "admin",
@@ -154,30 +157,21 @@ async function seedDatabase() {
         status: "active",
       },
       {
-        username: "lawyer1",
-        password: "lawyer123",
-        fullName: "فاطمة بن علي",
-        email: "fatima@lawoffice.dz",
-        role: "lawyer",
-        phone: "0666234567",
-        status: "active",
-      },
-      {
-        username: "lawyer2",
-        password: "lawyer123",
-        fullName: "محمد بن يوسف",
-        email: "mohamed@lawoffice.dz",
-        role: "lawyer",
-        phone: "0777345678",
-        status: "active",
-      },
-      {
-        username: "assistant1",
-        password: "assistant123",
+        username: "secretary1",
+        password: await bcrypt.hash("secretary123", 10),
         fullName: "سارة بن عمر",
         email: "sara@lawoffice.dz",
-        role: "assistant",
+        role: "secretary",
         phone: "0555456789",
+        status: "active",
+      },
+      {
+        username: "secretary2",
+        password: await bcrypt.hash("secretary123", 10),
+        fullName: "فاطمة بن علي",
+        email: "fatima@lawoffice.dz",
+        role: "secretary",
+        phone: "0666234567",
         status: "active",
       },
     ]);
@@ -365,7 +359,7 @@ async function seedDatabase() {
         amount: 5000000.0,
         notes: "تم الاستئناف ضد الحكم الابتدائي الذي قضى بالسجن لمدة 3 سنوات فقط",
         clientId: clients[0].id,
-        assignedLawyerId: users[1].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       {
         caseNumber: "2024/015",
@@ -384,7 +378,7 @@ async function seedDatabase() {
         amount: 800000.0,
         notes: "تم جمع الأدلة والشهود، القضية في مرحلة المرافعات",
         clientId: clients[0].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       // Cases for client 5 (شركة الأمل للتجارة) - Multiple cases
       {
@@ -442,7 +436,7 @@ async function seedDatabase() {
         amount: 180000.0,
         notes: "الطرفان متفاهمان، يتبقى تسوية النفقة الشهرية",
         clientId: clients[1].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       {
         caseNumber: "2024/003",
@@ -480,7 +474,7 @@ async function seedDatabase() {
         amount: 450000.0,
         notes: "شهود الإثبات جاهزون للإدلاء بشهاداتهم",
         clientId: clients[3].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       {
         caseNumber: "2024/005",
@@ -538,7 +532,7 @@ async function seedDatabase() {
         amount: 450000.0,
         notes: "شهود الإثبات جاهزون للإدلاء بشهاداتهم",
         clientId: clients[3].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       // Cases for client 6 (مؤسسة النجاح للبناء)
       {
@@ -557,7 +551,7 @@ async function seedDatabase() {
         amount: 2000000.0,
         notes: "المستندات العقارية قديمة، يتطلب البحث في السجلات",
         clientId: clients[6].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
       // Cases for client 8 (سعيد بن حسن) - Inactive client
       {
@@ -596,7 +590,7 @@ async function seedDatabase() {
         amount: 120000.0,
         notes: "تم تقديم مستندات تثبت زيادة تكاليف المعيشة",
         clientId: clients[9].id,
-        assignedLawyerId: users[2].id,
+        assignedLawyerId: users[0].id, // Admin
       },
     ]);
     console.log(`   ✓ Created ${cases.length} cases\n`);
@@ -1222,8 +1216,8 @@ async function seedDatabase() {
     console.log(`   ⚙️ Settings: ${await Setting.count()}`);
     console.log("\n🔐 Default Login Credentials:");
     console.log("   Admin: admin / admin123");
-    console.log("   Lawyer: lawyer1 / lawyer123");
-    console.log("   Assistant: assistant1 / assistant123");
+    console.log("   Secretary 1: secretary1 / secretary123");
+    console.log("   Secretary 2: secretary2 / secretary123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     throw error;

@@ -428,14 +428,14 @@ class UserService {
   }
 
   /**
-   * Get lawyers
-   * @returns {Promise<Object>} Lawyers
+   * Get admins
+   * @returns {Promise<Object>} Admins
    */
-  async getLawyers() {
+  async getAdmins() {
     try {
-      const lawyers = await User.findAll({
+      const admins = await User.findAll({
         where: {
-          role: { [Op.in]: ["admin", "lawyer"] },
+          role: "admin",
           status: "active",
         },
         attributes: { exclude: ["password"] },
@@ -444,15 +444,15 @@ class UserService {
 
       return {
         success: true,
-        data: lawyers.map((lawyer) => lawyer.toJSON()),
-        count: lawyers.length,
+        data: admins.map((admin) => admin.toJSON()),
+        count: admins.length,
       };
     } catch (error) {
-      console.error("Error fetching lawyers:", error);
+      console.error("Error fetching admins:", error);
       return {
         success: false,
         error: error.message,
-        message: "Failed to fetch lawyers",
+        message: "Failed to fetch admins",
       };
     }
   }

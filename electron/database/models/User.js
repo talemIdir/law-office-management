@@ -32,9 +32,9 @@ const User = sequelize.define(
       comment: "البريد الإلكتروني",
     },
     role: {
-      type: DataTypes.ENUM("admin", "lawyer", "assistant"),
-      defaultValue: "assistant",
-      comment: "الدور",
+      type: DataTypes.ENUM("admin", "secretary"),
+      defaultValue: "secretary",
+      comment: "الدور - Admin: صلاحيات كاملة, Secretary: سكرتيرة",
     },
     phone: {
       type: DataTypes.STRING,

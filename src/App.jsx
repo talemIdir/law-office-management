@@ -5,10 +5,13 @@ import {
   Link,
   useLocation,
   Outlet,
+  Navigate,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDialogProvider } from "./components/ConfirmDialog";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ClientsPage from "./pages/Clients";
 import ViewClient from "./pages/ViewClient";
@@ -23,32 +26,78 @@ import ReportsPage from "./pages/Reports";
 import ElectronicLitigationPage from "./pages/ElectronicLitigation";
 import ElectronicServicesPage from "./pages/ElectronicServices";
 import CourtsDirectory from "./pages/CourtsDirectory";
+import UsersPage from "./pages/Users";
 import SettingsPage from "./pages/Settings";
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        fontSize: "18px"
+      }}>
+        جاري التحميل...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function Sidebar() {
   const location = useLocation();
+  const { user, logout, isAdmin } = useAuth();
 
-  const navItems = [
-    { path: "/", label: "لوحة التحكم", icon: "📊" },
-    { path: "/clients", label: "الموكلين", icon: "👥" },
-    { path: "/cases", label: "القضايا", icon: "⚖️" },
-    { path: "/court-sessions", label: "الجلسات", icon: "🏛️" },
-    { path: "/documents", label: "المستندات", icon: "📁" },
-    { path: "/invoices", label: "الفواتير والمدفوعات", icon: "💰" },
-    { path: "/expenses", label: "المصروفات", icon: "💸" },
-    { path: "/appointments", label: "المواعيد", icon: "📅" },
-    { path: "/reports", label: "التقارير", icon: "📈" },
-    { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡" },
-    { path: "/electronic-services", label: "الخدمات الإلكترونية", icon: "🌐" },
-    { path: "/courts-directory", label: "فهرس المحاكم", icon: "📖" },
-    { path: "/settings", label: "الإعدادات", icon: "⚙️" },
+  const allNavItems = [
+    { path: "/", label: "لوحة التحكم", icon: "📊", roles: ["admin", "secretary"] },
+    { path: "/clients", label: "الموكلين", icon: "👥", roles: ["admin", "secretary"] },
+    { path: "/cases", label: "القضايا", icon: "⚖️", roles: ["admin", "secretary"] },
+    { path: "/court-sessions", label: "الجلسات", icon: "🏛️", roles: ["admin", "secretary"] },
+    { path: "/documents", label: "المستندات", icon: "📁", roles: ["admin", "secretary"] },
+    { path: "/invoices", label: "الفواتير والمدفوعات", icon: "💰", roles: ["admin"] },
+    { path: "/expenses", label: "المصروفات", icon: "💸", roles: ["admin"] },
+    { path: "/appointments", label: "المواعيد", icon: "📅", roles: ["admin", "secretary"] },
+    { path: "/reports", label: "التقارير", icon: "📈", roles: ["admin"] },
+    { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡", roles: ["admin"] },
+    { path: "/electronic-services", label: "الخدمات الإلكترونية", icon: "🌐", roles: ["admin"] },
+    { path: "/courts-directory", label: "فهرس المحاكم", icon: "📖", roles: ["admin", "secretary"] },
+    { path: "/users", label: "إدارة المستخدمين", icon: "👤", roles: ["admin"] },
+    { path: "/settings", label: "الإعدادات", icon: "⚙️", roles: ["admin"] },
   ];
+
+  // Filter navigation items based on user role
+  const navItems = allNavItems.filter(item =>
+    item.roles.includes(user?.role)
+  );
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>⚖️ مكتب المحاماة</h2>
         <p>نظام الإدارة المتكامل</p>
+        {user && (
+          <div className="user-info">
+            <p style={{ fontSize: "14px", marginTop: "10px", opacity: 0.9 }}>
+              {user.fullName}
+            </p>
+            <p style={{ fontSize: "12px", opacity: 0.7 }}>
+              {user.role === "admin" ? "مدير النظام" : "سكرتيرة"}
+            </p>
+          </div>
+        )}
       </div>
       <nav className="sidebar-nav">
         {navItems.map((item) => (
@@ -61,6 +110,24 @@ function Sidebar() {
             {item.label}
           </Link>
         ))}
+        <button
+          onClick={handleLogout}
+          className="nav-item logout-button"
+          style={{
+            marginTop: "auto",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            textAlign: "right",
+            width: "100%",
+            padding: "15px 20px",
+            color: "inherit",
+            fontSize: "inherit"
+          }}
+        >
+          <span className="nav-icon">🚪</span>
+          تسجيل الخروج
+        </button>
       </nav>
     </div>
   );
@@ -93,8 +160,16 @@ function Layout() {
 
 const router = createHashRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
     path: "/",
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -153,6 +228,10 @@ const router = createHashRouter([
         element: <ElectronicServicesPage />,
       },
       {
+        path: "users",
+        element: <UsersPage />,
+      },
+      {
         path: "settings",
         element: <SettingsPage />,
       },
@@ -161,7 +240,11 @@ const router = createHashRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
 
 export default App;

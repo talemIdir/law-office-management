@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import path from "path";
-import { app } from "electron";
+//import { app } from "electron";
 import fs from "fs";
 
 /**

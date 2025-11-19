@@ -667,4 +667,56 @@ ipcMain.handle("document:openFile", async (event, filePath) => {
   }
 });
 
+// Authentication handlers
+let currentUser = null;
+
+// Login
+ipcMain.handle("auth:login", async (event, username, password) => {
+  try {
+    const result = await userService.authenticateUser(username, password);
+    if (result.success) {
+      currentUser = result.data;
+    }
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Logout
+ipcMain.handle("auth:logout", async (event) => {
+  try {
+    currentUser = null;
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Get current user
+ipcMain.handle("auth:getCurrentUser", async (event) => {
+  try {
+    return currentUser;
+  } catch (error) {
+    return null;
+  }
+});
+
+// Change password
+ipcMain.handle("auth:changePassword", async (event, oldPassword, newPassword) => {
+  try {
+    if (!currentUser) {
+      return { success: false, error: "Not authenticated" };
+    }
+    const result = await userService.changePassword(
+      currentUser.id,
+      oldPassword,
+      newPassword
+    );
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 console.log("Electron main process started");
