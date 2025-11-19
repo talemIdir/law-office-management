@@ -223,11 +223,11 @@
     </div>
 
     <div class="instructions">
-      <h3>خطوات الحصول على مفتاح الترخيص:</h3>
+      <h3>خطوات التفعيل:</h3>
       <ol>
         <li>انسخ رقم تعريف الجهاز الموجود أدناه</li>
-        <li>أرسله إلى مزود الخدمة للحصول على مفتاح الترخيص الخاص بك</li>
-        <li>أدخل اسمك ومفتاح الترخيص الذي حصلت عليه</li>
+        <li>أرسله إلى مزود الخدمة للحصول على مفتاح الترخيص</li>
+        <li>أدخل مفتاح الترخيص الذي حصلت عليه</li>
         <li>انقر على زر "تفعيل الترخيص"</li>
       </ol>
     </div>
@@ -235,23 +235,13 @@
     <div class="machine-id-display">
       <label>رقم تعريف الجهاز:</label>
       <div class="machine-id" id="machineId">جاري التحميل...</div>
-      <button class="copy-btn" onclick="copyMachineId()">نسخ الرقم</button>
+      <button class="copy-btn" onclick="copyMachineId(event)">نسخ الرقم</button>
     </div>
 
     <div class="error-message" id="errorMessage"></div>
     <div class="success-message" id="successMessage"></div>
 
     <form id="licenseForm" onsubmit="activateLicense(event)">
-      <div class="form-group">
-        <label>الاسم الكامل:</label>
-        <input type="text" id="customerName" placeholder="أدخل اسمك الكامل" required>
-      </div>
-
-      <div class="form-group">
-        <label>البريد الإلكتروني (اختياري):</label>
-        <input type="email" id="customerEmail" placeholder="example@email.com">
-      </div>
-
       <div class="form-group">
         <label>مفتاح الترخيص:</label>
         <input
@@ -296,7 +286,7 @@
     });
 
     // Copy machine ID to clipboard
-    function copyMachineId() {
+    function copyMachineId(event) {
       navigator.clipboard.writeText(machineIdValue).then(() => {
         const btn = event.target;
         const originalText = btn.textContent;
@@ -316,8 +306,6 @@
       event.preventDefault();
 
       const licenseKey = document.getElementById('licenseKey').value.trim().toUpperCase();
-      const customerName = document.getElementById('customerName').value.trim();
-      const customerEmail = document.getElementById('customerEmail').value.trim();
 
       // Validate license key format
       const pattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
@@ -331,17 +319,15 @@
       hideMessages();
 
       try {
-        const result = await ipcRenderer.invoke('license:activate', licenseKey, customerName, customerEmail);
+        const result = await ipcRenderer.invoke('license:activate', licenseKey, '', '');
 
         showLoading(false);
 
         if (result.success) {
           showSuccess('تم تفعيل الترخيص بنجاح! سيتم فتح البرنامج الآن...');
 
-          // Close window after 2 seconds and reload main app
-          setTimeout(() => {
-            window.close();
-          }, 2000);
+          // Don't close the window here - let main.js handle it
+          // The interval in main.js will detect the valid license and close the window
         } else {
           showError(result.error || 'فشل التفعيل. الرجاء التحقق من مفتاح الترخيص والمحاولة مرة أخرى');
         }

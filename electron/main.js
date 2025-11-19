@@ -42,6 +42,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let mainWindow;
+let isActivatingLicense = false;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -92,21 +93,40 @@ app.whenReady().then(async () => {
   const licenseCheck = await licenseService.checkLicense();
 
   if (!licenseCheck.isValid) {
+    // Set flag to prevent app from quitting during activation
+    isActivatingLicense = true;
+
     // Show license activation window
     createLicenseWindow(licenseService);
 
     // Wait for license activation before proceeding
-    // The license window will close itself on successful activation
-    // Then we'll initialize the database and create the main window
+    // Check every 500ms for activation
     const checkInterval = setInterval(async () => {
       const recheckLicense = await licenseService.checkLicense();
       if (recheckLicense.isValid) {
         clearInterval(checkInterval);
+
+        console.log('License activated! Proceeding to main app...');
+
+        // Close license window first
         closeLicenseWindow();
-        await initDatabase();
-        createWindow();
+
+        // Wait a bit for the window to properly close
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // Now initialize database and create main window
+        try {
+          console.log('Initializing database...');
+          await initDatabase();
+          console.log('Creating main window...');
+          createWindow();
+          isActivatingLicense = false; // Reset flag
+        } catch (error) {
+          console.error('Failed to initialize after license activation:', error);
+          isActivatingLicense = false; // Reset flag even on error
+        }
       }
-    }, 1000);
+    }, 500);
   } else {
     // License is valid, proceed normally
     await initDatabase();
@@ -121,6 +141,12 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
+  // Don't quit if we're in the middle of license activation
+  if (isActivatingLicense) {
+    console.log('Window closed during license activation - not quitting');
+    return;
+  }
+
   if (process.platform !== "darwin") {
     app.quit();
   }

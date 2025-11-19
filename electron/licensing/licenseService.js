@@ -1,10 +1,8 @@
-import machineId from 'node-machine-id';
 import CryptoJS from 'crypto-js';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-
-const { machineIdSync } = machineId;
+import os from 'os';
 
 /**
  * Offline License Validation Service
@@ -28,12 +26,44 @@ export class LicenseService {
   }
 
   /**
+   * Generate a unique machine ID based on system information
+   */
+  generateMachineId() {
+    try {
+      // Collect system information
+      const hostname = os.hostname();
+      const platform = os.platform();
+      const arch = os.arch();
+      const cpus = os.cpus();
+      const totalmem = os.totalmem();
+
+      // Create a unique string from CPU and system info
+      const cpuInfo = cpus.length > 0 ? cpus[0].model : 'unknown';
+      const systemInfo = `${hostname}-${platform}-${arch}-${cpuInfo}-${totalmem}`;
+
+      // Hash the system info to create a consistent machine ID
+      const hash = CryptoJS.SHA256(systemInfo).toString();
+
+      // Format as a readable machine ID (first 32 chars, formatted)
+      const machineId = hash.substring(0, 32).toUpperCase();
+      const formatted = machineId.match(/.{1,8}/g).join('-');
+
+      return formatted;
+    } catch (error) {
+      console.error('Error generating machine ID:', error);
+      // Fallback to hostname-based ID
+      const fallback = CryptoJS.SHA256(os.hostname()).toString().substring(0, 32).toUpperCase();
+      return fallback.match(/.{1,8}/g).join('-');
+    }
+  }
+
+  /**
    * Initialize the license service
    */
   async initialize() {
     try {
       // Get machine ID (unique hardware fingerprint)
-      this.machineId = machineIdSync({ original: true });
+      this.machineId = this.generateMachineId();
 
       // Set license file path in app's user data directory
       const userDataPath = app.getPath('userData');

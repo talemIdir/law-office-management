@@ -19,7 +19,7 @@ export function createLicenseWindow(licenseService) {
 
   licenseWindow = new BrowserWindow({
     width: 800,
-    height: 700,
+    height: 800,
     resizable: false,
     maximizable: false,
     minimizable: false,
