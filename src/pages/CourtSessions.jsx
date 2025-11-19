@@ -194,13 +194,13 @@ function CourtSessionsPage() {
   // Set default date filters: today and one week ahead
   const getDefaultDateFrom = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
   const getDefaultDateTo = () => {
     const oneWeekAhead = new Date();
     oneWeekAhead.setDate(oneWeekAhead.getDate() + 7);
-    return oneWeekAhead.toISOString().split('T')[0];
+    return oneWeekAhead.toISOString().split("T")[0];
   };
 
   const [filterDateFrom, setFilterDateFrom] = useState(getDefaultDateFrom());
@@ -214,7 +214,6 @@ function CourtSessionsPage() {
   const loadSessions = async () => {
     setLoading(true);
     const result = await courtSessionAPI.getAll();
-    console.log(result);
     if (result.success) {
       setSessions(result.data);
     }
@@ -499,7 +498,10 @@ function CourtSessionsPage() {
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== "all" || filterDateFrom || filterDateTo
+            searchTerm ||
+            filterStatus !== "all" ||
+            filterDateFrom ||
+            filterDateTo
               ? "لم يتم العثور على جلسات مطابقة للبحث"
               : "لم يتم إضافة أي جلسات بعد"
           }

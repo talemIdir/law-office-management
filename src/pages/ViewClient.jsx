@@ -27,7 +27,6 @@ function ViewClient() {
     try {
       // Load client data
       const clientResult = await clientAPI.getById(id);
-      console.log(clientResult);
       if (clientResult.success) {
         setClient(clientResult.data);
       } else {

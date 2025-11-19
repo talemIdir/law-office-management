@@ -226,9 +226,7 @@ function DocumentModal({ document, onClose, onSave }) {
                   disabled={!formData.clientId}
                 >
                   <option value="">
-                    {formData.clientId
-                      ? "اختر القضية"
-                      : "اختر الموكل أولاً"}
+                    {formData.clientId ? "اختر القضية" : "اختر الموكل أولاً"}
                   </option>
                   {filteredCases.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -379,7 +377,6 @@ function DocumentsPage() {
     }
     try {
       const result = await openDocumentFile(filePath);
-      console.log(result);
       if (!result.success) {
         showError("فشل في فتح الملف");
       }
