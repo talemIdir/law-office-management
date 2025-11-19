@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from "electron";
 import started from "electron-squirrel-startup";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -86,13 +86,40 @@ function createWindow() {
 
 // Initialize app
 app.whenReady().then(async () => {
+  // Remove the application menu
+  Menu.setApplicationMenu(null);
+
   // Initialize license service
   await licenseService.initialize();
 
-  // Check license validity
-  const licenseCheck = await licenseService.checkLicense();
+  // Check overall access (license or trial)
+  const accessCheck = await licenseService.checkAccess();
 
-  if (!licenseCheck.isValid) {
+  if (accessCheck.hasAccess) {
+    // User has valid license or active trial, proceed normally
+    console.log(`Access granted via ${accessCheck.accessType}`);
+    if (accessCheck.accessType === 'trial') {
+      console.log(`Trial days remaining: ${accessCheck.daysRemaining}`);
+    }
+    await initDatabase();
+    createWindow();
+  } else if (accessCheck.canStartTrial) {
+    // No license, no trial started yet - automatically start trial
+    console.log('Starting trial period...');
+    const trialStart = await licenseService.startTrial();
+
+    if (trialStart.success) {
+      console.log('Trial started successfully!');
+      await initDatabase();
+      createWindow();
+    } else {
+      console.error('Failed to start trial:', trialStart.error);
+      // Show license window as fallback
+      isActivatingLicense = true;
+      createLicenseWindow(licenseService);
+    }
+  } else {
+    // Trial expired or needs activation
     // Set flag to prevent app from quitting during activation
     isActivatingLicense = true;
 
@@ -127,10 +154,6 @@ app.whenReady().then(async () => {
         }
       }
     }, 500);
-  } else {
-    // License is valid, proceed normally
-    await initDatabase();
-    createWindow();
   }
 
   app.on("activate", () => {
@@ -714,6 +737,55 @@ ipcMain.handle("auth:changePassword", async (event, oldPassword, newPassword) =>
       newPassword
     );
     return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// License and Trial Management
+ipcMain.handle("license:checkAccess", async () => {
+  try {
+    return await licenseService.checkAccess();
+  } catch (error) {
+    return { hasAccess: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:getTrialInfo", async () => {
+  try {
+    return await licenseService.getTrialInfo();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:getLicenseInfo", async () => {
+  try {
+    return await licenseService.getLicenseInfo();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:startTrial", async () => {
+  try {
+    return await licenseService.startTrial();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:activate", async (event, licenseKey, customerName, customerEmail) => {
+  try {
+    return await licenseService.activateLicense(licenseKey, customerName, customerEmail);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:getMachineId", async () => {
+  try {
+    return { success: true, machineId: licenseService.getMachineId() };
   } catch (error) {
     return { success: false, error: error.message };
   }

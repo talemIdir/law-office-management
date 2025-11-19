@@ -1,8 +1,8 @@
-import CryptoJS from 'crypto-js';
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
-import os from 'os';
+import CryptoJS from "crypto-js";
+import fs from "fs";
+import path from "path";
+import { app } from "electron";
+import os from "os";
 
 /**
  * Offline License Validation Service
@@ -16,12 +16,15 @@ import os from 'os';
  * 4. No internet connection required after initial activation
  */
 
-const LICENSE_FILE_NAME = 'license.dat';
-const ENCRYPTION_KEY = 'LAW_OFFICE_MGMT_2025_SECRET_KEY_CHANGE_THIS'; // Change this to your own secret!
+const LICENSE_FILE_NAME = "license.dat";
+const TRIAL_FILE_NAME = "trial.dat";
+const TRIAL_DAYS = 7; // Number of days for trial period
+const ENCRYPTION_KEY = "LAW_OFFICE_MGMT_2025_SECRET_KEY_CHANGE_THIS"; // Change this to your own secret!
 
 export class LicenseService {
   constructor() {
     this.licenseFilePath = null;
+    this.trialFilePath = null;
     this.machineId = null;
   }
 
@@ -38,7 +41,7 @@ export class LicenseService {
       const totalmem = os.totalmem();
 
       // Create a unique string from CPU and system info
-      const cpuInfo = cpus.length > 0 ? cpus[0].model : 'unknown';
+      const cpuInfo = cpus.length > 0 ? cpus[0].model : "unknown";
       const systemInfo = `${hostname}-${platform}-${arch}-${cpuInfo}-${totalmem}`;
 
       // Hash the system info to create a consistent machine ID
@@ -46,14 +49,17 @@ export class LicenseService {
 
       // Format as a readable machine ID (first 32 chars, formatted)
       const machineId = hash.substring(0, 32).toUpperCase();
-      const formatted = machineId.match(/.{1,8}/g).join('-');
+      const formatted = machineId.match(/.{1,8}/g).join("-");
 
       return formatted;
     } catch (error) {
-      console.error('Error generating machine ID:', error);
+      console.error("Error generating machine ID:", error);
       // Fallback to hostname-based ID
-      const fallback = CryptoJS.SHA256(os.hostname()).toString().substring(0, 32).toUpperCase();
-      return fallback.match(/.{1,8}/g).join('-');
+      const fallback = CryptoJS.SHA256(os.hostname())
+        .toString()
+        .substring(0, 32)
+        .toUpperCase();
+      return fallback.match(/.{1,8}/g).join("-");
     }
   }
 
@@ -66,12 +72,13 @@ export class LicenseService {
       this.machineId = this.generateMachineId();
 
       // Set license file path in app's user data directory
-      const userDataPath = app.getPath('userData');
+      const userDataPath = app.getPath("userData");
       this.licenseFilePath = path.join(userDataPath, LICENSE_FILE_NAME);
+      this.trialFilePath = path.join(userDataPath, TRIAL_FILE_NAME);
 
       return { success: true };
     } catch (error) {
-      console.error('Failed to initialize license service:', error);
+      console.error("Failed to initialize license service:", error);
       return { success: false, error: error.message };
     }
   }
@@ -89,7 +96,8 @@ export class LicenseService {
    * License key format: XXXX-XXXX-XXXX-XXXX-XXXX
    */
   isValidLicenseKeyFormat(licenseKey) {
-    const pattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    const pattern =
+      /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
     return pattern.test(licenseKey);
   }
 
@@ -103,11 +111,11 @@ export class LicenseService {
    */
   static generateLicenseKey(machineId, licenseInfo = {}) {
     const {
-      customerName = 'Customer',
-      customerEmail = '',
+      customerName = "Customer",
+      customerEmail = "",
       expiryDate = null, // null = perpetual license
       maxActivations = 1,
-      issueDate = new Date().toISOString()
+      issueDate = new Date().toISOString(),
     } = licenseInfo;
 
     // Create a deterministic hash based only on machine ID
@@ -116,7 +124,7 @@ export class LicenseService {
 
     // Take first 20 characters of hash and format as license key
     const keyString = hash.substring(0, 20).toUpperCase();
-    const formattedKey = keyString.match(/.{1,4}/g).join('-');
+    const formattedKey = keyString.match(/.{1,4}/g).join("-");
 
     // Store metadata separately (not part of key generation)
     const licenseData = {
@@ -126,35 +134,40 @@ export class LicenseService {
       expiryDate,
       maxActivations,
       issueDate,
-      version: '1.0'
+      version: "1.0",
     };
 
     return {
       licenseKey: formattedKey,
-      licenseData: licenseData
+      licenseData: licenseData,
     };
   }
 
   /**
    * Activate a license with the provided license key
    */
-  async activateLicense(licenseKey, customerName = '', customerEmail = '') {
+  async activateLicense(licenseKey, customerName = "", customerEmail = "") {
     try {
       // Validate format
       if (!this.isValidLicenseKeyFormat(licenseKey)) {
         return {
           success: false,
-          error: 'Invalid license key format. Expected format: XXXX-XXXX-XXXX-XXXX-XXXX'
+          error:
+            "Invalid license key format. Expected format: XXXX-XXXX-XXXX-XXXX-XXXX",
         };
       }
 
       // Verify the license key against the machine ID
-      const verificationResult = this.verifyLicenseKey(licenseKey, customerName, customerEmail);
+      const verificationResult = this.verifyLicenseKey(
+        licenseKey,
+        customerName,
+        customerEmail
+      );
 
       if (!verificationResult.isValid) {
         return {
           success: false,
-          error: 'Invalid license key. This key is not valid for this machine.'
+          error: "Invalid license key. This key is not valid for this machine.",
         };
       }
 
@@ -162,27 +175,27 @@ export class LicenseService {
       const licenseData = {
         licenseKey,
         machineId: this.machineId,
-        customerName: customerName || 'Licensed User',
-        customerEmail: customerEmail || '',
+        customerName: customerName || "Licensed User",
+        customerEmail: customerEmail || "",
         activationDate: new Date().toISOString(),
         expiryDate: null, // Perpetual license
-        status: 'active'
+        status: "active",
       };
 
       // Encrypt and save license data
       const encrypted = this.encryptLicenseData(licenseData);
-      await fs.promises.writeFile(this.licenseFilePath, encrypted, 'utf8');
+      await fs.promises.writeFile(this.licenseFilePath, encrypted, "utf8");
 
       return {
         success: true,
-        message: 'License activated successfully',
-        data: licenseData
+        message: "License activated successfully",
+        data: licenseData,
       };
     } catch (error) {
-      console.error('License activation error:', error);
+      console.error("License activation error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -191,13 +204,16 @@ export class LicenseService {
    * Verify a license key against the current machine
    * This recreates the key based on machine ID and checks if it matches
    */
-  verifyLicenseKey(licenseKey, customerName = '', customerEmail = '') {
+  verifyLicenseKey(licenseKey, customerName = "", customerEmail = "") {
     try {
       // Remove dashes for comparison
-      const providedKey = licenseKey.replace(/-/g, '');
+      const providedKey = licenseKey.replace(/-/g, "");
 
       // Generate what the key SHOULD be for this machine
-      const hash = CryptoJS.HmacSHA256(this.machineId, ENCRYPTION_KEY).toString();
+      const hash = CryptoJS.HmacSHA256(
+        this.machineId,
+        ENCRYPTION_KEY
+      ).toString();
       const expectedKey = hash.substring(0, 20).toUpperCase();
 
       // Compare the provided key with the expected key
@@ -211,11 +227,11 @@ export class LicenseService {
           customerEmail,
           expiryDate: null,
           maxActivations: 1,
-          version: '1.0'
-        }
+          version: "1.0",
+        },
       };
     } catch (error) {
-      console.error('License verification error:', error);
+      console.error("License verification error:", error);
       return { isValid: false };
     }
   }
@@ -230,19 +246,22 @@ export class LicenseService {
         return {
           isValid: false,
           needsActivation: true,
-          reason: 'No license file found'
+          reason: "No license file found",
         };
       }
 
       // Read and decrypt license file
-      const encrypted = await fs.promises.readFile(this.licenseFilePath, 'utf8');
+      const encrypted = await fs.promises.readFile(
+        this.licenseFilePath,
+        "utf8"
+      );
       const licenseData = this.decryptLicenseData(encrypted);
 
       if (!licenseData) {
         return {
           isValid: false,
           needsActivation: true,
-          reason: 'Invalid or corrupted license file'
+          reason: "Invalid or corrupted license file",
         };
       }
 
@@ -251,16 +270,16 @@ export class LicenseService {
         return {
           isValid: false,
           needsActivation: true,
-          reason: 'License is bound to a different machine'
+          reason: "License is bound to a different machine",
         };
       }
 
       // Check if license is active
-      if (licenseData.status !== 'active') {
+      if (licenseData.status !== "active") {
         return {
           isValid: false,
           needsActivation: true,
-          reason: 'License is not active'
+          reason: "License is not active",
         };
       }
 
@@ -271,7 +290,7 @@ export class LicenseService {
           return {
             isValid: false,
             needsActivation: true,
-            reason: 'License has expired'
+            reason: "License has expired",
           };
         }
       }
@@ -279,14 +298,14 @@ export class LicenseService {
       return {
         isValid: true,
         needsActivation: false,
-        licenseData
+        licenseData,
       };
     } catch (error) {
-      console.error('License check error:', error);
+      console.error("License check error:", error);
       return {
         isValid: false,
         needsActivation: true,
-        reason: error.message
+        reason: error.message,
       };
     }
   }
@@ -300,12 +319,15 @@ export class LicenseService {
         return null;
       }
 
-      const encrypted = await fs.promises.readFile(this.licenseFilePath, 'utf8');
+      const encrypted = await fs.promises.readFile(
+        this.licenseFilePath,
+        "utf8"
+      );
       const licenseData = this.decryptLicenseData(encrypted);
 
       return licenseData;
     } catch (error) {
-      console.error('Error reading license info:', error);
+      console.error("Error reading license info:", error);
       return null;
     }
   }
@@ -318,9 +340,206 @@ export class LicenseService {
       if (fs.existsSync(this.licenseFilePath)) {
         await fs.promises.unlink(this.licenseFilePath);
       }
-      return { success: true, message: 'License deactivated' };
+      return { success: true, message: "License deactivated" };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Start a trial period
+   */
+  async startTrial() {
+    try {
+      // Check if trial already exists
+      if (fs.existsSync(this.trialFilePath)) {
+        return {
+          success: false,
+          error: "Trial has already been started",
+        };
+      }
+
+      const trialData = {
+        startDate: new Date().toISOString(),
+        endDate: new Date(
+          Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        machineId: this.machineId,
+        status: "active",
+      };
+
+      // Encrypt and save trial data
+      const encrypted = this.encryptLicenseData(trialData);
+      await fs.promises.writeFile(this.trialFilePath, encrypted, "utf8");
+
+      return {
+        success: true,
+        message: "Trial started successfully",
+        data: trialData,
+      };
+    } catch (error) {
+      console.error("Trial start error:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Check trial status
+   */
+  async checkTrial() {
+    try {
+      // Check if trial file exists
+      if (!fs.existsSync(this.trialFilePath)) {
+        return {
+          isActive: false,
+          hasStarted: false,
+          needsActivation: false,
+        };
+      }
+
+      // Read and decrypt trial file
+      const encrypted = await fs.promises.readFile(this.trialFilePath, "utf8");
+      const trialData = this.decryptLicenseData(encrypted);
+
+      if (!trialData) {
+        return {
+          isActive: false,
+          hasStarted: true,
+          needsActivation: true,
+          reason: "Invalid trial data",
+        };
+      }
+
+      // Verify machine ID matches
+      if (trialData.machineId !== this.machineId) {
+        return {
+          isActive: false,
+          hasStarted: true,
+          needsActivation: true,
+          reason: "Trial is bound to a different machine",
+        };
+      }
+
+      // Check if trial has expired
+      const endDate = new Date(trialData.endDate);
+      const now = new Date();
+      const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+
+      if (endDate < now) {
+        return {
+          isActive: false,
+          hasStarted: true,
+          needsActivation: true,
+          trialData,
+          daysRemaining: 0,
+          reason: "Trial has expired",
+        };
+      }
+
+      return {
+        isActive: true,
+        hasStarted: true,
+        needsActivation: false,
+        trialData,
+        daysRemaining,
+      };
+    } catch (error) {
+      console.error("Trial check error:", error);
+      return {
+        isActive: false,
+        hasStarted: false,
+        needsActivation: false,
+        reason: error.message,
+      };
+    }
+  }
+
+  /**
+   * Get trial information
+   */
+  async getTrialInfo() {
+    try {
+      if (!fs.existsSync(this.trialFilePath)) {
+        return null;
+      }
+
+      const encrypted = await fs.promises.readFile(this.trialFilePath, "utf8");
+      const trialData = this.decryptLicenseData(encrypted);
+
+      if (!trialData) {
+        return null;
+      }
+
+      const endDate = new Date(trialData.endDate);
+      const now = new Date();
+      const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+
+      return {
+        ...trialData,
+        daysRemaining,
+        isExpired: endDate < now,
+      };
+    } catch (error) {
+      console.error("Error reading trial info:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Check overall app access (license or trial)
+   */
+  async checkAccess() {
+    try {
+      // First check if there's a valid license
+      const licenseCheck = await this.checkLicense();
+
+      if (licenseCheck.isValid) {
+        return {
+          hasAccess: true,
+          accessType: "license",
+          licenseData: licenseCheck.licenseData,
+        };
+      }
+
+      // If no valid license, check trial
+      const trialCheck = await this.checkTrial();
+
+      if (trialCheck.isActive) {
+        return {
+          hasAccess: true,
+          accessType: "trial",
+          daysRemaining: trialCheck.daysRemaining,
+          trialData: trialCheck.trialData,
+        };
+      }
+
+      // If trial hasn't started yet, allow starting it
+      if (!trialCheck.hasStarted) {
+        return {
+          hasAccess: false,
+          canStartTrial: true,
+          needsActivation: false,
+        };
+      }
+
+      // Trial expired or invalid, need license
+      return {
+        hasAccess: false,
+        canStartTrial: false,
+        needsActivation: true,
+        reason: trialCheck.reason || "Access denied",
+      };
+    } catch (error) {
+      console.error("Access check error:", error);
+      return {
+        hasAccess: false,
+        canStartTrial: false,
+        needsActivation: true,
+        reason: error.message,
+      };
     }
   }
 
@@ -341,7 +560,7 @@ export class LicenseService {
       const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
       return JSON.parse(jsonString);
     } catch (error) {
-      console.error('Failed to decrypt license data:', error);
+      console.error("Failed to decrypt license data:", error);
       return null;
     }
   }

@@ -222,6 +222,13 @@
       <p>نظام إدارة مكتب المحاماة</p>
     </div>
 
+    <div class="instructions" id="trialExpiredNotice" style="background-color: #ffe6e6; border-right: 5px solid #ff4444; display: none;">
+      <h3 style="color: #c33;">⚠️ انتهت فترة التجربة</h3>
+      <p style="margin-top: 10px; color: #666;">
+        لقد انتهت فترة التجربة المجانية. للاستمرار في استخدام البرنامج، يرجى تفعيل الترخيص باتباع الخطوات أدناه.
+      </p>
+    </div>
+
     <div class="instructions">
       <h3>خطوات التفعيل:</h3>
       <ol>
@@ -273,12 +280,19 @@
     // Load machine ID on page load
     window.addEventListener('DOMContentLoaded', async () => {
       try {
+        // Get machine ID
         const result = await ipcRenderer.invoke('license:getMachineId');
         if (result.success) {
           machineIdValue = result.machineId;
           document.getElementById('machineId').textContent = machineIdValue;
         } else {
           showError('Failed to get machine ID: ' + result.error);
+        }
+
+        // Check trial status to show appropriate notice
+        const trialInfo = await ipcRenderer.invoke('license:getTrialInfo');
+        if (trialInfo && trialInfo.isExpired) {
+          document.getElementById('trialExpiredNotice').style.display = 'block';
         }
       } catch (error) {
         showError('Error: ' + error.message);
