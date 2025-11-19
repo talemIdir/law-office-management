@@ -62,9 +62,9 @@
 }
 
 :root {
-  --primary-color: #2c5f2d;
-  --primary-dark: #1e4620;
-  --primary-light: #4a8f4d;
+  --primary-color: #16213e;
+  --primary-dark: #1a1a2e;
+  --primary-light: #0f3460;
   --secondary-color: #c9a96e;
   --accent-color: #d4af37;
   --text-dark: #1a1a1a;
@@ -1515,7 +1515,11 @@ p {
 }
 
 .courts-stats .stat-card {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--primary-dark) 100%
+  );
   padding: 1.5rem;
   border-radius: 8px;
   text-align: center;
