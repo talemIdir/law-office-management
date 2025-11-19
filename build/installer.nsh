@@ -56,7 +56,7 @@ Function DataDirectoryPage
   ${EndIf}
 
   ; Title
-  ${NSD_CreateLabel} 0 0 100% 12u "Data Directory Selection"
+  ${NSD_CreateLabel} 0 0 100% 12u "اختيار مجلد البيانات"
   Pop $Label
 
   ; Set bold font for title
@@ -64,11 +64,11 @@ Function DataDirectoryPage
   SendMessage $Label ${WM_SETFONT} $0 0
 
   ; Instructions
-  ${NSD_CreateLabel} 0 20u 100% 36u "Please select where you want to store your law office data, including the database, documents, and backups.$\r$\n$\r$\nIMPORTANT: Choose a location that is regularly backed up to prevent data loss."
+  ${NSD_CreateLabel} 0 20u 100% 36u "الرجاء تحديد المكان الذي تريد تخزين بيانات مكتب المحاماة فيه، بما في ذلك قاعدة البيانات والمستندات والنسخ الاحتياطية.$\r$\n$\r$\nمهم: اختر موقعًا يتم نسخه احتياطيًا بانتظام لمنع فقدان البيانات."
   Pop $InfoLabel
 
   ; Data Directory Label
-  ${NSD_CreateLabel} 0 62u 100% 12u "Data Directory:"
+  ${NSD_CreateLabel} 0 62u 100% 12u "مجلد البيانات:"
   Pop $Label
 
   ; Data Directory Text Box
@@ -76,12 +76,12 @@ Function DataDirectoryPage
   Pop $DataDir
 
   ; Browse Button
-  ${NSD_CreateButton} 82% 75u 18% 12u "Browse..."
+  ${NSD_CreateButton} 82% 75u 18% 12u "استعراض..."
   Pop $BrowseButton
   ${NSD_OnClick} $BrowseButton BrowseForDirectory
 
   ; Additional Info
-  ${NSD_CreateLabel} 0 95u 100% 24u "This directory will contain:$\r$\n  • SQLite database (law-office.db)$\r$\n  • Uploaded documents and files$\r$\n  • Application settings"
+  ${NSD_CreateLabel} 0 95u 100% 24u "سيحتوي هذا المجلد على:$\r$\n  • قاعدة بيانات SQLite (law-office.db)$\r$\n  • المستندات والملفات المرفوعة$\r$\n  • إعدادات التطبيق"
   Pop $Label
 
   nsDialogs::Show
@@ -89,7 +89,7 @@ FunctionEnd
 
 ; Browse button click handler
 Function BrowseForDirectory
-  nsDialogs::SelectFolderDialog "Select Data Directory" "$DataDirText"
+  nsDialogs::SelectFolderDialog "اختر مجلد البيانات" "$DataDirText"
   Pop $0
 
   ${If} $0 != error
@@ -105,7 +105,7 @@ Function DataDirectoryPageLeave
 
   ; Validate that a directory was selected
   ${If} $DataDirText == ""
-    MessageBox MB_OK|MB_ICONEXCLAMATION "Please select a data directory."
+    MessageBox MB_OK|MB_ICONEXCLAMATION "الرجاء تحديد مجلد البيانات."
     Abort
   ${EndIf}
 FunctionEnd
@@ -121,17 +121,17 @@ Function CreateDataDirectory
 
   ; Write a readme file
   FileOpen $1 "$DataDirText\README.txt" w
-  FileWrite $1 "Law Office Management System - Data Directory$\r$\n"
+  FileWrite $1 "نظام إدارة مكتب المحاماة - مجلد البيانات$\r$\n"
   FileWrite $1 "============================================$\r$\n$\r$\n"
-  FileWrite $1 "This directory contains all data for your Law Office Management System.$\r$\n$\r$\n"
-  FileWrite $1 "IMPORTANT:$\r$\n"
-  FileWrite $1 "- Regularly backup this entire directory to prevent data loss$\r$\n"
-  FileWrite $1 "- Do not manually modify the database files$\r$\n"
-  FileWrite $1 "- Keep this directory secure as it contains confidential client information$\r$\n$\r$\n"
-  FileWrite $1 "Directory Structure:$\r$\n"
-  FileWrite $1 "- law-office.db: Main database file$\r$\n"
-  FileWrite $1 "- documents/: Uploaded documents and files$\r$\n"
-  FileWrite $1 "- backups/: Database backup files$\r$\n"
+  FileWrite $1 "يحتوي هذا المجلد على جميع بيانات نظام إدارة مكتب المحاماة الخاص بك.$\r$\n$\r$\n"
+  FileWrite $1 "مهم:$\r$\n"
+  FileWrite $1 "- قم بعمل نسخة احتياطية من هذا المجلد بالكامل بانتظام لمنع فقدان البيانات$\r$\n"
+  FileWrite $1 "- لا تقم بتعديل ملفات قاعدة البيانات يدوياً$\r$\n"
+  FileWrite $1 "- حافظ على أمان هذا المجلد لأنه يحتوي على معلومات سرية عن العملاء$\r$\n$\r$\n"
+  FileWrite $1 "هيكل المجلد:$\r$\n"
+  FileWrite $1 "- law-office.db: ملف قاعدة البيانات الرئيسي$\r$\n"
+  FileWrite $1 "- documents/: المستندات والملفات المرفوعة$\r$\n"
+  FileWrite $1 "- backups/: ملفات النسخ الاحتياطي لقاعدة البيانات$\r$\n"
   FileClose $1
 FunctionEnd
 
@@ -170,26 +170,9 @@ FunctionEnd
   Delete "$SMPROGRAMS\Law Office Management\Uninstall Law Office Management.lnk"
   RMDir "$SMPROGRAMS\Law Office Management"
 
-  ; Ask user if they want to remove data directory
-  MessageBox MB_YESNO|MB_ICONQUESTION "Do you want to remove all application data, including the database and documents?$\r$\n$\r$\nWARNING: This action cannot be undone. Make sure you have a backup if needed.$\r$\n$\r$\nClick NO to keep your data for future reinstallation." IDYES RemoveData IDNO KeepData
+  ; Inform user that data is preserved
+  MessageBox MB_OK|MB_ICONINFORMATION "تم إلغاء تثبيت التطبيق.$\r$\n$\r$\nتم الحفاظ على بياناتك (قاعدة البيانات والمستندات والنسخ الاحتياطية) ولن يتم حذفها.$\r$\n$\r$\nيمكنك إعادة تثبيت التطبيق لاحقاً واختيار نفس مجلد البيانات."
 
-  RemoveData:
-    ; Read the data path
-    SetShellVarContext current
-    FileOpen $1 "$APPDATA\law-office-management\data-path.txt" r
-    FileRead $1 $0
-    FileClose $1
-
-    ; Remove data directory
-    RMDir /r "$0"
-
-    MessageBox MB_OK|MB_ICONINFORMATION "All application data has been removed."
-    Goto EndUninstall
-
-  KeepData:
-    MessageBox MB_OK|MB_ICONINFORMATION "Your data has been preserved. You can reinstall the application later and select the same data directory."
-
-  EndUninstall:
-  ; Remove config directory
+  ; Remove config directory only (not the data directory)
   RMDir /r "$APPDATA\law-office-management"
 !macroend
