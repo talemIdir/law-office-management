@@ -791,12 +791,17 @@ function CasesPage() {
             onChange={(e) => setFilterType(e.target.value)}
           >
             <option value="all">جميع الأنواع</option>
-            <option value="civil">مدني</option>
-            <option value="criminal">جنائي</option>
-            <option value="commercial">تجاري</option>
-            <option value="administrative">إداري</option>
-            <option value="family">أسري</option>
-            <option value="labor">عمالي</option>
+            <option value="civil">المدني</option>
+            <option value="social">الإجتماعي</option>
+            <option value="real_estate">العقاري</option>
+            <option value="family">شؤون الأسرة</option>
+            <option value="commercial">التجاري</option>
+            <option value="maritime">البحري</option>
+            <option value="urgent">الاستعجالي</option>
+            <option value="misdemeanor">الجنح</option>
+            <option value="violations">المخالفات</option>
+            <option value="juveniles">الأحداث</option>
+            <option value="penalty_enforcement">تطبيق العقوبات</option>
             <option value="other">أخرى</option>
           </select>
           <select
