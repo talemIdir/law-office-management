@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { caseAPI, clientAPI, paymentAPI, expenseAPI } from "../utils/api";
 import { showError, showWarning } from "../utils/toast";
 import DataTable from "../components/DataTable";
+import AdvancedFilter from "../components/AdvancedFilter";
 import {
   getCaseTypeLabel,
   getPaymentMethodLabel,
@@ -17,6 +18,9 @@ function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
+  const [paymentFilters, setPaymentFilters] = useState({});
+  const [expenseFilters, setExpenseFilters] = useState({});
+  const [caseFilters, setCaseFilters] = useState({});
 
   useEffect(() => {
     const today = new Date();
@@ -196,6 +200,65 @@ function ReportsPage() {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("ar-DZ");
   };
+
+  // Filter payments in reports
+  const filteredPayments = useMemo(() => {
+    if (!reportData?.payments) return [];
+    let filtered = [...reportData.payments];
+
+    if (paymentFilters.searchTerm) {
+      const searchLower = paymentFilters.searchTerm.toLowerCase();
+      filtered = filtered.filter((p) => p.reference?.toLowerCase().includes(searchLower));
+    }
+
+    if (paymentFilters.paymentMethod && paymentFilters.paymentMethod !== "all") {
+      filtered = filtered.filter((p) => p.paymentMethod === paymentFilters.paymentMethod);
+    }
+
+    return filtered;
+  }, [reportData?.payments, paymentFilters]);
+
+  // Filter expenses in reports
+  const filteredExpenses = useMemo(() => {
+    if (!reportData?.expenses) return [];
+    let filtered = [...reportData.expenses];
+
+    if (expenseFilters.searchTerm) {
+      const searchLower = expenseFilters.searchTerm.toLowerCase();
+      filtered = filtered.filter((e) => e.description?.toLowerCase().includes(searchLower));
+    }
+
+    if (expenseFilters.category && expenseFilters.category !== "all") {
+      filtered = filtered.filter((e) => e.category === expenseFilters.category);
+    }
+
+    return filtered;
+  }, [reportData?.expenses, expenseFilters]);
+
+  // Filter cases in reports
+  const filteredReportCases = useMemo(() => {
+    if (!reportData?.cases) return [];
+    let filtered = [...reportData.cases];
+
+    if (caseFilters.searchTerm) {
+      const searchLower = caseFilters.searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.caseNumber?.toLowerCase().includes(searchLower) ||
+          c.title?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (caseFilters.caseType && caseFilters.caseType !== "all") {
+      filtered = filtered.filter((c) => c.caseType === caseFilters.caseType);
+    }
+
+    if (caseFilters.status && caseFilters.status !== "all") {
+      filtered = filtered.filter((c) => c.status === caseFilters.status);
+    }
+
+    return filtered;
+  }, [reportData?.cases, caseFilters]);
 
   // Column definitions for cases table
   const casesColumns = useMemo(
@@ -467,8 +530,57 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">تفاصيل القضايا</h3>
+            <AdvancedFilter
+              onFilterChange={setCaseFilters}
+              filterConfig={{
+                searchPlaceholder: "🔍 البحث في القضايا...",
+                showDateRange: false,
+                showAmountRange: false,
+                defaultValues: {
+                  caseType: "all",
+                  status: "all",
+                },
+                customFilters: [
+                  {
+                    name: "caseType",
+                    label: "نوع القضية",
+                    icon: "📋",
+                    type: "select",
+                    options: [
+                      { value: "all", label: "جميع الأنواع" },
+                      { value: "civil", label: "المدني" },
+                      { value: "social", label: "الإجتماعي" },
+                      { value: "real_estate", label: "العقاري" },
+                      { value: "family", label: "شؤون الأسرة" },
+                      { value: "commercial", label: "التجاري" },
+                      { value: "maritime", label: "البحري" },
+                      { value: "urgent", label: "الاستعجالي" },
+                      { value: "misdemeanor", label: "الجنح" },
+                      { value: "violations", label: "المخالفات" },
+                      { value: "juveniles", label: "الأحداث" },
+                      { value: "penalty_enforcement", label: "تطبيق العقوبات" },
+                      { value: "other", label: "أخرى" },
+                    ],
+                  },
+                  {
+                    name: "status",
+                    label: "الحالة",
+                    icon: "📊",
+                    type: "select",
+                    options: [
+                      { value: "all", label: "جميع الحالات" },
+                      { value: "first_instance", label: "على مستوى الدرجة الأولى" },
+                      { value: "in_settlement", label: "في إطار التسوية" },
+                      { value: "closed", label: "مغلقة" },
+                      { value: "in_appeal", label: "في الاستئناف" },
+                      { value: "extraordinary_appeal", label: "طعن غير عادي" },
+                    ],
+                  },
+                ],
+              }}
+            />
             <DataTable
-              data={reportData.cases || []}
+              data={filteredReportCases}
               columns={casesColumns}
               showPagination={true}
               pageSize={10}
@@ -478,8 +590,34 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">تفاصيل المدفوعات</h3>
+            <AdvancedFilter
+              onFilterChange={setPaymentFilters}
+              filterConfig={{
+                searchPlaceholder: "🔍 البحث برقم المرجع...",
+                showDateRange: false,
+                showAmountRange: false,
+                defaultValues: {
+                  paymentMethod: "all",
+                },
+                customFilters: [
+                  {
+                    name: "paymentMethod",
+                    label: "طريقة الدفع",
+                    icon: "💳",
+                    type: "select",
+                    options: [
+                      { value: "all", label: "جميع الطرق" },
+                      { value: "cash", label: "نقدي" },
+                      { value: "check", label: "شيك" },
+                      { value: "bank_transfer", label: "تحويل بنكي" },
+                      { value: "other", label: "أخرى" },
+                    ],
+                  },
+                ],
+              }}
+            />
             <DataTable
-              data={reportData.payments || []}
+              data={filteredPayments}
               columns={paymentsColumns}
               showPagination={true}
               pageSize={10}
@@ -489,8 +627,37 @@ function ReportsPage() {
 
           <div className="card">
             <h3 className="card-title">تفاصيل المصروفات</h3>
+            <AdvancedFilter
+              onFilterChange={setExpenseFilters}
+              filterConfig={{
+                searchPlaceholder: "🔍 البحث في الوصف...",
+                showDateRange: false,
+                showAmountRange: false,
+                defaultValues: {
+                  category: "all",
+                },
+                customFilters: [
+                  {
+                    name: "category",
+                    label: "الفئة",
+                    icon: "🏷️",
+                    type: "select",
+                    options: [
+                      { value: "all", label: "جميع الفئات" },
+                      { value: "office_rent", label: "إيجار المكتب" },
+                      { value: "salaries", label: "رواتب" },
+                      { value: "utilities", label: "فواتير" },
+                      { value: "supplies", label: "مستلزمات" },
+                      { value: "transportation", label: "تنقلات" },
+                      { value: "legal_fees", label: "رسوم قانونية" },
+                      { value: "other", label: "أخرى" },
+                    ],
+                  },
+                ],
+              }}
+            />
             <DataTable
-              data={reportData.expenses || []}
+              data={filteredExpenses}
               columns={expensesColumns}
               showPagination={true}
               pageSize={10}

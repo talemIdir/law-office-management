@@ -4,6 +4,7 @@ import { clientAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import AdvancedFilter from "../components/AdvancedFilter";
 import { getStatusLabel, getClientTypeLabel } from "../utils/labels";
 
 function ClientModal({ client, onClose, onSave }) {
@@ -258,8 +259,7 @@ function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filters, setFilters] = useState({});
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -330,14 +330,52 @@ function ClientsPage() {
     setShowModal(true);
   };
 
-  const globalFilterFn = (client, searchTerm) => {
-    return (
-      (client.firstName && client.firstName.includes(searchTerm)) ||
-      (client.lastName && client.lastName.includes(searchTerm)) ||
-      (client.companyName && client.companyName.includes(searchTerm)) ||
-      (client.phone && client.phone.includes(searchTerm))
-    );
-  };
+  const filteredClients = useMemo(() => {
+    let filtered = [...clients];
+
+    // Text search
+    if (filters.searchTerm) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.firstName?.toLowerCase().includes(searchLower) ||
+          c.lastName?.toLowerCase().includes(searchLower) ||
+          c.companyName?.toLowerCase().includes(searchLower) ||
+          c.phone?.includes(searchLower) ||
+          c.email?.toLowerCase().includes(searchLower) ||
+          c.nationalId?.includes(searchLower)
+      );
+    }
+
+    // Date range filter (creation date)
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      filtered = filtered.filter((c) => {
+        if (!c.createdAt) return false;
+        return new Date(c.createdAt) >= startDate;
+      });
+    }
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((c) => {
+        if (!c.createdAt) return false;
+        return new Date(c.createdAt) <= endDate;
+      });
+    }
+
+    // Client type filter
+    if (filters.clientType && filters.clientType !== "all") {
+      filtered = filtered.filter((c) => c.type === filters.clientType);
+    }
+
+    // Status filter
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter((c) => c.status === filters.status);
+    }
+
+    return filtered;
+  }, [clients, filters]);
 
   const columns = useMemo(
     () => [
@@ -445,38 +483,51 @@ function ClientsPage() {
       </div>
 
       <div className="card">
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="🔍 البحث عن موكل..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            className="form-select"
-            style={{ width: "200px" }}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">جميع الحالات</option>
-            <option value="active">نشط</option>
-            <option value="inactive">غير نشط</option>
-            <option value="archived">مؤرشف</option>
-          </select>
-        </div>
+        <AdvancedFilter
+          onFilterChange={setFilters}
+          filterConfig={{
+            searchPlaceholder: "🔍 البحث عن موكل (الاسم، الهاتف، البريد، الرقم الوطني)...",
+            showDateRange: true,
+            showAmountRange: false,
+            defaultValues: {
+              clientType: "all",
+              status: "all",
+            },
+            customFilters: [
+              {
+                name: "clientType",
+                label: "نوع الموكل",
+                icon: "👤",
+                type: "select",
+                options: [
+                  { value: "all", label: "جميع الأنواع" },
+                  { value: "individual", label: "فرد" },
+                  { value: "company", label: "شركة" },
+                ],
+              },
+              {
+                name: "status",
+                label: "حالة الموكل",
+                icon: "📊",
+                type: "select",
+                options: [
+                  { value: "all", label: "جميع الحالات" },
+                  { value: "active", label: "نشط" },
+                  { value: "inactive", label: "غير نشط" },
+                  { value: "archived", label: "مؤرشف" },
+                ],
+              },
+            ],
+          }}
+        />
 
         <DataTable
-          data={clients}
+          data={filteredClients}
           columns={columns}
-          searchTerm={searchTerm}
-          filterValue={filterStatus}
-          filterKey="status"
-          globalFilterFn={globalFilterFn}
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== "all"
+            Object.keys(filters).length > 0
               ? "لم يتم العثور على موكلين مطابقين للبحث"
               : "لم يتم إضافة أي موكلين بعد"
           }

@@ -5,6 +5,7 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import PaymentModal from "../components/PaymentModal";
+import AdvancedFilter from "../components/AdvancedFilter";
 import {
   getStatusLabel,
   getCaseTypeLabel,
@@ -517,9 +518,7 @@ function CasesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
+  const [filters, setFilters] = useState({});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCaseForPayment, setSelectedCaseForPayment] = useState(null);
   const confirm = useConfirm();
@@ -638,18 +637,55 @@ function CasesPage() {
     );
   };
 
-  const globalFilterFn = (caseItem, searchTerm) => {
-    return (
-      caseItem.caseNumber.includes(searchTerm) ||
-      caseItem.title.includes(searchTerm) ||
-      (caseItem.opposingParty && caseItem.opposingParty.includes(searchTerm))
-    );
-  };
+  const filteredCases = useMemo(() => {
+    let filtered = [...cases];
 
-  const filteredByType = useMemo(() => {
-    if (filterType === "all") return cases;
-    return cases.filter((c) => c.caseType === filterType);
-  }, [cases, filterType]);
+    // Text search
+    if (filters.searchTerm) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.caseNumber?.toLowerCase().includes(searchLower) ||
+          c.title?.toLowerCase().includes(searchLower) ||
+          c.opposingParty?.toLowerCase().includes(searchLower) ||
+          getClientName(c.clientId).toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Date range filter
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      filtered = filtered.filter((c) => {
+        if (!c.startDate) return false;
+        return new Date(c.startDate) >= startDate;
+      });
+    }
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((c) => {
+        if (!c.startDate) return false;
+        return new Date(c.startDate) <= endDate;
+      });
+    }
+
+    // Case type filter
+    if (filters.caseType && filters.caseType !== "all") {
+      filtered = filtered.filter((c) => c.caseType === filters.caseType);
+    }
+
+    // Status filter
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter((c) => c.status === filters.status);
+    }
+
+    // Priority filter
+    if (filters.priority && filters.priority !== "all") {
+      filtered = filtered.filter((c) => c.priority === filters.priority);
+    }
+
+    return filtered;
+  }, [cases, filters, clients]);
 
   const columns = useMemo(
     () => [
@@ -776,60 +812,75 @@ function CasesPage() {
       </div>
 
       <div className="card">
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="🔍 البحث عن قضية..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            className="form-select"
-            style={{ width: "180px" }}
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="all">جميع الأنواع</option>
-            <option value="civil">المدني</option>
-            <option value="social">الإجتماعي</option>
-            <option value="real_estate">العقاري</option>
-            <option value="family">شؤون الأسرة</option>
-            <option value="commercial">التجاري</option>
-            <option value="maritime">البحري</option>
-            <option value="urgent">الاستعجالي</option>
-            <option value="misdemeanor">الجنح</option>
-            <option value="violations">المخالفات</option>
-            <option value="juveniles">الأحداث</option>
-            <option value="penalty_enforcement">تطبيق العقوبات</option>
-            <option value="other">أخرى</option>
-          </select>
-          <select
-            className="form-select"
-            style={{ width: "180px" }}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">جميع الحالات</option>
-            <option value="first_instance">على مستوى الدرجة الأولى</option>
-            <option value="in_settlement">في إطار التسوية</option>
-            <option value="closed">مغلقة</option>
-            <option value="in_appeal">في الاستئناف</option>
-            <option value="extraordinary_appeal">طعن غير عادي</option>
-          </select>
-        </div>
+        <AdvancedFilter
+          onFilterChange={setFilters}
+          filterConfig={{
+            searchPlaceholder: "🔍 البحث عن قضية (رقم، عنوان، خصم، موكل)...",
+            showDateRange: true,
+            showAmountRange: false,
+            defaultValues: {
+              caseType: "all",
+              status: "all",
+              priority: "all",
+            },
+            customFilters: [
+              {
+                name: "caseType",
+                label: "نوع القضية",
+                icon: "📋",
+                type: "select",
+                options: [
+                  { value: "all", label: "جميع الأنواع" },
+                  { value: "civil", label: "المدني" },
+                  { value: "social", label: "الإجتماعي" },
+                  { value: "real_estate", label: "العقاري" },
+                  { value: "family", label: "شؤون الأسرة" },
+                  { value: "commercial", label: "التجاري" },
+                  { value: "maritime", label: "البحري" },
+                  { value: "urgent", label: "الاستعجالي" },
+                  { value: "misdemeanor", label: "الجنح" },
+                  { value: "violations", label: "المخالفات" },
+                  { value: "juveniles", label: "الأحداث" },
+                  { value: "penalty_enforcement", label: "تطبيق العقوبات" },
+                  { value: "other", label: "أخرى" },
+                ],
+              },
+              {
+                name: "status",
+                label: "حالة القضية",
+                icon: "📊",
+                type: "select",
+                options: [
+                  { value: "all", label: "جميع الحالات" },
+                  { value: "first_instance", label: "على مستوى الدرجة الأولى" },
+                  { value: "in_settlement", label: "في إطار التسوية" },
+                  { value: "closed", label: "مغلقة" },
+                  { value: "in_appeal", label: "في الاستئناف" },
+                  { value: "extraordinary_appeal", label: "طعن غير عادي" },
+                ],
+              },
+              {
+                name: "priority",
+                label: "الأولوية",
+                icon: "⚠️",
+                type: "select",
+                options: [
+                  { value: "all", label: "جميع الأولويات" },
+                  { value: "normal", label: "عادي" },
+                  { value: "urgent", label: "قضاء استعجالي" },
+                ],
+              },
+            ],
+          }}
+        />
 
         <DataTable
-          data={filteredByType}
+          data={filteredCases}
           columns={columns}
-          searchTerm={searchTerm}
-          filterValue={filterStatus}
-          filterKey="status"
-          globalFilterFn={globalFilterFn}
           pageSize={10}
           showPagination={true}
           emptyMessage={
-            searchTerm || filterStatus !== "all" || filterType !== "all"
+            Object.keys(filters).length > 0
               ? "لم يتم العثور على قضايا مطابقة للبحث"
               : "لم يتم إضافة أي قضايا بعد"
           }
