@@ -54,76 +54,107 @@ Font.register({
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    padding: 35,
     fontFamily: "Tajawal",
     fontSize: 11,
     textAlign: "right",
+    backgroundColor: "#ffffff",
+  },
+  decorativeLine: {
+    height: 3,
+    backgroundColor: "#d4af37",
+    marginBottom: 2,
+  },
+  decorativeLineSecondary: {
+    height: 1,
+    backgroundColor: "#1a1a2e",
+    marginBottom: 20,
   },
   header: {
     textAlign: "center",
-    marginBottom: 20,
-    borderBottom: "3px solid #2c3e50",
-    paddingBottom: 15,
+    marginBottom: 25,
+    paddingBottom: 20,
+    borderBottom: "2px solid #d4af37",
+  },
+  logoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    objectFit: "contain",
   },
   title: {
-    fontSize: 24,
-    fontWeight: 700,
-    color: "#2c3e50",
-    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: 800,
+    color: "#1a1a2e",
+    marginBottom: 5,
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 10,
-    color: "#7f8c8d",
+    fontSize: 11,
+    color: "#6b7280",
+    fontWeight: 500,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 700,
-    color: "#1f2937",
-    backgroundColor: "#e5e7eb",
-    padding: 8,
-    marginTop: 15,
-    marginBottom: 10,
+    color: "#1a1a2e",
+    backgroundColor: "#f3f4f6",
+    padding: 10,
+    marginTop: 18,
+    marginBottom: 12,
     textAlign: "right",
+    borderRight: "4px solid #d4af37",
   },
   table: {
     display: "table",
     width: "100%",
     marginBottom: 15,
+    border: "1px solid #e5e7eb",
+    borderRadius: 4,
   },
   tableRow: {
     flexDirection: "row-reverse",
-    borderBottom: "1px solid #ecf0f1",
+    borderBottom: "1px solid #e5e7eb",
   },
   tableRowEven: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
   },
   tableCol1: {
     width: "35%",
-    padding: 8,
+    padding: 10,
     fontWeight: 700,
-    backgroundColor: "#f8f9fa",
-    color: "#2c3e50",
+    backgroundColor: "#fafafa",
+    color: "#1a1a2e",
     fontSize: 10,
     textAlign: "right",
+    borderLeft: "2px solid #e5e7eb",
   },
   tableCol2: {
     width: "65%",
-    padding: 8,
+    padding: 10,
     fontSize: 10,
     textAlign: "right",
+    color: "#374151",
   },
   dataTable: {
     display: "table",
     width: "100%",
     marginBottom: 15,
     fontSize: 9,
+    border: "1px solid #e5e7eb",
+    borderRadius: 4,
   },
   dataTableHeader: {
     flexDirection: "row-reverse",
-    backgroundColor: "#34495e",
+    backgroundColor: "#1a1a2e",
     color: "white",
     fontWeight: 700,
-    padding: 8,
+    padding: 10,
+    borderBottom: "2px solid #d4af37",
   },
   dataTableRow: {
     flexDirection: "row-reverse",
@@ -138,29 +169,31 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   textSection: {
-    backgroundColor: "#f8f9fa",
-    padding: 12,
-    borderRight: "4px solid #3498db",
+    backgroundColor: "#fafafa",
+    padding: 14,
+    borderRight: "4px solid #d4af37",
     marginBottom: 15,
     fontSize: 10,
     lineHeight: 1.8,
     textAlign: "right",
+    borderRadius: 4,
   },
   totalRow: {
-    backgroundColor: "#2ecc71",
+    backgroundColor: "#10b981",
     color: "white",
     fontWeight: 700,
-    padding: 10,
+    padding: 12,
     marginTop: 10,
     fontSize: 12,
     textAlign: "right",
+    borderRadius: 4,
   },
   footer: {
     marginTop: 30,
     paddingTop: 15,
-    borderTop: "2px solid #95a5a6",
+    borderTop: "2px solid #d4af37",
     textAlign: "center",
-    color: "#7f8c8d",
+    color: "#6b7280",
     fontSize: 9,
     position: "absolute",
     bottom: 10,
@@ -198,18 +231,16 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Decorative Header Lines */}
+        <View style={styles.decorativeLine} />
+        <View style={styles.decorativeLineSecondary} />
+
         {/* Header */}
         <View style={styles.header}>
           {officeLogo && (
-            <Image
-              src={officeLogo}
-              style={{
-                width: 80,
-                height: 80,
-                marginBottom: 10,
-                objectFit: "contain",
-              }}
-            />
+            <View style={styles.logoContainer}>
+              <Image src={officeLogo} style={styles.logo} />
+            </View>
           )}
           <Text style={styles.title}>تقرير القضية</Text>
           <Text style={styles.subtitle}>تاريخ التقرير: {currentDate}</Text>
@@ -505,18 +536,16 @@ const InvoiceDocument = ({ invoice, client, caseData, payments, officeLogo }) =>
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Decorative Header Lines */}
+        <View style={styles.decorativeLine} />
+        <View style={styles.decorativeLineSecondary} />
+
         {/* Header */}
         <View style={styles.header}>
           {officeLogo && (
-            <Image
-              src={officeLogo}
-              style={{
-                width: 80,
-                height: 80,
-                marginBottom: 10,
-                objectFit: "contain",
-              }}
-            />
+            <View style={styles.logoContainer}>
+              <Image src={officeLogo} style={styles.logo} />
+            </View>
           )}
           <Text style={styles.title}>فاتورة</Text>
           <Text style={styles.subtitle}>رقم الفاتورة: {invoice.invoiceNumber}</Text>
