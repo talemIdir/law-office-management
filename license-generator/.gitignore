@@ -1,0 +1,5 @@
+# Ignore all license records (they contain customer data)
+license-records/
+
+# Keep the directory structure
+!license-records/.gitkeep

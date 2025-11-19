@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفعيل الترخيص</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 700px;
+      padding: 50px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #333;
+      font-size: 32px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      font-family: 'Courier New', monospace;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group input:read-only {
+      background-color: #f5f5f5;
+      cursor: not-allowed;
+    }
+
+    .machine-id-display {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-right: 5px solid #667eea;
+      margin-bottom: 25px;
+    }
+
+    .machine-id-display label {
+      display: block;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .machine-id-display .machine-id {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      color: #333;
+      font-weight: bold;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      background-color: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+      font-weight: 600;
+    }
+
+    .copy-btn:hover {
+      background-color: #5568d3;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background-color: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 15px;
+    }
+
+    .submit-btn:hover {
+      background-color: #5568d3;
+    }
+
+    .submit-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background-color: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      border-left: 4px solid #c33;
+    }
+
+    .success-message {
+      background-color: #efe;
+      color: #3c3;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      border-left: 4px solid #3c3;
+    }
+
+    .instructions {
+      background-color: #fff9e6;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-size: 15px;
+      color: #666;
+      border-right: 5px solid #ffc107;
+    }
+
+    .instructions h3 {
+      color: #333;
+      font-size: 17px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .instructions ol {
+      margin-right: 25px;
+      margin-top: 10px;
+    }
+
+    .instructions li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>تفعيل الترخيص</h1>
+      <p>نظام إدارة مكتب المحاماة</p>
+    </div>
+
+    <div class="instructions">
+      <h3>خطوات الحصول على مفتاح الترخيص:</h3>
+      <ol>
+        <li>انسخ رقم تعريف الجهاز الموجود أدناه</li>
+        <li>أرسله إلى مزود الخدمة للحصول على مفتاح الترخيص الخاص بك</li>
+        <li>أدخل اسمك ومفتاح الترخيص الذي حصلت عليه</li>
+        <li>انقر على زر "تفعيل الترخيص"</li>
+      </ol>
+    </div>
+
+    <div class="machine-id-display">
+      <label>رقم تعريف الجهاز:</label>
+      <div class="machine-id" id="machineId">جاري التحميل...</div>
+      <button class="copy-btn" onclick="copyMachineId()">نسخ الرقم</button>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
+
+    <form id="licenseForm" onsubmit="activateLicense(event)">
+      <div class="form-group">
+        <label>الاسم الكامل:</label>
+        <input type="text" id="customerName" placeholder="أدخل اسمك الكامل" required>
+      </div>
+
+      <div class="form-group">
+        <label>البريد الإلكتروني (اختياري):</label>
+        <input type="email" id="customerEmail" placeholder="example@email.com">
+      </div>
+
+      <div class="form-group">
+        <label>مفتاح الترخيص:</label>
+        <input
+          type="text"
+          id="licenseKey"
+          placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+          pattern="[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}"
+          style="text-transform: uppercase;"
+          required
+        >
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        تفعيل الترخيص
+      </button>
+    </form>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px; color: #666;">جاري التفعيل...</p>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    let machineIdValue = '';
+
+    // Load machine ID on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const result = await ipcRenderer.invoke('license:getMachineId');
+        if (result.success) {
+          machineIdValue = result.machineId;
+          document.getElementById('machineId').textContent = machineIdValue;
+        } else {
+          showError('Failed to get machine ID: ' + result.error);
+        }
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    });
+
+    // Copy machine ID to clipboard
+    function copyMachineId() {
+      navigator.clipboard.writeText(machineIdValue).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'تم النسخ بنجاح!';
+        btn.style.backgroundColor = '#28a745';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.backgroundColor = '#667eea';
+        }, 2000);
+      }).catch(err => {
+        showError('فشل النسخ: ' + err.message);
+      });
+    }
+
+    // Activate license
+    async function activateLicense(event) {
+      event.preventDefault();
+
+      const licenseKey = document.getElementById('licenseKey').value.trim().toUpperCase();
+      const customerName = document.getElementById('customerName').value.trim();
+      const customerEmail = document.getElementById('customerEmail').value.trim();
+
+      // Validate license key format
+      const pattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+      if (!pattern.test(licenseKey)) {
+        showError('تنسيق مفتاح الترخيص غير صحيح. الرجاء التأكد من صحة المفتاح');
+        return;
+      }
+
+      // Show loading
+      showLoading(true);
+      hideMessages();
+
+      try {
+        const result = await ipcRenderer.invoke('license:activate', licenseKey, customerName, customerEmail);
+
+        showLoading(false);
+
+        if (result.success) {
+          showSuccess('تم تفعيل الترخيص بنجاح! سيتم فتح البرنامج الآن...');
+
+          // Close window after 2 seconds and reload main app
+          setTimeout(() => {
+            window.close();
+          }, 2000);
+        } else {
+          showError(result.error || 'فشل التفعيل. الرجاء التحقق من مفتاح الترخيص والمحاولة مرة أخرى');
+        }
+      } catch (error) {
+        showLoading(false);
+        showError('حدث خطأ أثناء التفعيل: ' + error.message);
+      }
+    }
+
+    // Show error message
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+    }
+
+    // Hide messages
+    function hideMessages() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    // Show/hide loading
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+      document.getElementById('licenseForm').style.display = show ? 'none' : 'block';
+      document.getElementById('submitBtn').disabled = show;
+    }
+
+    // Auto-format license key input
+    document.getElementById('licenseKey').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+      let formatted = '';
+
+      for (let i = 0; i < value.length && i < 20; i++) {
+        if (i > 0 && i % 4 === 0) {
+          formatted += '-';
+        }
+        formatted += value[i];
+      }
+
+      e.target.value = formatted;
+    });
+  </script>
+</body>
+</html>

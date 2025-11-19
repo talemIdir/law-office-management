@@ -28,10 +28,12 @@
     "@react-pdf/renderer": "^4.3.1",
     "@tanstack/react-table": "^8.20.5",
     "bcrypt": "^5.1.1",
+    "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^8.2.0",
     "moment": "^2.30.1",
+    "node-machine-id": "^1.1.12",
     "react": "^18.3.1",
     "react-big-calendar": "^1.19.4",
     "react-dom": "^18.3.1",
@@ -64,6 +66,13 @@
     "directories": {
       "output": "release"
     },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!electron/licensing/**/*.md",
+      "!**/*.map"
+    ],
     "extraResources": [
       {
         "from": "resources",
@@ -72,6 +81,9 @@
           "**/*"
         ]
       }
+    ],
+    "asarUnpack": [
+      "node_modules/sqlite3/**/*"
     ],
     "win": {
       "target": [

@@ -32,6 +32,11 @@ import {
   settingService,
 } from "./database/services/index.js";
 import jurisdictionalService from "./database/services/jurisdictionalService.js";
+import { licenseService } from "./licensing/licenseService.js";
+import {
+  createLicenseWindow,
+  closeLicenseWindow,
+} from "./licensing/licenseWindow.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,8 +52,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
-    minWidth: 1024,
-    minHeight: 768,
+    minWidth: 1400,
+    minHeight: 900,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -80,8 +85,33 @@ function createWindow() {
 
 // Initialize app
 app.whenReady().then(async () => {
-  await initDatabase();
-  createWindow();
+  // Initialize license service
+  await licenseService.initialize();
+
+  // Check license validity
+  const licenseCheck = await licenseService.checkLicense();
+
+  if (!licenseCheck.isValid) {
+    // Show license activation window
+    createLicenseWindow(licenseService);
+
+    // Wait for license activation before proceeding
+    // The license window will close itself on successful activation
+    // Then we'll initialize the database and create the main window
+    const checkInterval = setInterval(async () => {
+      const recheckLicense = await licenseService.checkLicense();
+      if (recheckLicense.isValid) {
+        clearInterval(checkInterval);
+        closeLicenseWindow();
+        await initDatabase();
+        createWindow();
+      }
+    }, 1000);
+  } else {
+    // License is valid, proceed normally
+    await initDatabase();
+    createWindow();
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -101,7 +131,8 @@ app.on("window-all-closed", () => {
 // Generic CRUD handlers
 function setupCrudHandlers(modelName, service) {
   // Capitalize first letter for method names
-  const capitalizedName = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+  const capitalizedName =
+    modelName.charAt(0).toUpperCase() + modelName.slice(1);
 
   // Get all
   ipcMain.handle(`${modelName}:getAll`, async (event, options = {}) => {
@@ -341,7 +372,7 @@ ipcMain.handle("courtSession:getUpcoming", async (event, limit = 10) => {
       limit,
     });
     // Convert Sequelize instances to plain objects to avoid serialization issues
-    const plainSessions = sessions.map(session => session.toJSON());
+    const plainSessions = sessions.map((session) => session.toJSON());
     return { success: true, data: plainSessions };
   } catch (error) {
     return { success: false, error: error.message };
@@ -364,7 +395,9 @@ ipcMain.handle("appointment:getUpcoming", async (event, limit = 10) => {
       limit,
     });
     // Convert Sequelize instances to plain objects to avoid serialization issues
-    const plainAppointments = appointments.map(appointment => appointment.toJSON());
+    const plainAppointments = appointments.map((appointment) =>
+      appointment.toJSON()
+    );
     return { success: true, data: plainAppointments };
   } catch (error) {
     return { success: false, error: error.message };
@@ -383,7 +416,7 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
         },
         include: [
           { model: Client, as: "client" },
-          { model: Case, as: "case" }
+          { model: Case, as: "case" },
         ],
       }),
       Payment.findAll({
@@ -420,9 +453,9 @@ ipcMain.handle("reports:financial", async (event, startDate, endDate) => {
     const netIncome = totalPaid - totalExpenses;
 
     // Convert Sequelize instances to plain objects
-    const plainInvoices = invoices.map(inv => inv.toJSON());
-    const plainPayments = payments.map(pay => pay.toJSON());
-    const plainExpenses = expenses.map(exp => exp.toJSON());
+    const plainInvoices = invoices.map((inv) => inv.toJSON());
+    const plainPayments = payments.map((pay) => pay.toJSON());
+    const plainExpenses = expenses.map((exp) => exp.toJSON());
 
     return {
       success: true,
@@ -461,25 +494,39 @@ ipcMain.handle("jurisdiction:getJudicialCouncilById", async (event, id) => {
   return await jurisdictionalService.getJudicialCouncilById(id);
 });
 
-ipcMain.handle("jurisdiction:getAllFirstDegreeCourts", async (event, filters = {}) => {
-  return await jurisdictionalService.getAllFirstDegreeCourts(filters);
-});
+ipcMain.handle(
+  "jurisdiction:getAllFirstDegreeCourts",
+  async (event, filters = {}) => {
+    return await jurisdictionalService.getAllFirstDegreeCourts(filters);
+  }
+);
 
-ipcMain.handle("jurisdiction:getCourtsByCouncilId", async (event, councilId) => {
-  return await jurisdictionalService.getCourtsByCouncilId(councilId);
-});
+ipcMain.handle(
+  "jurisdiction:getCourtsByCouncilId",
+  async (event, councilId) => {
+    return await jurisdictionalService.getCourtsByCouncilId(councilId);
+  }
+);
 
 ipcMain.handle("jurisdiction:getAllAdministrativeAppealCourts", async () => {
   return await jurisdictionalService.getAllAdministrativeAppealCourts();
 });
 
-ipcMain.handle("jurisdiction:getAllAdministrativeCourts", async (event, filters = {}) => {
-  return await jurisdictionalService.getAllAdministrativeCourts(filters);
-});
+ipcMain.handle(
+  "jurisdiction:getAllAdministrativeCourts",
+  async (event, filters = {}) => {
+    return await jurisdictionalService.getAllAdministrativeCourts(filters);
+  }
+);
 
-ipcMain.handle("jurisdiction:getAdminCourtsByAppealCourtId", async (event, appealCourtId) => {
-  return await jurisdictionalService.getAdminCourtsByAppealCourtId(appealCourtId);
-});
+ipcMain.handle(
+  "jurisdiction:getAdminCourtsByAppealCourtId",
+  async (event, appealCourtId) => {
+    return await jurisdictionalService.getAdminCourtsByAppealCourtId(
+      appealCourtId
+    );
+  }
+);
 
 ipcMain.handle("jurisdiction:getAllCommercialCourts", async () => {
   return await jurisdictionalService.getAllCommercialCourts();
@@ -527,54 +574,62 @@ ipcMain.handle("dialog:selectFile", async () => {
 });
 
 // Copy file to documents folder with organized structure
-ipcMain.handle("document:copyFile", async (event, sourceFilePath, clientName, caseNumber, documentTitle) => {
-  try {
-    // Sanitize folder names by replacing invalid characters
-    const sanitizeFolderName = (name) => {
-      // Replace forward slashes, backslashes, colons, and other invalid characters
-      return name.replace(/[\/\\:*?"<>|]/g, '_');
-    };
+ipcMain.handle(
+  "document:copyFile",
+  async (event, sourceFilePath, clientName, caseNumber, documentTitle) => {
+    try {
+      // Sanitize folder names by replacing invalid characters
+      const sanitizeFolderName = (name) => {
+        // Replace forward slashes, backslashes, colons, and other invalid characters
+        return name.replace(/[\/\\:*?"<>|]/g, "_");
+      };
 
-    // Get the app's user data path
-    const userDataPath = app.getPath("userData");
+      // Get the app's user data path
+      const userDataPath = app.getPath("userData");
 
-    // Sanitize client name and case number for folder names
-    const sanitizedClientName = sanitizeFolderName(clientName);
-    const sanitizedCaseNumber = sanitizeFolderName(caseNumber);
-    const sanitizedDocTitle = sanitizeFolderName(documentTitle);
+      // Sanitize client name and case number for folder names
+      const sanitizedClientName = sanitizeFolderName(clientName);
+      const sanitizedCaseNumber = sanitizeFolderName(caseNumber);
+      const sanitizedDocTitle = sanitizeFolderName(documentTitle);
 
-    // Create documents folder structure: documents/clientName/caseNumber/
-    const documentsDir = path.join(userDataPath, "documents", sanitizedClientName, sanitizedCaseNumber);
+      // Create documents folder structure: documents/clientName/caseNumber/
+      const documentsDir = path.join(
+        userDataPath,
+        "documents",
+        sanitizedClientName,
+        sanitizedCaseNumber
+      );
 
-    // Create directories if they don't exist
-    await fs.mkdir(documentsDir, { recursive: true });
+      // Create directories if they don't exist
+      await fs.mkdir(documentsDir, { recursive: true });
 
-    // Get file extension from source file
-    const fileExt = path.extname(sourceFilePath);
+      // Get file extension from source file
+      const fileExt = path.extname(sourceFilePath);
 
-    // Create new filename using document title
-    const newFileName = `${sanitizedDocTitle}${fileExt}`;
-    const destinationPath = path.join(documentsDir, newFileName);
+      // Create new filename using document title
+      const newFileName = `${sanitizedDocTitle}${fileExt}`;
+      const destinationPath = path.join(documentsDir, newFileName);
 
-    // Copy the file
-    await fs.copyFile(sourceFilePath, destinationPath);
+      // Copy the file
+      await fs.copyFile(sourceFilePath, destinationPath);
 
-    // Get file stats
-    const stats = await fs.stat(destinationPath);
+      // Get file stats
+      const stats = await fs.stat(destinationPath);
 
-    return {
-      success: true,
-      data: {
-        filePath: destinationPath,
-        fileName: newFileName,
-        fileSize: stats.size,
-      },
-    };
-  } catch (error) {
-    console.error("Error copying file:", error);
-    return { success: false, error: error.message };
+      return {
+        success: true,
+        data: {
+          filePath: destinationPath,
+          fileName: newFileName,
+          fileSize: stats.size,
+        },
+      };
+    } catch (error) {
+      console.error("Error copying file:", error);
+      return { success: false, error: error.message };
+    }
   }
-});
+);
 
 // Open file in default application
 ipcMain.handle("document:openFile", async (event, filePath) => {

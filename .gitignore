@@ -11,3 +11,11 @@ build
 out
 release
 .vite
+
+# License generator and records (NEVER commit these!)
+license-generator/license-records/*.json
+!license-generator/license-records/.gitkeep
+
+# Keep the setup documentation private if needed
+# Uncomment the line below if you don't want to commit LICENSING_SETUP.md
+# LICENSING_SETUP.md
