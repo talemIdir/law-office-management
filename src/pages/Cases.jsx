@@ -395,7 +395,10 @@ function CaseModal({ caseData, onClose, onSave }) {
                 >
                   <option value="">اختر المحكمة التجارية</option>
                   {commercialCourts.map((court, index) => (
-                    <option key={`commercial-court-${court.id || index}`} value={court.id}>
+                    <option
+                      key={`commercial-court-${court.id || index}`}
+                      value={court.id}
+                    >
                       {court.name}
                     </option>
                   ))}
@@ -678,21 +681,6 @@ function CasesPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "courtName",
-        header: "المحكمة",
-        cell: ({ row }) => (
-          <div>
-            {row.original.jurisdictionType && (
-              <div className="text-muted" style={{ fontSize: "0.85em" }}>
-                {getJurisdictionTypeLabel(row.original.jurisdictionType)}
-              </div>
-            )}
-            <div>{row.original.courtName || "-"}</div>
-          </div>
-        ),
-        enableSorting: true,
-      },
-      {
         accessorKey: "status",
         header: "الحالة",
         cell: ({ row }) => (
@@ -728,12 +716,6 @@ function CasesPage() {
             {getPriorityLabel(row.original.priority)}
           </span>
         ),
-        enableSorting: true,
-      },
-      {
-        accessorKey: "amount",
-        header: "المبلغ",
-        cell: ({ row }) => formatCurrency(row.original.amount),
         enableSorting: true,
       },
       {

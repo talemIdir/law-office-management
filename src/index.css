@@ -222,7 +222,6 @@ p {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  margin-bottom: 1.5rem;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
   flex: 1;
@@ -534,7 +533,6 @@ p {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .dashboard-stats-grid {
@@ -544,7 +542,6 @@ p {
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .stats-grid {
@@ -877,7 +874,6 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
 
 .page-header h1 {

@@ -257,7 +257,7 @@ function ViewClient() {
       </div>
 
       {/* Client Details Card */}
-      <div className="card" style={{ marginBottom: "20px" }}>
+      <div className="card">
         <div className="card-header">
           <h3>تفاصيل الموكل</h3>
           <span className={`badge ${getStatusBadgeClass(client.status)}`}>
@@ -344,7 +344,7 @@ function ViewClient() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="stats-grid" style={{ marginBottom: "20px" }}>
+      <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">⚖️</div>
           <div className="stat-content">

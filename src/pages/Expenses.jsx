@@ -326,7 +326,13 @@ function ExpensesPage() {
         accessorKey: "description",
         header: "الوصف",
         cell: ({ row }) => (
-          <div style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div
+            style={{
+              maxWidth: "300px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {row.original.description}
           </div>
         ),
@@ -405,7 +411,10 @@ function ExpensesPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="stats-grid" style={{ marginBottom: "20px" }}>
+      <div
+        className="stats-grid"
+        style={{ gridTemplateColumns: "1fr 1fr 1fr" }}
+      >
         <div className="stat-card">
           <div className="stat-icon">💸</div>
           <div className="stat-content">
