@@ -175,6 +175,28 @@ class UserService {
         throw new Error("User not found");
       }
 
+      // Prevent changing role or deactivating the last active admin
+      if (user.role === "admin" && user.status === "active") {
+        const activeAdminCount = await User.count({
+          where: {
+            role: "admin",
+            status: "active",
+          },
+        });
+
+        if (activeAdminCount === 1) {
+          // Prevent changing role from admin to secretary
+          if (updateData.role && updateData.role !== "admin") {
+            throw new Error("Cannot change the role of the last active admin");
+          }
+
+          // Prevent deactivating the last admin
+          if (updateData.status === "inactive") {
+            throw new Error("Cannot deactivate the last active admin");
+          }
+        }
+      }
+
       // Check for duplicate username if updating
       if (updateData.username && updateData.username !== user.username) {
         const existing = await User.findOne({
@@ -242,6 +264,20 @@ class UserService {
       const user = await User.findByPk(id);
       if (!user) {
         throw new Error("User not found");
+      }
+
+      // Prevent deleting the last active admin
+      if (user.role === "admin") {
+        const activeAdminCount = await User.count({
+          where: {
+            role: "admin",
+            status: "active",
+          },
+        });
+
+        if (activeAdminCount === 1 && user.status === "active") {
+          throw new Error("Cannot delete the last active admin");
+        }
       }
 
       await user.destroy();

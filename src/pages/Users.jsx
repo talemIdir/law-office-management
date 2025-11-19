@@ -87,6 +87,18 @@ function Users() {
       return;
     }
 
+    // Prevent changing the role of the last active admin
+    if (editingUser && editingUser.role === "admin" && formData.role !== "admin") {
+      const activeAdmins = users.filter(
+        (u) => u.role === "admin" && u.status === "active"
+      );
+
+      if (activeAdmins.length === 1 && editingUser.status === "active") {
+        toast.error("لا يمكن تغيير دور المسؤول الوحيد النشط في النظام");
+        return;
+      }
+    }
+
     try {
       let result;
       const dataToSubmit = { ...formData };
@@ -115,6 +127,21 @@ function Users() {
   };
 
   const handleDelete = async (id) => {
+    const userToDelete = users.find((u) => u.id === id);
+
+    // Check if this is an admin user
+    if (userToDelete && userToDelete.role === "admin") {
+      const activeAdmins = users.filter(
+        (u) => u.role === "admin" && u.status === "active"
+      );
+
+      // Prevent deleting the last active admin
+      if (activeAdmins.length === 1) {
+        toast.error("لا يمكن حذف المسؤول الوحيد في النظام");
+        return;
+      }
+    }
+
     if (!window.confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
       return;
     }
@@ -134,6 +161,19 @@ function Users() {
 
   const handleToggleStatus = async (user) => {
     const newStatus = user.status === "active" ? "inactive" : "active";
+
+    // Prevent deactivating the last active admin
+    if (user.role === "admin" && user.status === "active" && newStatus === "inactive") {
+      const activeAdmins = users.filter(
+        (u) => u.role === "admin" && u.status === "active"
+      );
+
+      if (activeAdmins.length === 1) {
+        toast.error("لا يمكن تعطيل المسؤول الوحيد النشط في النظام");
+        return;
+      }
+    }
+
     try {
       const result = await userAPI.update(user.id, { status: newStatus });
       if (result.success) {
