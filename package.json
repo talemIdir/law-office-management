@@ -96,8 +96,8 @@
       "allowElevation": true,
       "include": "build/installer.nsh",
       "perMachine": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
       "warningsAsErrors": false,
       "differentialPackage": false
     }

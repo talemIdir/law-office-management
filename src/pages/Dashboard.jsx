@@ -9,8 +9,10 @@ import {
 } from "../utils/api";
 import DataTable from "../components/DataTable";
 import CalendarView from "../components/CalendarView";
+import { useAuth } from "../contexts/AuthContext";
 
 function Dashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [allSessions, setAllSessions] = useState([]);
   const [allAppointments, setAllAppointments] = useState([]);
@@ -112,25 +114,29 @@ function Dashboard() {
               <div className="stat-card-description">جلسة مجدولة</div>
             </div>
 
-            <div className="stat-card danger">
-              <div className="stat-card-header">
-                <span className="stat-card-title">إجمالي الفواتير</span>
-                <span className="stat-card-icon">🧾</span>
-              </div>
-              <div className="stat-card-value">{stats.totalInvoices}</div>
-              <div className="stat-card-description">فاتورة مسجلة</div>
-            </div>
+            {user?.role === "admin" && (
+              <>
+                <div className="stat-card danger">
+                  <div className="stat-card-header">
+                    <span className="stat-card-title">إجمالي الفواتير</span>
+                    <span className="stat-card-icon">🧾</span>
+                  </div>
+                  <div className="stat-card-value">{stats.totalInvoices}</div>
+                  <div className="stat-card-description">فاتورة مسجلة</div>
+                </div>
 
-            <div className="stat-card success">
-              <div className="stat-card-header">
-                <span className="stat-card-title">إجمالي المدفوعات</span>
-                <span className="stat-card-icon">💵</span>
-              </div>
-              <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
-                {formatCurrency(stats.totalRevenue)}
-              </div>
-              <div className="stat-card-description">مجموع المبالغ المحصلة</div>
-            </div>
+                <div className="stat-card success">
+                  <div className="stat-card-header">
+                    <span className="stat-card-title">إجمالي المدفوعات</span>
+                    <span className="stat-card-icon">💵</span>
+                  </div>
+                  <div className="stat-card-value" style={{ fontSize: "1.5rem" }}>
+                    {formatCurrency(stats.totalRevenue)}
+                  </div>
+                  <div className="stat-card-description">مجموع المبالغ المحصلة</div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Calendar View */}

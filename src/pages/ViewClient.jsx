@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { clientAPI, caseAPI, paymentAPI, documentAPI, openDocumentFile } from "../utils/api";
+import {
+  clientAPI,
+  caseAPI,
+  paymentAPI,
+  documentAPI,
+  openDocumentFile,
+} from "../utils/api";
 import { showError, showSuccess } from "../utils/toast";
 import DataTable from "../components/DataTable";
 import DocumentModal from "../components/DocumentModal";
+import { useAuth } from "../contexts/AuthContext";
 import {
   getStatusLabel,
   getCaseTypeLabel,
@@ -15,12 +22,13 @@ import { formatFileSize } from "../utils/formatters";
 function ViewClient() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [client, setClient] = useState(null);
   const [cases, setCases] = useState([]);
   const [payments, setPayments] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("cases");
+  const [activeTab, setActiveTab] = useState("overview");
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
 
@@ -237,7 +245,9 @@ function ViewClient() {
         showSuccess("تم إضافة المستند بنجاح");
         setShowDocumentModal(false);
         // Reload documents
-        const documentsResult = await documentAPI.getAll({ clientId: parseInt(id) });
+        const documentsResult = await documentAPI.getAll({
+          clientId: parseInt(id),
+        });
         if (documentsResult.success) setDocuments(documentsResult.data);
       } else {
         showError("خطأ: " + result.error);
@@ -267,7 +277,10 @@ function ViewClient() {
       {
         accessorKey: "case",
         header: "القضية",
-        cell: ({ row }) => row.original.case ? `${row.original.case.caseNumber} - ${row.original.case.title}` : "-",
+        cell: ({ row }) =>
+          row.original.case
+            ? `${row.original.case.caseNumber} - ${row.original.case.title}`
+            : "-",
         enableSorting: false,
       },
       {
@@ -279,7 +292,8 @@ function ViewClient() {
       {
         accessorKey: "fileSize",
         header: "حجم الملف",
-        cell: ({ row }) => row.original.fileSize ? formatFileSize(row.original.fileSize) : "-",
+        cell: ({ row }) =>
+          row.original.fileSize ? formatFileSize(row.original.fileSize) : "-",
         enableSorting: true,
       },
       {
@@ -363,21 +377,27 @@ function ViewClient() {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">💰</div>
-          <div className="stat-content">
-            <div className="stat-value">{formatCurrency(totalCasesAmount)}</div>
-            <div className="stat-label">قيمة القضايا</div>
-          </div>
-        </div>
+        {user?.role === "admin" && (
+          <>
+            <div className="stat-card">
+              <div className="stat-icon">💰</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {formatCurrency(totalCasesAmount)}
+                </div>
+                <div className="stat-label">قيمة القضايا</div>
+              </div>
+            </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">💳</div>
-          <div className="stat-content">
-            <div className="stat-value">{payments.length}</div>
-            <div className="stat-label">إجمالي المدفوعات</div>
-          </div>
-        </div>
+            <div className="stat-card">
+              <div className="stat-icon">💳</div>
+              <div className="stat-content">
+                <div className="stat-value">{payments.length}</div>
+                <div className="stat-label">إجمالي المدفوعات</div>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="stat-card">
           <div className="stat-icon">📁</div>
@@ -387,15 +407,17 @@ function ViewClient() {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <div className="stat-value">
-              {formatCurrency(totalPaymentsAmount)}
+        {user?.role === "admin" && (
+          <div className="stat-card">
+            <div className="stat-icon">📊</div>
+            <div className="stat-content">
+              <div className="stat-value">
+                {formatCurrency(totalPaymentsAmount)}
+              </div>
+              <div className="stat-label">إجمالي المبالغ المدفوعة</div>
             </div>
-            <div className="stat-label">إجمالي المبالغ المدفوعة</div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tabs Section */}
@@ -414,12 +436,14 @@ function ViewClient() {
             >
               ⚖️ القضايا ({cases.length})
             </button>
-            <button
-              className={`tab-button ${activeTab === "payments" ? "active" : ""}`}
-              onClick={() => setActiveTab("payments")}
-            >
-              💰 المدفوعات ({payments.length})
-            </button>
+            {user?.role === "admin" && (
+              <button
+                className={`tab-button ${activeTab === "payments" ? "active" : ""}`}
+                onClick={() => setActiveTab("payments")}
+              >
+                💰 المدفوعات ({payments.length})
+              </button>
+            )}
             <button
               className={`tab-button ${activeTab === "documents" ? "active" : ""}`}
               onClick={() => setActiveTab("documents")}
@@ -552,8 +576,17 @@ function ViewClient() {
 
             {activeTab === "documents" && (
               <>
-                <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-end" }}>
-                  <button className="btn btn-primary" onClick={handleAddDocument}>
+                <div
+                  style={{
+                    marginBottom: "20px",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleAddDocument}
+                  >
                     ➕ إضافة مستند
                   </button>
                 </div>

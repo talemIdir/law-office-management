@@ -15,6 +15,7 @@ import {
 import { showError } from "../utils/toast";
 import DataTable from "../components/DataTable";
 import DocumentModal from "../components/DocumentModal";
+import { useAuth } from "../contexts/AuthContext";
 import {
   getStatusLabel,
   getCaseTypeLabel,
@@ -38,6 +39,7 @@ import { showSuccess } from "../utils/toast";
 function ViewCase() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [caseData, setCaseData] = useState(null);
   const [client, setClient] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -568,21 +570,25 @@ function ViewCase() {
         className="stats-grid"
         style={{ gridTemplateColumns: "1fr 1fr 1fr" }}
       >
-        <div className="stat-card">
-          <div className="stat-icon">💰</div>
-          <div className="stat-content">
-            <div className="stat-value">{payments.length}</div>
-            <div className="stat-label">المدفوعات</div>
-          </div>
-        </div>
+        {user?.role === "admin" && (
+          <>
+            <div className="stat-card">
+              <div className="stat-icon">💰</div>
+              <div className="stat-content">
+                <div className="stat-value">{payments.length}</div>
+                <div className="stat-label">المدفوعات</div>
+              </div>
+            </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <div className="stat-value">{formatCurrency(totalPayments)}</div>
-            <div className="stat-label">إجمالي المدفوعات</div>
-          </div>
-        </div>
+            <div className="stat-card">
+              <div className="stat-icon">📊</div>
+              <div className="stat-content">
+                <div className="stat-value">{formatCurrency(totalPayments)}</div>
+                <div className="stat-label">إجمالي المدفوعات</div>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="stat-card">
           <div className="stat-icon">🏛️</div>
@@ -608,13 +614,15 @@ function ViewCase() {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">💸</div>
-          <div className="stat-content">
-            <div className="stat-value">{formatCurrency(totalExpenses)}</div>
-            <div className="stat-label">المصروفات</div>
+        {user?.role === "admin" && (
+          <div className="stat-card">
+            <div className="stat-icon">💸</div>
+            <div className="stat-content">
+              <div className="stat-value">{formatCurrency(totalExpenses)}</div>
+              <div className="stat-label">المصروفات</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tabs Section */}
@@ -627,12 +635,14 @@ function ViewCase() {
             >
               📋 نظرة عامة
             </button>
-            <button
-              className={`tab-button ${activeTab === "payments" ? "active" : ""}`}
-              onClick={() => setActiveTab("payments")}
-            >
-              💰 المدفوعات ({payments.length})
-            </button>
+            {user?.role === "admin" && (
+              <button
+                className={`tab-button ${activeTab === "payments" ? "active" : ""}`}
+                onClick={() => setActiveTab("payments")}
+              >
+                💰 المدفوعات ({payments.length})
+              </button>
+            )}
             <button
               className={`tab-button ${activeTab === "courtSessions" ? "active" : ""}`}
               onClick={() => setActiveTab("courtSessions")}
@@ -651,18 +661,22 @@ function ViewCase() {
             >
               📁 المستندات ({documents.length})
             </button>
-            <button
-              className={`tab-button ${activeTab === "expenses" ? "active" : ""}`}
-              onClick={() => setActiveTab("expenses")}
-            >
-              💸 المصروفات ({expenses.length})
-            </button>
-            <button
-              className={`tab-button ${activeTab === "invoices" ? "active" : ""}`}
-              onClick={() => setActiveTab("invoices")}
-            >
-              🧾 الفواتير ({invoices.length})
-            </button>
+            {user?.role === "admin" && (
+              <>
+                <button
+                  className={`tab-button ${activeTab === "expenses" ? "active" : ""}`}
+                  onClick={() => setActiveTab("expenses")}
+                >
+                  💸 المصروفات ({expenses.length})
+                </button>
+                <button
+                  className={`tab-button ${activeTab === "invoices" ? "active" : ""}`}
+                  onClick={() => setActiveTab("invoices")}
+                >
+                  🧾 الفواتير ({invoices.length})
+                </button>
+              </>
+            )}
           </div>
 
           <div className="tab-content">
@@ -779,14 +793,16 @@ function ViewCase() {
                       </span>
                     </div>
 
-                    <div className="detail-item">
-                      <span className="detail-label">
-                        الأتعاب المتفق عليها:
-                      </span>
-                      <span className="detail-value">
-                        {formatCurrency(caseData.amount)}
-                      </span>
-                    </div>
+                    {user?.role === "admin" && (
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          الأتعاب المتفق عليها:
+                        </span>
+                        <span className="detail-value">
+                          {formatCurrency(caseData.amount)}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="detail-item">
                       <span className="detail-label">تاريخ التسجيل:</span>

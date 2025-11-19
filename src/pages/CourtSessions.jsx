@@ -6,6 +6,20 @@ import DataTable from "../components/DataTable";
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
+
+  // Format date for datetime-local input
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    // Convert to local timezone and format as YYYY-MM-DDTHH:mm
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const [formData, setFormData] = useState({
     sessionDate: "",
     court: "",
@@ -17,6 +31,8 @@ function CourtSessionModal({ session, onClose, onSave }) {
     status: "في التقرير",
     caseId: "",
     ...session,
+    // Format the sessionDate after spreading session data
+    sessionDate: session?.sessionDate ? formatDateForInput(session.sessionDate) : "",
   });
 
   useEffect(() => {

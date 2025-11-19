@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { invoiceAPI, clientAPI, caseAPI, paymentAPI, settingAPI } from "../utils/api";
+import {
+  invoiceAPI,
+  clientAPI,
+  caseAPI,
+  paymentAPI,
+  settingAPI,
+} from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
@@ -211,7 +217,7 @@ function InvoicesPage() {
         showSuccess(
           selectedInvoice
             ? "تم تحديث الفاتورة بنجاح"
-            : "تم إضافة الفاتورة بنجاح",
+            : "تم إضافة الفاتورة بنجاح"
         );
       } else {
         showError("خطأ: " + result.error);
@@ -273,7 +279,9 @@ function InvoicesPage() {
       let officeLogo = null;
 
       if (settingsResult.success) {
-        const logoSetting = settingsResult.data.find(s => s.key === "officeLogo");
+        const logoSetting = settingsResult.data.find(
+          (s) => s.key === "officeLogo"
+        );
         if (logoSetting && logoSetting.value) {
           officeLogo = logoSetting.value;
         }
@@ -379,7 +387,10 @@ function InvoicesPage() {
         header: "المبلغ الإجمالي",
         cell: ({ row }) => {
           const amount = getCaseAmount(row.original.caseId);
-          const total = calculateTotalAmount(amount, row.original.taxPercentage);
+          const total = calculateTotalAmount(
+            amount,
+            row.original.taxPercentage
+          );
           return formatCurrency(total);
         },
         enableSorting: false,
@@ -413,7 +424,7 @@ function InvoicesPage() {
         enableSorting: false,
       },
     ],
-    [clients],
+    [clients]
   );
 
   if (loading) {
@@ -428,7 +439,7 @@ function InvoicesPage() {
   return (
     <div className="page-content">
       <div className="page-header">
-        <h1 className="page-title">إدارة الفواتير والمدفوعات</h1>
+        <h1 className="page-title">إدارة الفواتير</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
           ➕ إضافة فاتورة جديدة
         </button>

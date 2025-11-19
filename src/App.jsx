@@ -10,7 +10,9 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDialogProvider } from "./components/ConfirmDialog";
+import TrialBanner from "./components/TrialBanner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import logoImage from "./assets/photo_5832486805842889657_y.jpg";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ClientsPage from "./pages/Clients";
@@ -34,13 +36,15 @@ function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        fontSize: "18px"
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          fontSize: "18px",
+        }}
+      >
         جاري التحميل...
       </div>
     );
@@ -58,24 +62,74 @@ function Sidebar() {
   const { user, logout, isAdmin } = useAuth();
 
   const allNavItems = [
-    { path: "/", label: "لوحة التحكم", icon: "📊", roles: ["admin", "secretary"] },
-    { path: "/clients", label: "الموكلين", icon: "👥", roles: ["admin", "secretary"] },
-    { path: "/cases", label: "القضايا", icon: "⚖️", roles: ["admin", "secretary"] },
-    { path: "/court-sessions", label: "الجلسات", icon: "🏛️", roles: ["admin", "secretary"] },
-    { path: "/documents", label: "المستندات", icon: "📁", roles: ["admin", "secretary"] },
-    { path: "/invoices", label: "الفواتير والمدفوعات", icon: "💰", roles: ["admin"] },
+    {
+      path: "/",
+      label: "لوحة التحكم",
+      icon: "📊",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/clients",
+      label: "الموكلين",
+      icon: "👥",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/cases",
+      label: "القضايا",
+      icon: "⚖️",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/court-sessions",
+      label: "الجلسات",
+      icon: "🏛️",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/documents",
+      label: "المستندات",
+      icon: "📁",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/invoices",
+      label: "الفواتير",
+      icon: "💰",
+      roles: ["admin"],
+    },
     { path: "/expenses", label: "المصروفات", icon: "💸", roles: ["admin"] },
-    { path: "/appointments", label: "المواعيد", icon: "📅", roles: ["admin", "secretary"] },
+    {
+      path: "/appointments",
+      label: "المواعيد",
+      icon: "📅",
+      roles: ["admin", "secretary"],
+    },
     { path: "/reports", label: "التقارير", icon: "📈", roles: ["admin"] },
-    { path: "/electronic-litigation", label: "التقاضي الإلكتروني", icon: "⚡", roles: ["admin"] },
-    { path: "/electronic-services", label: "الخدمات الإلكترونية", icon: "🌐", roles: ["admin"] },
-    { path: "/courts-directory", label: "فهرس المحاكم", icon: "📖", roles: ["admin", "secretary"] },
+    {
+      path: "/electronic-litigation",
+      label: "التقاضي الإلكتروني",
+      icon: "⚡",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/electronic-services",
+      label: "الخدمات الإلكترونية",
+      icon: "🌐",
+      roles: ["admin", "secretary"],
+    },
+    {
+      path: "/courts-directory",
+      label: "فهرس المحاكم",
+      icon: "📖",
+      roles: ["admin", "secretary"],
+    },
     { path: "/users", label: "إدارة المستخدمين", icon: "👤", roles: ["admin"] },
     { path: "/settings", label: "الإعدادات", icon: "⚙️", roles: ["admin"] },
   ];
 
   // Filter navigation items based on user role
-  const navItems = allNavItems.filter(item =>
+  const navItems = allNavItems.filter((item) =>
     item.roles.includes(user?.role)
   );
 
@@ -86,8 +140,40 @@ function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2>⚖️ مكتب المحاماة</h2>
-        <p>نظام الإدارة المتكامل</p>
+        <img
+          src={logoImage}
+          alt="Law Office Logo"
+          style={{
+            width: "120px",
+            height: "120px",
+            margin: "0 auto 15px",
+            display: "block",
+            objectFit: "contain",
+          }}
+        />
+        <h2
+          style={{
+            fontFamily: "'Georgia', 'Times New Roman', serif",
+            fontSize: "20px",
+            fontWeight: "700",
+            letterSpacing: "1px",
+            color: "#d4af37",
+            textTransform: "uppercase",
+            marginBottom: "5px",
+            textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          B-T Judicial Services
+        </h2>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "rgba(255, 255, 255, 0.85)",
+            fontWeight: "500",
+          }}
+        >
+          نظام الإدارة المتكامل
+        </p>
         {user && (
           <div className="user-info">
             <p style={{ fontSize: "14px", marginTop: "10px", opacity: 0.9 }}>
@@ -122,7 +208,7 @@ function Sidebar() {
             width: "100%",
             padding: "15px 20px",
             color: "inherit",
-            fontSize: "inherit"
+            fontSize: "inherit",
           }}
         >
           <span className="nav-icon">🚪</span>
@@ -139,6 +225,7 @@ function Layout() {
       <div className="app-container">
         <Sidebar />
         <main className="main-content">
+          <TrialBanner />
           <Outlet />
         </main>
       </div>

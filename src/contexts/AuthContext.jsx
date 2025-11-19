@@ -108,6 +108,7 @@ export function AuthProvider({ children }) {
         "add_documents",
         "view_court_sessions",
         "add_court_sessions",
+        "add_payment",
       ];
       return secretaryPermissions.includes(permission);
     }

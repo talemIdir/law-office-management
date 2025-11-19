@@ -6,6 +6,7 @@ import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import PaymentModal from "../components/PaymentModal";
 import AdvancedFilter from "../components/AdvancedFilter";
+import { useAuth } from "../contexts/AuthContext";
 import {
   getStatusLabel,
   getCaseTypeLabel,
@@ -14,6 +15,7 @@ import {
 } from "../utils/labels";
 
 function CaseModal({ caseData, onClose, onSave }) {
+  const { user } = useAuth();
   const [clients, setClients] = useState([]);
   const [judicialCouncils, setJudicialCouncils] = useState([]);
   const [administrativeAppealCourts, setAdministrativeAppealCourts] = useState(
@@ -473,17 +475,19 @@ function CaseModal({ caseData, onClose, onSave }) {
                   onChange={handleChange}
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">الأتعاب المتفق عليها (دج)</label>
-                <input
-                  type="number"
-                  name="amount"
-                  className="form-control"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  step="0.01"
-                />
-              </div>
+              {user?.role === "admin" && (
+                <div className="form-group">
+                  <label className="form-label">الأتعاب المتفق عليها (دج)</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    className="form-control"
+                    value={formData.amount}
+                    onChange={handleChange}
+                    step="0.01"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -512,6 +516,7 @@ function CaseModal({ caseData, onClose, onSave }) {
 }
 
 function CasesPage() {
+  const { user, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
@@ -741,20 +746,6 @@ function CasesPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "priority",
-        header: "الأولوية",
-        cell: ({ row }) => (
-          <span
-            className={`badge ${
-              row.original.priority === "urgent" ? "badge-danger" : "badge-info"
-            }`}
-          >
-            {getPriorityLabel(row.original.priority)}
-          </span>
-        ),
-        enableSorting: true,
-      },
-      {
         id: "actions",
         header: "الإجراءات",
         cell: ({ row }) => (
@@ -766,13 +757,15 @@ function CasesPage() {
             >
               👁️ عرض
             </button>
-            <button
-              className="btn btn-sm btn-success"
-              onClick={() => handleAddPayment(row.original)}
-              title="إضافة دفعة"
-            >
-              💰 دفعة
-            </button>
+            {hasPermission("add_payment") && (
+              <button
+                className="btn btn-sm btn-success"
+                onClick={() => handleAddPayment(row.original)}
+                title="إضافة دفعة"
+              >
+                💰 دفعة
+              </button>
+            )}
             <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
