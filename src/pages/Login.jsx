@@ -8,6 +8,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -72,14 +73,24 @@ function Login() {
 
           <div className="form-group">
             <label htmlFor="password">كلمة المرور</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="أدخل كلمة المرور"
-              disabled={loading}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="أدخل كلمة المرور"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="login-button" disabled={loading}>
