@@ -256,93 +256,6 @@ function ViewClient() {
         </button>
       </div>
 
-      {/* Client Details Card */}
-      <div className="card">
-        <div className="card-header">
-          <h3>تفاصيل الموكل</h3>
-          <span className={`badge ${getStatusBadgeClass(client.status)}`}>
-            {getStatusLabel(client.status)}
-          </span>
-        </div>
-        <div className="card-body">
-          <div className="details-grid">
-            <div className="detail-item">
-              <span className="detail-label">النوع:</span>
-              <span className="detail-value">
-                {client.type === "individual" ? "فرد" : "شركة"}
-              </span>
-            </div>
-
-            {client.type === "individual" ? (
-              <>
-                <div className="detail-item">
-                  <span className="detail-label">الاسم الكامل:</span>
-                  <span className="detail-value">
-                    {client.firstName} {client.lastName}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">رقم البطاقة الوطنية:</span>
-                  <span className="detail-value">
-                    {client.nationalId || "-"}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="detail-item">
-                  <span className="detail-label">اسم الشركة:</span>
-                  <span className="detail-value">{client.companyName}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">الرقم الجبائي:</span>
-                  <span className="detail-value">{client.taxId || "-"}</span>
-                </div>
-              </>
-            )}
-
-            <div className="detail-item">
-              <span className="detail-label">رقم الهاتف:</span>
-              <span className="detail-value">{client.phone}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">البريد الإلكتروني:</span>
-              <span className="detail-value">{client.email || "-"}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">العنوان:</span>
-              <span className="detail-value">{client.address || "-"}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">المدينة:</span>
-              <span className="detail-value">{client.city || "-"}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">الولاية:</span>
-              <span className="detail-value">{client.wilaya || "-"}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">تاريخ التسجيل:</span>
-              <span className="detail-value">
-                {formatDate(client.createdAt)}
-              </span>
-            </div>
-          </div>
-
-          {client.notes && (
-            <div className="detail-item" style={{ marginTop: "20px" }}>
-              <span className="detail-label">ملاحظات:</span>
-              <p className="detail-value">{client.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Statistics Cards */}
       <div className="stats-grid">
         <div className="stat-card">
@@ -385,6 +298,12 @@ function ViewClient() {
         <div className="tabs-container">
           <div className="tabs-header">
             <button
+              className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
+              onClick={() => setActiveTab("overview")}
+            >
+              📋 تفاصيل الموكل
+            </button>
+            <button
               className={`tab-button ${activeTab === "cases" ? "active" : ""}`}
               onClick={() => setActiveTab("cases")}
             >
@@ -399,6 +318,107 @@ function ViewClient() {
           </div>
 
           <div className="tab-content">
+            {activeTab === "overview" && (
+              <div className="card">
+                <div className="card-header">
+                  <h3>تفاصيل الموكل</h3>
+                  <span
+                    className={`badge ${getStatusBadgeClass(client.status)}`}
+                  >
+                    {getStatusLabel(client.status)}
+                  </span>
+                </div>
+                <div className="card-body">
+                  <div className="details-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">النوع:</span>
+                      <span className="detail-value">
+                        {client.type === "individual" ? "فرد" : "شركة"}
+                      </span>
+                    </div>
+
+                    {client.type === "individual" ? (
+                      <>
+                        <div className="detail-item">
+                          <span className="detail-label">الاسم الكامل:</span>
+                          <span className="detail-value">
+                            {client.firstName} {client.lastName}
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">
+                            رقم البطاقة الوطنية:
+                          </span>
+                          <span className="detail-value">
+                            {client.nationalId || "-"}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="detail-item">
+                          <span className="detail-label">اسم الشركة:</span>
+                          <span className="detail-value">
+                            {client.companyName}
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">الرقم الجبائي:</span>
+                          <span className="detail-value">
+                            {client.taxId || "-"}
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="detail-item">
+                      <span className="detail-label">رقم الهاتف:</span>
+                      <span className="detail-value">{client.phone}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">البريد الإلكتروني:</span>
+                      <span className="detail-value">
+                        {client.email || "-"}
+                      </span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">العنوان:</span>
+                      <span className="detail-value">
+                        {client.address || "-"}
+                      </span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">المدينة:</span>
+                      <span className="detail-value">{client.city || "-"}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">الولاية:</span>
+                      <span className="detail-value">
+                        {client.wilaya || "-"}
+                      </span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">تاريخ التسجيل:</span>
+                      <span className="detail-value">
+                        {formatDate(client.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {client.notes && (
+                    <div className="detail-item" style={{ marginTop: "20px" }}>
+                      <span className="detail-label">ملاحظات:</span>
+                      <p className="detail-value">{client.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {activeTab === "cases" && (
               <DataTable
                 data={cases}

@@ -23,6 +23,7 @@ import {
   getPriorityLabel,
   getClientRoleLabel,
   getExpenseCategoryLabel,
+  getJurisdictionTypeLabel,
 } from "../utils/labels";
 import {
   formatDate,
@@ -701,14 +702,27 @@ function ViewCase() {
                     <div className="detail-item">
                       <span className="detail-label">المحكمة:</span>
                       <span className="detail-value">
-                        {caseData.court || "-"}
+                        {caseData.courtName || "-"}
                       </span>
                     </div>
 
                     <div className="detail-item">
-                      <span className="detail-label">نوع المحكمة:</span>
+                      <span className="detail-label">نوع القضاء:</span>
                       <span className="detail-value">
-                        {caseData.courtType || "-"}
+                        {caseData.jurisdictionType ? (
+                          <span className="badge badge-info">
+                            {getJurisdictionTypeLabel(caseData.jurisdictionType)}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="detail-item">
+                      <span className="detail-label">القاضي:</span>
+                      <span className="detail-value">
+                        {caseData.judge || "-"}
                       </span>
                     </div>
 
