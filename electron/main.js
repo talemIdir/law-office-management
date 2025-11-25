@@ -50,11 +50,17 @@ if (started) {
 }
 
 function createWindow() {
+  // Set the icon path
+  const iconPath = process.env.NODE_ENV === "development"
+    ? path.join(__dirname, "../build/app.jpg")
+    : path.join(process.resourcesPath, "app.jpg");
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1400,
     minHeight: 900,
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

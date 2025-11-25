@@ -528,6 +528,64 @@ class UserService {
       };
     }
   }
+
+  /**
+   * Create default admin user on first run
+   * Only creates if no users exist in the database
+   */
+  async createDefaultAdmin() {
+    try {
+      // Check if any users exist
+      const users = await User.findAll();
+
+      if (users.length === 0) {
+        console.log("No users found. Creating default admin user...");
+
+        const defaultAdmin = {
+          username: "admin",
+          password: "admin123",
+          fullName: "المدير",
+          email: "admin@lawoffice.dz",
+          role: "admin",
+          status: "active",
+        };
+
+        const result = await this.createUser(defaultAdmin);
+
+        if (result.success) {
+          console.log("✅ Default admin user created successfully!");
+          console.log("Username: admin");
+          console.log("Password: admin123");
+          console.log("⚠️  Please change the password after first login.");
+          return {
+            success: true,
+            message: "Default admin user created",
+            data: result.data,
+          };
+        } else {
+          console.error("Failed to create default admin user:", result.error);
+          return result;
+        }
+      } else {
+        console.log(`Users already exist (${users.length} users found). Skipping default admin creation.`);
+        return {
+          success: true,
+          message: "Users already exist",
+        };
+      }
+    } catch (error) {
+      console.error("Error in createDefaultAdmin:", error);
+      return {
+        success: false,
+        error: error.message,
+        message: "Failed to create default admin",
+      };
+    }
+  }
 }
 
-export default new UserService();
+const userServiceInstance = new UserService();
+
+// Export the instance as default and also export the createDefaultAdmin method
+export default userServiceInstance;
+export const createDefaultAdmin = () => userServiceInstance.createDefaultAdmin();

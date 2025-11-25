@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import path from "path";
-//import { app } from "electron";
+import { app } from "electron";
 import fs from "fs";
 
 /**
@@ -73,7 +73,7 @@ async function initDatabase() {
     console.log("Database connection established successfully.");
 
     // Sync all models
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     console.log("Database synchronized successfully.");
 
     // Auto-seed jurisdictional data on first run
@@ -85,6 +85,15 @@ async function initDatabase() {
     } catch (seedError) {
       console.error("Error seeding jurisdictional data:", seedError);
       // Don't fail initialization if seeding fails
+    }
+
+    // Create default admin user on first run if no users exist
+    try {
+      const { createDefaultAdmin } = await import("./services/userService.js");
+      await createDefaultAdmin();
+    } catch (adminError) {
+      console.error("Error creating default admin user:", adminError);
+      // Don't fail initialization if admin creation fails
     }
 
     return true;

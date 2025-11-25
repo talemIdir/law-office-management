@@ -3,6 +3,10 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 export default {
   packagerConfig: {
+    icon: "./build/app.jpg",
+    extraResource: [
+      "./build/app.jpg"
+    ],
     asar: {
       unpack: "*.{node,dll}",
     },
@@ -29,7 +33,10 @@ export default {
   makers: [
     {
       name: "@electron-forge/maker-squirrel",
-      config: {},
+      config: {
+        setupIcon: "./build/app.jpg",
+        iconUrl: "./build/app.jpg",
+      },
     },
     {
       name: "@electron-forge/maker-zip",
