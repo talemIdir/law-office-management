@@ -83,7 +83,7 @@ function ViewClient() {
 
       // Load documents for this client
       const documentsResult = await documentAPI.getAll({
-        clientId: parseInt(id),
+        where: { clientId: parseInt(id) },
       });
       if (documentsResult.success) {
         setDocuments(documentsResult.data);
@@ -246,7 +246,7 @@ function ViewClient() {
         setShowDocumentModal(false);
         // Reload documents
         const documentsResult = await documentAPI.getAll({
-          clientId: parseInt(id),
+          where: { clientId: parseInt(id) },
         });
         if (documentsResult.success) setDocuments(documentsResult.data);
       } else {

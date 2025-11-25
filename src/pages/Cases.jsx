@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { caseAPI, clientAPI, paymentAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
@@ -16,7 +16,10 @@ import {
 
 function CaseModal({ caseData, onClose, onSave }) {
   const { user } = useAuth();
+  const clientDropdownRef = useRef(null);
   const [clients, setClients] = useState([]);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [judicialCouncils, setJudicialCouncils] = useState([]);
   const [administrativeAppealCourts, setAdministrativeAppealCourts] = useState(
     []
@@ -57,6 +60,33 @@ function CaseModal({ caseData, onClose, onSave }) {
   useEffect(() => {
     loadClients();
     loadJurisdictionalData();
+  }, []);
+
+  useEffect(() => {
+    // Set initial search term when editing a case
+    if (caseData && caseData.clientId && clients.length > 0) {
+      const selectedClient = clients.find(c => c.id === caseData.clientId);
+      if (selectedClient) {
+        const displayName = selectedClient.type === "company"
+          ? selectedClient.companyName
+          : `${selectedClient.firstName} ${selectedClient.lastName}`;
+        setClientSearchTerm(displayName);
+      }
+    }
+  }, [caseData, clients]);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
+        setShowClientDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -155,6 +185,38 @@ function CaseModal({ caseData, onClose, onSave }) {
     } else {
       setCourts([]);
     }
+  };
+
+  const filteredClients = useMemo(() => {
+    if (!clientSearchTerm) return clients.slice(0, 10); // Show first 10 clients when empty
+
+    const searchLower = clientSearchTerm.toLowerCase();
+    return clients.filter(client => {
+      const displayName = client.type === "company"
+        ? client.companyName
+        : `${client.firstName} ${client.lastName}`;
+      return displayName.toLowerCase().includes(searchLower);
+    }).slice(0, 10); // Show max 10 results
+  }, [clients, clientSearchTerm]);
+
+  const handleClientSearch = (e) => {
+    const value = e.target.value;
+    setClientSearchTerm(value);
+    setShowClientDropdown(true);
+
+    // Clear clientId if search term is cleared
+    if (!value) {
+      setFormData({ ...formData, clientId: "" });
+    }
+  };
+
+  const handleClientSelect = (client) => {
+    const displayName = client.type === "company"
+      ? client.companyName
+      : `${client.firstName} ${client.lastName}`;
+    setClientSearchTerm(displayName);
+    setFormData({ ...formData, clientId: client.id });
+    setShowClientDropdown(false);
   };
 
   const handleSubmit = async (e) => {
@@ -279,24 +341,55 @@ function CaseModal({ caseData, onClose, onSave }) {
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }} ref={clientDropdownRef}>
                 <label className="form-label required">الموكل</label>
-                <select
-                  name="clientId"
-                  className="form-select"
-                  value={formData.clientId}
-                  onChange={handleChange}
+                <input
+                  type="text"
+                  className="form-control"
+                  value={clientSearchTerm}
+                  onChange={handleClientSearch}
+                  onFocus={() => setShowClientDropdown(true)}
+                  placeholder="ابحث عن الموكل..."
                   required
-                >
-                  <option value="">اختر الموكل</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.type === "company"
-                        ? client.companyName
-                        : `${client.firstName} ${client.lastName}`}
-                    </option>
-                  ))}
-                </select>
+                  autoComplete="off"
+                />
+                {showClientDropdown && filteredClients.length > 0 && (
+                  <div
+                    className="client-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {filteredClients.map((client) => (
+                      <div
+                        key={client.id}
+                        className="client-dropdown-item"
+                        onClick={() => handleClientSelect(client)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      >
+                        {client.type === "company"
+                          ? client.companyName
+                          : `${client.firstName} ${client.lastName}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -619,18 +712,19 @@ function CaseModal({ caseData, onClose, onSave }) {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">تاريخ التكليف</label>
+                <label className="form-label required">تاريخ التكليف</label>
                 <input
                   type="date"
                   name="startDate"
                   className="form-control"
                   value={formData.startDate}
                   onChange={handleChange}
+                  required
                 />
               </div>
               {user?.role === "admin" && (
                 <div className="form-group">
-                  <label className="form-label">الأتعاب المتفق عليها (دج)</label>
+                  <label className="form-label required">الأتعاب المتفق عليها (دج)</label>
                   <input
                     type="number"
                     name="amount"
@@ -638,6 +732,7 @@ function CaseModal({ caseData, onClose, onSave }) {
                     value={formData.amount}
                     onChange={handleChange}
                     step="0.01"
+                    required
                   />
                 </div>
               )}

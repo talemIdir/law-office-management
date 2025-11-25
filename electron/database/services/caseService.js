@@ -76,55 +76,64 @@ class CaseService {
    */
   async getAllCases(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.status) {
-        where.status = filters.status;
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.status) {
+          where.status = filters.status;
+        }
+
+        if (filters.caseType) {
+          where.caseType = filters.caseType;
+        }
+
+        if (filters.priority) {
+          where.priority = filters.priority;
+        }
+
+        if (filters.clientId) {
+          where.clientId = filters.clientId;
+        }
+
+        if (filters.assignedLawyerId) {
+          where.assignedLawyerId = filters.assignedLawyerId;
+        }
+
+        if (filters.clientRole) {
+          where.clientRole = filters.clientRole;
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { caseNumber: { [Op.like]: `%${filters.search}%` } },
+            { title: { [Op.like]: `%${filters.search}%` } },
+            { description: { [Op.like]: `%${filters.search}%` } },
+            { court: { [Op.like]: `%${filters.search}%` } },
+            { judge: { [Op.like]: `%${filters.search}%` } },
+            { opposingParty: { [Op.like]: `%${filters.search}%` } },
+          ];
+        }
+
+        if (filters.startDate) {
+          where.startDate = { [Op.gte]: filters.startDate };
+        }
+
+        if (filters.endDate) {
+          where.endDate = { [Op.lte]: filters.endDate };
+        }
       }
 
-      if (filters.caseType) {
-        where.caseType = filters.caseType;
-      }
-
-      if (filters.priority) {
-        where.priority = filters.priority;
-      }
-
-      if (filters.clientId) {
-        where.clientId = filters.clientId;
-      }
-
-      if (filters.assignedLawyerId) {
-        where.assignedLawyerId = filters.assignedLawyerId;
-      }
-
-      if (filters.clientRole) {
-        where.clientRole = filters.clientRole;
-      }
-
-      if (filters.search) {
-        where[Op.or] = [
-          { caseNumber: { [Op.like]: `%${filters.search}%` } },
-          { title: { [Op.like]: `%${filters.search}%` } },
-          { description: { [Op.like]: `%${filters.search}%` } },
-          { court: { [Op.like]: `%${filters.search}%` } },
-          { judge: { [Op.like]: `%${filters.search}%` } },
-          { opposingParty: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
-
-      if (filters.startDate) {
-        where.startDate = { [Op.gte]: filters.startDate };
-      }
-
-      if (filters.endDate) {
-        where.endDate = { [Op.lte]: filters.endDate };
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["createdAt", "DESC"]];
 
       const cases = await Case.findAll({
         where,
-        order: [["createdAt", "DESC"]],
+        order,
         include: [
           { model: Client, as: "client" },
           { model: User, as: "assignedLawyer" },
