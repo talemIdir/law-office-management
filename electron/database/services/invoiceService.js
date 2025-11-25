@@ -85,43 +85,52 @@ class InvoiceService {
    */
   async getAllInvoices(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.status) {
-        where.status = filters.status;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.status) {
+          where.status = filters.status;
+        }
 
-      if (filters.clientId) {
-        where.clientId = filters.clientId;
-      }
+        if (filters.clientId) {
+          where.clientId = filters.clientId;
+        }
 
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.startDate) {
-        where.invoiceDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.invoiceDate) {
-          where.invoiceDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.invoiceDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.invoiceDate) {
+            where.invoiceDate[Op.lte] = filters.endDate;
+          } else {
+            where.invoiceDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { invoiceNumber: { [Op.like]: `%${filters.search}%` } },
+            { description: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { invoiceNumber: { [Op.like]: `%${filters.search}%` } },
-          { description: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["invoiceDate", "DESC"]];
 
       const invoices = await Invoice.findAll({
         where,
@@ -129,7 +138,7 @@ class InvoiceService {
           { model: Client, as: "client" },
           { model: Case, as: "case" },
         ],
-        order: [["invoiceDate", "DESC"]],
+        order,
       });
 
       return {

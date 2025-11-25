@@ -164,45 +164,54 @@ class DocumentService {
    */
   async getAllDocuments(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.documentType) {
-        where.documentType = filters.documentType;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.documentType) {
+          where.documentType = filters.documentType;
+        }
 
-      if (filters.clientId) {
-        where.clientId = filters.clientId;
-      }
+        if (filters.clientId) {
+          where.clientId = filters.clientId;
+        }
 
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.startDate) {
-        where.uploadDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.uploadDate) {
-          where.uploadDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.uploadDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.uploadDate) {
+            where.uploadDate[Op.lte] = filters.endDate;
+          } else {
+            where.uploadDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { title: { [Op.like]: `%${filters.search}%` } },
+            { description: { [Op.like]: `%${filters.search}%` } },
+            { fileName: { [Op.like]: `%${filters.search}%` } },
+            { notes: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { title: { [Op.like]: `%${filters.search}%` } },
-          { description: { [Op.like]: `%${filters.search}%` } },
-          { fileName: { [Op.like]: `%${filters.search}%` } },
-          { notes: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["uploadDate", "DESC"]];
 
       const documents = await Document.findAll({
         where,
@@ -210,7 +219,7 @@ class DocumentService {
           { model: Client, as: "client" },
           { model: Case, as: "case" },
         ],
-        order: [["uploadDate", "DESC"]],
+        order,
       });
 
       return {

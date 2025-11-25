@@ -63,49 +63,58 @@ class ExpenseService {
    */
   async getAllExpenses(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.category) {
-        where.category = filters.category;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.category) {
+          where.category = filters.category;
+        }
 
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.paymentMethod) {
-        where.paymentMethod = filters.paymentMethod;
-      }
+        if (filters.paymentMethod) {
+          where.paymentMethod = filters.paymentMethod;
+        }
 
-      if (filters.startDate) {
-        where.expenseDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.expenseDate) {
-          where.expenseDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.expenseDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.expenseDate) {
+            where.expenseDate[Op.lte] = filters.endDate;
+          } else {
+            where.expenseDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { description: { [Op.like]: `%${filters.search}%` } },
+            { reference: { [Op.like]: `%${filters.search}%` } },
+            { notes: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { description: { [Op.like]: `%${filters.search}%` } },
-          { reference: { [Op.like]: `%${filters.search}%` } },
-          { notes: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["expenseDate", "DESC"]];
 
       const expenses = await Expense.findAll({
         where,
         include: [{ model: Case, as: "case" }],
-        order: [["expenseDate", "DESC"]],
+        order,
       });
 
       return {

@@ -53,45 +53,55 @@ class CourtSessionService {
    */
   async getAllCourtSessions(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.status) {
-        where.status = filters.status;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.status) {
+          where.status = filters.status;
+        }
 
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.startDate) {
-        where.sessionDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.sessionDate) {
-          where.sessionDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.sessionDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.sessionDate) {
+            where.sessionDate[Op.lte] = filters.endDate;
+          } else {
+            where.sessionDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { court: { [Op.like]: `%${filters.search}%` } },
+            { courtRoom: { [Op.like]: `%${filters.search}%` } },
+            { judge: { [Op.like]: `%${filters.search}%` } },
+            { attendees: { [Op.like]: `%${filters.search}%` } },
+            { outcome: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { court: { [Op.like]: `%${filters.search}%` } },
-          { courtRoom: { [Op.like]: `%${filters.search}%` } },
-          { judge: { [Op.like]: `%${filters.search}%` } },
-          { attendees: { [Op.like]: `%${filters.search}%` } },
-          { outcome: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["sessionDate", "ASC"]];
 
       const sessions = await CourtSession.findAll({
         where,
+        order,
         include: [
           {
             model: Case,

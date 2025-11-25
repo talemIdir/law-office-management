@@ -70,48 +70,57 @@ class AppointmentService {
    */
   async getAllAppointments(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.status) {
-        where.status = filters.status;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.status) {
+          where.status = filters.status;
+        }
 
-      if (filters.appointmentType) {
-        where.appointmentType = filters.appointmentType;
-      }
+        if (filters.appointmentType) {
+          where.appointmentType = filters.appointmentType;
+        }
 
-      if (filters.clientId) {
-        where.clientId = filters.clientId;
-      }
+        if (filters.clientId) {
+          where.clientId = filters.clientId;
+        }
 
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.startDate) {
-        where.appointmentDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.appointmentDate) {
-          where.appointmentDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.appointmentDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.appointmentDate) {
+            where.appointmentDate[Op.lte] = filters.endDate;
+          } else {
+            where.appointmentDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { title: { [Op.like]: `%${filters.search}%` } },
+            { location: { [Op.like]: `%${filters.search}%` } },
+            { notes: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { title: { [Op.like]: `%${filters.search}%` } },
-          { location: { [Op.like]: `%${filters.search}%` } },
-          { notes: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["appointmentDate", "ASC"]];
 
       const appointments = await Appointment.findAll({
         where,
@@ -119,7 +128,7 @@ class AppointmentService {
           { model: Client, as: "client" },
           { model: Case, as: "case" },
         ],
-        order: [["appointmentDate", "ASC"]],
+        order,
       });
 
       return {

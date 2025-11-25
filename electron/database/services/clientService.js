@@ -69,39 +69,48 @@ class ClientService {
    */
   async getAllClients(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.type) {
-        where.type = filters.type;
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.type) {
+          where.type = filters.type;
+        }
+
+        if (filters.status) {
+          where.status = filters.status;
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { firstName: { [Op.like]: `%${filters.search}%` } },
+            { lastName: { [Op.like]: `%${filters.search}%` } },
+            { companyName: { [Op.like]: `%${filters.search}%` } },
+            { email: { [Op.like]: `%${filters.search}%` } },
+            { phone: { [Op.like]: `%${filters.search}%` } },
+            { nationalId: { [Op.like]: `%${filters.search}%` } },
+          ];
+        }
+
+        if (filters.city) {
+          where.city = { [Op.like]: `%${filters.city}%` };
+        }
+
+        if (filters.wilaya) {
+          where.wilaya = filters.wilaya;
+        }
       }
 
-      if (filters.status) {
-        where.status = filters.status;
-      }
-
-      if (filters.search) {
-        where[Op.or] = [
-          { firstName: { [Op.like]: `%${filters.search}%` } },
-          { lastName: { [Op.like]: `%${filters.search}%` } },
-          { companyName: { [Op.like]: `%${filters.search}%` } },
-          { email: { [Op.like]: `%${filters.search}%` } },
-          { phone: { [Op.like]: `%${filters.search}%` } },
-          { nationalId: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
-
-      if (filters.city) {
-        where.city = { [Op.like]: `%${filters.city}%` };
-      }
-
-      if (filters.wilaya) {
-        where.wilaya = filters.wilaya;
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["createdAt", "DESC"]];
 
       const clients = await Client.findAll({
         where,
-        order: [["createdAt", "DESC"]],
+        order,
         include: filters.includeCases
           ? [
               { model: Case, as: "cases" },

@@ -60,39 +60,48 @@ class PaymentService {
    */
   async getAllPayments(filters = {}) {
     try {
-      const where = {};
+      let where = {};
 
-      // Apply filters
-      if (filters.caseId) {
-        where.caseId = filters.caseId;
-      }
+      // If filters has a 'where' property, use it directly (Sequelize-style)
+      if (filters.where) {
+        where = { ...filters.where };
+      } else {
+        // Otherwise, build where clause from individual filter properties (legacy support)
+        // Apply filters
+        if (filters.caseId) {
+          where.caseId = filters.caseId;
+        }
 
-      if (filters.paymentMethod) {
-        where.paymentMethod = filters.paymentMethod;
-      }
+        if (filters.paymentMethod) {
+          where.paymentMethod = filters.paymentMethod;
+        }
 
-      if (filters.startDate) {
-        where.paymentDate = {
-          [Op.gte]: filters.startDate,
-        };
-      }
-
-      if (filters.endDate) {
-        if (where.paymentDate) {
-          where.paymentDate[Op.lte] = filters.endDate;
-        } else {
+        if (filters.startDate) {
           where.paymentDate = {
-            [Op.lte]: filters.endDate,
+            [Op.gte]: filters.startDate,
           };
+        }
+
+        if (filters.endDate) {
+          if (where.paymentDate) {
+            where.paymentDate[Op.lte] = filters.endDate;
+          } else {
+            where.paymentDate = {
+              [Op.lte]: filters.endDate,
+            };
+          }
+        }
+
+        if (filters.search) {
+          where[Op.or] = [
+            { reference: { [Op.like]: `%${filters.search}%` } },
+            { notes: { [Op.like]: `%${filters.search}%` } },
+          ];
         }
       }
 
-      if (filters.search) {
-        where[Op.or] = [
-          { reference: { [Op.like]: `%${filters.search}%` } },
-          { notes: { [Op.like]: `%${filters.search}%` } },
-        ];
-      }
+      // Use custom order if provided, otherwise default
+      const order = filters.order || [["paymentDate", "DESC"]];
 
       const payments = await Payment.findAll({
         where,
@@ -108,7 +117,7 @@ class PaymentService {
             ],
           },
         ],
-        order: [["paymentDate", "DESC"]],
+        order,
       });
 
       return {
