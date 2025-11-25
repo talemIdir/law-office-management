@@ -23,6 +23,7 @@ function CaseModal({ caseData, onClose, onSave }) {
   );
   const [commercialCourts, setCommercialCourts] = useState([]);
   const [supremeChambers, setSupremeChambers] = useState([]);
+  const [stateCouncilChambers, setStateCouncilChambers] = useState([]);
   const [courts, setCourts] = useState([]);
   const [formData, setFormData] = useState({
     caseNumber: "",
@@ -31,9 +32,12 @@ function CaseModal({ caseData, onClose, onSave }) {
     caseType: "civil",
     jurisdictionType: "",
     ordinaryJurisdictionType: "",
+    administrativeJurisdictionType: "",
     judicialCouncilId: "",
     supremeCourtId: "",
     supremeChamberId: "",
+    stateCouncilId: "",
+    stateCouncilChamberId: "",
     administrativeAppealCourtId: "",
     courtId: "",
     courtName: "",
@@ -62,6 +66,7 @@ function CaseModal({ caseData, onClose, onSave }) {
   }, [
     formData.jurisdictionType,
     formData.ordinaryJurisdictionType,
+    formData.administrativeJurisdictionType,
     formData.judicialCouncilId,
     formData.administrativeAppealCourtId,
   ]);
@@ -90,6 +95,14 @@ function CaseModal({ caseData, onClose, onSave }) {
     );
     if (supremeChambersResult.success) {
       setSupremeChambers(supremeChambersResult.data);
+    }
+
+    // Load State Council chambers
+    const stateCouncilChambersResult = await ipcRenderer.invoke(
+      "jurisdiction:getStateCouncilChambers"
+    );
+    if (stateCouncilChambersResult.success) {
+      setStateCouncilChambers(stateCouncilChambersResult.data);
     }
 
     // Load administrative appeal courts
@@ -158,9 +171,12 @@ function CaseModal({ caseData, onClose, onSave }) {
         ...formData,
         jurisdictionType: value,
         ordinaryJurisdictionType: "",
+        administrativeJurisdictionType: "",
         judicialCouncilId: "",
         supremeCourtId: "",
         supremeChamberId: "",
+        stateCouncilId: "",
+        stateCouncilChamberId: "",
         administrativeAppealCourtId: "",
         courtId: "",
         courtName: "",
@@ -175,6 +191,19 @@ function CaseModal({ caseData, onClose, onSave }) {
         judicialCouncilId: "",
         supremeCourtId: "",
         supremeChamberId: "",
+        courtId: "",
+        courtName: "",
+      });
+      setCourts([]);
+    }
+    // If administrative jurisdiction type changes, reset related fields
+    else if (name === "administrativeJurisdictionType") {
+      setFormData({
+        ...formData,
+        administrativeJurisdictionType: value,
+        administrativeAppealCourtId: "",
+        stateCouncilId: "",
+        stateCouncilChamberId: "",
         courtId: "",
         courtName: "",
       });
@@ -207,6 +236,14 @@ function CaseModal({ caseData, onClose, onSave }) {
         ...formData,
         supremeChamberId: value,
         supremeCourtId: value ? 1 : "", // There's only one Supreme Court with ID 1
+      });
+    }
+    // If State Council Chamber is selected, set stateCouncilId
+    else if (name === "stateCouncilChamberId") {
+      setFormData({
+        ...formData,
+        stateCouncilChamberId: value,
+        stateCouncilId: value ? 1 : "", // There's only one State Council with ID 1
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -425,45 +462,82 @@ function CaseModal({ caseData, onClose, onSave }) {
             )}
 
             {formData.jurisdictionType === "administrative" && (
-              <div className="form-row">
+              <>
                 <div className="form-group">
-                  <label className="form-label">محكمة الاستئناف الإدارية</label>
+                  <label className="form-label">نوع المحكمة</label>
                   <select
-                    name="administrativeAppealCourtId"
+                    name="administrativeJurisdictionType"
                     className="form-select"
-                    value={formData.administrativeAppealCourtId}
+                    value={formData.administrativeJurisdictionType}
                     onChange={handleChange}
                   >
-                    <option value="">اختر محكمة الاستئناف الإدارية</option>
-                    {administrativeAppealCourts.map((court) => (
-                      <option key={court.id} value={court.id}>
-                        {court.name}
-                      </option>
-                    ))}
+                    <option value="">اختر نوع المحكمة</option>
+                    <option value="appeal_court">محكمة الاستئناف الإدارية</option>
+                    <option value="state_council">مجلس الدولة</option>
                   </select>
                 </div>
-                {formData.administrativeAppealCourtId && (
+
+                {formData.administrativeJurisdictionType === "appeal_court" && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">محكمة الاستئناف الإدارية</label>
+                      <select
+                        name="administrativeAppealCourtId"
+                        className="form-select"
+                        value={formData.administrativeAppealCourtId}
+                        onChange={handleChange}
+                      >
+                        <option value="">اختر محكمة الاستئناف الإدارية</option>
+                        {administrativeAppealCourts.map((court) => (
+                          <option key={court.id} value={court.id}>
+                            {court.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {formData.administrativeAppealCourtId && (
+                      <div className="form-group">
+                        <label className="form-label">المحكمة الإدارية</label>
+                        <select
+                          name="courtId"
+                          className="form-select"
+                          value={formData.courtId}
+                          onChange={handleChange}
+                        >
+                          <option value="">اختر المحكمة الإدارية</option>
+                          {courts.map((court, index) => (
+                            <option
+                              key={`admin-court-${court.id || index}`}
+                              value={court.id}
+                            >
+                              {court.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formData.administrativeJurisdictionType === "state_council" && (
                   <div className="form-group">
-                    <label className="form-label">المحكمة الإدارية</label>
+                    <label className="form-label">غرفة مجلس الدولة</label>
                     <select
-                      name="courtId"
+                      name="stateCouncilChamberId"
                       className="form-select"
-                      value={formData.courtId}
+                      value={formData.stateCouncilChamberId}
                       onChange={handleChange}
                     >
-                      <option value="">اختر المحكمة الإدارية</option>
-                      {courts.map((court, index) => (
-                        <option
-                          key={`admin-court-${court.id || index}`}
-                          value={court.id}
-                        >
-                          {court.name}
+                      <option value="">اختر الغرفة</option>
+                      {stateCouncilChambers.map((chamber) => (
+                        <option key={chamber.id} value={chamber.id}>
+                          {chamber.name}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {formData.jurisdictionType === "commercial" && (

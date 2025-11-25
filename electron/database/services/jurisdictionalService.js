@@ -5,6 +5,8 @@ import AdministrativeCourt from '../models/AdministrativeCourt.js';
 import SpecializedCommercialCourt from '../models/SpecializedCommercialCourt.js';
 import SupremeCourt from '../models/SupremeCourt.js';
 import SupremeChamber from '../models/SupremeChamber.js';
+import StateCouncil from '../models/StateCouncil.js';
+import StateCouncilChamber from '../models/StateCouncilChamber.js';
 import {
   serializeJudicialCouncil,
   serializeFirstDegreeCourt,
@@ -423,6 +425,97 @@ class JurisdictionalService {
       }
 
       const chamber = await SupremeChamber.findByPk(id);
+
+      if (!chamber) {
+        throw new Error('Chamber not found');
+      }
+
+      return {
+        success: true,
+        data: chamber.toJSON(),
+        message: 'Chamber fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching chamber:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch chamber'
+      };
+    }
+  }
+
+  /**
+   * Get the State Council
+   * @returns {Promise<Object>} Success response with State Council data
+   */
+  async getStateCouncil() {
+    try {
+      const stateCouncil = await StateCouncil.findOne({
+        include: [{
+          model: StateCouncilChamber,
+          as: 'chambers',
+          order: [['name', 'ASC']]
+        }]
+      });
+
+      if (!stateCouncil) {
+        throw new Error('State Council not found');
+      }
+
+      return {
+        success: true,
+        data: stateCouncil.toJSON(),
+        message: 'State Council fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching State Council:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch State Council'
+      };
+    }
+  }
+
+  /**
+   * Get all State Council chambers
+   * @returns {Promise<Object>} Success response with chambers data
+   */
+  async getStateCouncilChambers() {
+    try {
+      const chambers = await StateCouncilChamber.findAll({
+        order: [['name', 'ASC']]
+      });
+
+      return {
+        success: true,
+        data: chambers.map(c => c.toJSON()),
+        count: chambers.length,
+        message: 'State Council chambers fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching State Council chambers:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch State Council chambers'
+      };
+    }
+  }
+
+  /**
+   * Get a State Council chamber by ID
+   * @param {number} id - Chamber ID
+   * @returns {Promise<Object>} Success response with chamber data
+   */
+  async getStateCouncilChamberById(id) {
+    try {
+      if (!id) {
+        throw new Error('Chamber ID is required');
+      }
+
+      const chamber = await StateCouncilChamber.findByPk(id);
 
       if (!chamber) {
         throw new Error('Chamber not found');

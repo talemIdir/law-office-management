@@ -58,6 +58,28 @@ function SupremeCourtChamberDisplay({ chamberId }) {
   return <span>{chamberName}</span>;
 }
 
+// Component to display State Council chamber name
+function StateCouncilChamberDisplay({ chamberId }) {
+  const [chamberName, setChamberName] = useState("-");
+
+  useEffect(() => {
+    const fetchChamber = async () => {
+      if (!chamberId) return;
+      const { ipcRenderer } = window.require("electron");
+      const result = await ipcRenderer.invoke(
+        "jurisdiction:getStateCouncilChamberById",
+        parseInt(chamberId)
+      );
+      if (result.success && result.data) {
+        setChamberName(result.data.name);
+      }
+    };
+    fetchChamber();
+  }, [chamberId]);
+
+  return <span>{chamberName}</span>;
+}
+
 function ViewCase() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -831,6 +853,24 @@ function ViewCase() {
                           <span className="detail-label">غرفة المحكمة العليا:</span>
                           <span className="detail-value">
                             <SupremeCourtChamberDisplay chamberId={caseData.supremeChamberId} />
+                          </span>
+                        </div>
+                      )}
+
+                      {caseData.jurisdictionType === "administrative" && caseData.administrativeJurisdictionType && (
+                        <div className="detail-item">
+                          <span className="detail-label">نوع المحكمة:</span>
+                          <span className="detail-value">
+                            {caseData.administrativeJurisdictionType === "appeal_court" ? "محكمة الاستئناف الإدارية" : "مجلس الدولة"}
+                          </span>
+                        </div>
+                      )}
+
+                      {caseData.administrativeJurisdictionType === "state_council" && caseData.stateCouncilChamberId && (
+                        <div className="detail-item">
+                          <span className="detail-label">غرفة مجلس الدولة:</span>
+                          <span className="detail-value">
+                            <StateCouncilChamberDisplay chamberId={caseData.stateCouncilChamberId} />
                           </span>
                         </div>
                       )}

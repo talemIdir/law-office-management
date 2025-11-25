@@ -608,6 +608,19 @@ ipcMain.handle("jurisdiction:getSupremeChamberById", async (event, id) => {
   return await jurisdictionalService.getSupremeChamberById(id);
 });
 
+// State Council handlers
+ipcMain.handle("jurisdiction:getStateCouncil", async () => {
+  return await jurisdictionalService.getStateCouncil();
+});
+
+ipcMain.handle("jurisdiction:getStateCouncilChambers", async () => {
+  return await jurisdictionalService.getStateCouncilChambers();
+});
+
+ipcMain.handle("jurisdiction:getStateCouncilChamberById", async (event, id) => {
+  return await jurisdictionalService.getStateCouncilChamberById(id);
+});
+
 // File dialog handler for selecting documents
 ipcMain.handle("dialog:selectFile", async () => {
   try {

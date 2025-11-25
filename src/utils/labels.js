@@ -145,3 +145,14 @@ export const getSupremeChamberLabel = (chamberType) => {
   };
   return labels[chamberType] || chamberType;
 };
+
+export const getStateCouncilChamberLabel = (chamberType) => {
+  const labels = {
+    chamber_1: "الغرفة 1",
+    chamber_2: "الغرفة 2",
+    chamber_3: "الغرفة 3",
+    chamber_4: "الغرفة 4",
+    urgent: "الغرفة الاستعجالية",
+  };
+  return labels[chamberType] || chamberType;
+};

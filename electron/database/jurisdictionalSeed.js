@@ -6,6 +6,8 @@ import AdministrativeCourt from './models/AdministrativeCourt.js';
 import SpecializedCommercialCourt from './models/SpecializedCommercialCourt.js';
 import SupremeCourt from './models/SupremeCourt.js';
 import SupremeChamber from './models/SupremeChamber.js';
+import StateCouncil from './models/StateCouncil.js';
+import StateCouncilChamber from './models/StateCouncilChamber.js';
 
 /**
  * Seeds the database with Algerian jurisdictional data
@@ -18,8 +20,9 @@ async function seedJurisdictionalData() {
     // Check if data already exists
     const councilCount = await JudicialCouncil.count();
     const supremeCourtCount = await SupremeCourt.count();
+    const stateCouncilCount = await StateCouncil.count();
 
-    if (councilCount > 0 && supremeCourtCount > 0) {
+    if (councilCount > 0 && supremeCourtCount > 0 && stateCouncilCount > 0) {
       console.log('Jurisdictional data already exists. Skipping seed.');
       return;
     }
@@ -44,6 +47,13 @@ async function seedJurisdictionalData() {
       await seedAdministrativeJudiciary();
     } else {
       console.log('✓ Administrative Courts already seeded, skipping...');
+    }
+
+    // Seed State Council (مجلس الدولة)
+    if (stateCouncilCount === 0) {
+      await seedStateCouncil();
+    } else {
+      console.log('✓ State Council already seeded, skipping...');
     }
 
     // Seed Commercial Judiciary (القضاء التجاري)
@@ -356,6 +366,63 @@ async function seedSupremeCourt() {
 
   await SupremeChamber.bulkCreate(chambers);
   console.log(`✓ Seeded ${chambers.length} Supreme Court Chambers`);
+}
+
+/**
+ * Seeds State Council and its chambers
+ */
+async function seedStateCouncil() {
+  console.log('Seeding State Council...');
+
+  // Create the State Council
+  const stateCouncil = await StateCouncil.create({
+    id: 1,
+    name: 'مجلس الدولة',
+    phone: '021 60 29 29',
+    email: 'contact@conseiletat.dz',
+    website: 'https://www.conseiletat.dz',
+    address: 'حيدرة، الجزائر',
+    receptionDays: 'من الأحد إلى الخميس'
+  });
+
+  console.log('✓ Created State Council');
+
+  // Create the chambers of the State Council
+  const chambers = [
+    {
+      name: 'الغرفة 1',
+      chamberType: 'chamber_1',
+      stateCouncilId: stateCouncil.id,
+      description: 'الغرفة الأولى لمجلس الدولة'
+    },
+    {
+      name: 'الغرفة 2',
+      chamberType: 'chamber_2',
+      stateCouncilId: stateCouncil.id,
+      description: 'الغرفة الثانية لمجلس الدولة'
+    },
+    {
+      name: 'الغرفة 3',
+      chamberType: 'chamber_3',
+      stateCouncilId: stateCouncil.id,
+      description: 'الغرفة الثالثة لمجلس الدولة'
+    },
+    {
+      name: 'الغرفة 4',
+      chamberType: 'chamber_4',
+      stateCouncilId: stateCouncil.id,
+      description: 'الغرفة الرابعة لمجلس الدولة'
+    },
+    {
+      name: 'الغرفة الاستعجالية',
+      chamberType: 'urgent',
+      stateCouncilId: stateCouncil.id,
+      description: 'الغرفة الاستعجالية لمجلس الدولة'
+    }
+  ];
+
+  await StateCouncilChamber.bulkCreate(chambers);
+  console.log(`✓ Seeded ${chambers.length} State Council Chambers`);
 }
 
 export { seedJurisdictionalData };
