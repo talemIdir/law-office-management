@@ -720,149 +720,227 @@ function ViewCase() {
                   </div>
                 </div>
                 <div className="card-body">
-                  <div className="details-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">رقم القضية:</span>
-                      <span className="detail-value">
-                        {caseData.caseNumber}
-                      </span>
-                    </div>
+                  {/* Basic Case Information */}
+                  <div className="detail-section">
+                    <h4 className="section-title">معلومات القضية الأساسية</h4>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">رقم القضية:</span>
+                        <span className="detail-value">
+                          <strong>{caseData.caseNumber}</strong>
+                        </span>
+                      </div>
 
-                    <div className="detail-item">
-                      <span className="detail-label">نوع القضية:</span>
-                      <span className="detail-value">
-                        {getCaseTypeLabel(caseData.caseType)}
-                      </span>
-                    </div>
+                      <div className="detail-item">
+                        <span className="detail-label">عنوان القضية:</span>
+                        <span className="detail-value">
+                          <strong>{caseData.title}</strong>
+                        </span>
+                      </div>
 
-                    <div className="detail-item">
-                      <span className="detail-label">الموكل:</span>
-                      <span className="detail-value">
-                        {client ? (
-                          <span
-                            style={{ color: "#0066cc", cursor: "pointer" }}
-                            onClick={() => navigate(`/clients/${client.id}`)}
-                          >
-                            {client.type === "company"
-                              ? client.companyName
-                              : `${client.firstName} ${client.lastName}`}
+                      <div className="detail-item">
+                        <span className="detail-label">نوع القضية:</span>
+                        <span className="detail-value">
+                          <span className="badge badge-secondary">
+                            {getCaseTypeLabel(caseData.caseType)}
                           </span>
-                        ) : (
-                          "-"
-                        )}
-                      </span>
-                    </div>
+                        </span>
+                      </div>
 
-                    <div className="detail-item">
-                      <span className="detail-label">صفة الموكل:</span>
-                      <span className="detail-value">
-                        {getClientRoleLabel(caseData.clientRole)}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">المحكمة:</span>
-                      <span className="detail-value">
-                        {caseData.courtName || "-"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">نوع القضاء:</span>
-                      <span className="detail-value">
-                        {caseData.jurisdictionType ? (
-                          <span className="badge badge-info">
-                            {getJurisdictionTypeLabel(caseData.jurisdictionType)}
+                      <div className="detail-item">
+                        <span className="detail-label">الحالة:</span>
+                        <span className="detail-value">
+                          <span className={`badge ${getStatusBadgeClass(caseData.status)}`}>
+                            {getStatusLabel(caseData.status)}
                           </span>
-                        ) : (
-                          "-"
-                        )}
-                      </span>
-                    </div>
-
-                    {caseData.jurisdictionType === "ordinary" && caseData.ordinaryJurisdictionType && (
-                      <div className="detail-item">
-                        <span className="detail-label">نوع المحكمة:</span>
-                        <span className="detail-value">
-                          {caseData.ordinaryJurisdictionType === "judicial_council" ? "المجلس القضائي" : "المحكمة العليا"}
                         </span>
                       </div>
-                    )}
 
-                    {caseData.ordinaryJurisdictionType === "supreme_court" && caseData.supremeChamberId && (
                       <div className="detail-item">
-                        <span className="detail-label">غرفة المحكمة العليا:</span>
+                        <span className="detail-label">الأولوية:</span>
                         <span className="detail-value">
-                          <SupremeCourtChamberDisplay chamberId={caseData.supremeChamberId} />
+                          <span className={`badge ${getPriorityBadgeClass(caseData.priority)}`}>
+                            {getPriorityLabel(caseData.priority)}
+                          </span>
                         </span>
                       </div>
-                    )}
-
-                    <div className="detail-item">
-                      <span className="detail-label">القاضي:</span>
-                      <span className="detail-value">
-                        {caseData.judge || "-"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">الخصم:</span>
-                      <span className="detail-value">
-                        {caseData.opposingParty || "-"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">محامي الخصم:</span>
-                      <span className="detail-value">
-                        {caseData.opposingLawyer || "-"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">تاريخ البدء:</span>
-                      <span className="detail-value">
-                        {formatDate(caseData.startDate)}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">تاريخ الانتهاء:</span>
-                      <span className="detail-value">
-                        {formatDate(caseData.endDate)}
-                      </span>
-                    </div>
-
-                    {user?.role === "admin" && (
-                      <div className="detail-item">
-                        <span className="detail-label">
-                          الأتعاب المتفق عليها:
-                        </span>
-                        <span className="detail-value">
-                          {formatCurrency(caseData.amount)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="detail-item">
-                      <span className="detail-label">تاريخ التسجيل:</span>
-                      <span className="detail-value">
-                        {formatDate(caseData.createdAt)}
-                      </span>
                     </div>
                   </div>
 
-                  {caseData.description && (
-                    <div className="detail-item" style={{ marginTop: "20px" }}>
-                      <span className="detail-label">وصف القضية:</span>
-                      <p className="detail-value">{caseData.description}</p>
+                  {/* Client Information */}
+                  <div className="detail-section">
+                    <h4 className="section-title">معلومات الموكل</h4>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">الموكل:</span>
+                        <span className="detail-value">
+                          {client ? (
+                            <span
+                              style={{ color: "#0066cc", cursor: "pointer" }}
+                              onClick={() => navigate(`/clients/${client.id}`)}
+                            >
+                              {client.type === "company"
+                                ? client.companyName
+                                : `${client.firstName} ${client.lastName}`}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">صفة الموكل:</span>
+                        <span className="detail-value">
+                          <span className="badge badge-primary">
+                            {getClientRoleLabel(caseData.clientRole)}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Court and Jurisdiction Information */}
+                  <div className="detail-section">
+                    <h4 className="section-title">معلومات المحكمة والقضاء</h4>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">نوع القضاء:</span>
+                        <span className="detail-value">
+                          {caseData.jurisdictionType ? (
+                            <span className="badge badge-info">
+                              {getJurisdictionTypeLabel(caseData.jurisdictionType)}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </span>
+                      </div>
+
+                      {caseData.jurisdictionType === "ordinary" && caseData.ordinaryJurisdictionType && (
+                        <div className="detail-item">
+                          <span className="detail-label">نوع المحكمة:</span>
+                          <span className="detail-value">
+                            {caseData.ordinaryJurisdictionType === "judicial_council" ? "المجلس القضائي" : "المحكمة العليا"}
+                          </span>
+                        </div>
+                      )}
+
+                      {caseData.ordinaryJurisdictionType === "supreme_court" && caseData.supremeChamberId && (
+                        <div className="detail-item">
+                          <span className="detail-label">غرفة المحكمة العليا:</span>
+                          <span className="detail-value">
+                            <SupremeCourtChamberDisplay chamberId={caseData.supremeChamberId} />
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="detail-item">
+                        <span className="detail-label">المحكمة:</span>
+                        <span className="detail-value">
+                          {caseData.courtName || "-"}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">القاضي:</span>
+                        <span className="detail-value">
+                          {caseData.judge || "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Opposing Party Information */}
+                  <div className="detail-section">
+                    <h4 className="section-title">معلومات الخصم</h4>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">الخصم:</span>
+                        <span className="detail-value">
+                          {caseData.opposingParty || "-"}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">محامي الخصم:</span>
+                        <span className="detail-value">
+                          {caseData.opposingLawyer || "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dates and Timeline */}
+                  <div className="detail-section">
+                    <h4 className="section-title">التواريخ والجدول الزمني</h4>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">تاريخ البدء:</span>
+                        <span className="detail-value">
+                          {formatDate(caseData.startDate)}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">تاريخ الانتهاء:</span>
+                        <span className="detail-value">
+                          {formatDate(caseData.endDate)}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">تاريخ التسجيل:</span>
+                        <span className="detail-value">
+                          {formatDateTime(caseData.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">آخر تحديث:</span>
+                        <span className="detail-value">
+                          {formatDateTime(caseData.updatedAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Information (Admin Only) */}
+                  {user?.role === "admin" && (
+                    <div className="detail-section">
+                      <h4 className="section-title">المعلومات المالية</h4>
+                      <div className="details-grid">
+                        <div className="detail-item">
+                          <span className="detail-label">الأتعاب المتفق عليها:</span>
+                          <span className="detail-value">
+                            {formatCurrency(caseData.amount)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  {caseData.notes && (
-                    <div className="detail-item" style={{ marginTop: "20px" }}>
-                      <span className="detail-label">ملاحظات:</span>
-                      <p className="detail-value">{caseData.notes}</p>
+                  {/* Additional Details */}
+                  {(caseData.description || caseData.notes) && (
+                    <div className="detail-section">
+                      <h4 className="section-title">تفاصيل إضافية</h4>
+                      {caseData.description && (
+                        <div className="detail-item" style={{ marginBottom: "15px" }}>
+                          <span className="detail-label">وصف القضية:</span>
+                          <p className="detail-value" style={{ marginTop: "8px", lineHeight: "1.6" }}>
+                            {caseData.description}
+                          </p>
+                        </div>
+                      )}
+
+                      {caseData.notes && (
+                        <div className="detail-item">
+                          <span className="detail-label">ملاحظات:</span>
+                          <p className="detail-value" style={{ marginTop: "8px", lineHeight: "1.6" }}>
+                            {caseData.notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
