@@ -129,13 +129,14 @@ function ClientModal({ client, onClose, onSave }) {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">رقم البطاقة الوطنية</label>
+                <label className="form-label required">رقم البطاقة الوطنية</label>
                 <input
                   type="text"
                   name="nationalId"
                   className="form-control"
                   value={formData.nationalId}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="form-group">
