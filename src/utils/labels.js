@@ -89,7 +89,16 @@ export const getPriorityLabel = (priority) => {
 };
 
 export const getClientRoleLabel = (role) => {
-  return role === "plaintiff" ? "مدعي" : "مدعى عليه";
+  const labels = {
+    plaintiff: "مدعي",
+    defendant: "مدعى عليه",
+    intervening_party: "مدخل في الخصام",
+    respondent_after_expertise: "مرجع بعد الخبرة",
+    appellant_after_expertise: "مرجع عليه بعد الخبرة",
+    appellant: "الطاعن",
+    respondent: "المطعون ضده",
+  };
+  return labels[role] || role;
 };
 
 export const getJurisdictionTypeLabel = (type) => {

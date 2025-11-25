@@ -13,7 +13,8 @@
     "package": "electron-forge package",
     "build-win": "npm run build && npm run electron:build",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "db:seed": "node electron/database/seed.js"
+    "db:seed": "node electron/database/seed.js",
+    "db:migrate:clientrole": "node electron/database/migrateCaseClientRole.js"
   },
   "keywords": [
     "electron",
@@ -88,7 +89,8 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "build/app.jpg"
     },
     "nsis": {
       "oneClick": false,

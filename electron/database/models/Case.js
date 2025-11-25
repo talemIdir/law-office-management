@@ -78,9 +78,17 @@ const Case = sequelize.define(
       comment: "محامي الطرف المقابل",
     },
     clientRole: {
-      type: DataTypes.ENUM("plaintiff", "defendant"),
+      type: DataTypes.ENUM(
+        "plaintiff",
+        "defendant",
+        "intervening_party",
+        "respondent_after_expertise",
+        "appellant_after_expertise",
+        "appellant",
+        "respondent"
+      ),
       allowNull: false,
-      comment: "دور العميل: مدعي أو مدعى عليه",
+      comment: "دور العميل: مدعي، مدعى عليه، مدخل في الخصام، مرجع بعد الخبرة، مرجع عليه بعد الخبرة، الطاعن، المطعون ضده",
     },
     status: {
       type: DataTypes.ENUM(

@@ -284,6 +284,11 @@ function CaseModal({ caseData, onClose, onSave }) {
                 >
                   <option value="plaintiff">مدعي</option>
                   <option value="defendant">مدعى عليه</option>
+                  <option value="intervening_party">مدخل في الخصام</option>
+                  <option value="respondent_after_expertise">مرجع بعد الخبرة</option>
+                  <option value="appellant_after_expertise">مرجع عليه بعد الخبرة</option>
+                  <option value="appellant">الطاعن</option>
+                  <option value="respondent">المطعون ضده</option>
                 </select>
               </div>
             </div>
