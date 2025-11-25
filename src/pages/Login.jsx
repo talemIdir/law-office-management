@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
+import logoImage from "../assets/app.jpg";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -45,7 +46,9 @@ function Login() {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <div className="login-icon">⚖️</div>
+          <div className="login-icon">
+            <img src={logoImage} alt="Logo" className="login-logo" />
+          </div>
           <h1>نظام إدارة مكتب المحاماة</h1>
           <p>تسجيل الدخول</p>
         </div>

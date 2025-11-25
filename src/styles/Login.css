@@ -74,6 +74,20 @@
   filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.3));
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 3px solid rgba(212, 175, 55, 0.3);
 }
 
 .login-header h1 {

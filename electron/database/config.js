@@ -73,7 +73,7 @@ async function initDatabase() {
     console.log("Database connection established successfully.");
 
     // Sync all models
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log("Database synchronized successfully.");
 
     // Auto-seed jurisdictional data on first run
