@@ -177,8 +177,23 @@ function ViewClient() {
         cell: ({ row }) => formatCurrency(row.original.amount),
         enableSorting: true,
       },
+      {
+        id: "actions",
+        header: "الإجراءات",
+        cell: ({ row }) => (
+          <div className="action-buttons">
+            <button
+              className="btn btn-sm btn-info"
+              onClick={() => navigate(`/cases/${row.original.id}`)}
+            >
+              👁️ عرض
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
     ],
-    []
+    [navigate]
   );
 
   const paymentsColumns = useMemo(
@@ -361,9 +376,9 @@ function ViewClient() {
         </h1>
         <button
           className="btn btn-outline"
-          onClick={() => navigate("/clients")}
+          onClick={() => navigate(-1)}
         >
-          ← العودة إلى قائمة الموكلين
+          ← رجوع
         </button>
       </div>
 

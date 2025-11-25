@@ -602,9 +602,9 @@ function ViewCase() {
           </button>
           <button
             className="btn btn-outline"
-            onClick={() => navigate("/cases")}
+            onClick={() => navigate(-1)}
           >
-            ← العودة إلى قائمة القضايا
+            ← رجوع
           </button>
         </div>
       </div>
