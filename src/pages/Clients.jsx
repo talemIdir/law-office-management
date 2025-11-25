@@ -74,6 +74,7 @@ function ClientModal({ client, onClose, onSave }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* Section 1: Client Type and Basic Information */}
             <div className="form-group">
               <label className="form-label required">نوع الموكل</label>
               <select
@@ -127,6 +128,7 @@ function ClientModal({ client, onClose, onSave }) {
               </div>
             )}
 
+            {/* Section 2: Identification Documents */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label required">رقم البطاقة الوطنية</label>
@@ -151,6 +153,7 @@ function ClientModal({ client, onClose, onSave }) {
               </div>
             </div>
 
+            {/* Section 3: Contact Information */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label required">رقم الهاتف</label>
@@ -175,6 +178,7 @@ function ClientModal({ client, onClose, onSave }) {
               </div>
             </div>
 
+            {/* Section 4: Address Information */}
             <div className="form-group">
               <label className="form-label">العنوان</label>
               <input
@@ -215,17 +219,7 @@ function ClientModal({ client, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">ملاحظات</label>
-              <textarea
-                name="notes"
-                className="form-textarea"
-                value={formData.notes || ""}
-                onChange={handleChange}
-                rows="3"
-              ></textarea>
-            </div>
-
+            {/* Section 5: Status */}
             <div className="form-group">
               <label className="form-label">الحالة</label>
               <select
@@ -238,6 +232,18 @@ function ClientModal({ client, onClose, onSave }) {
                 <option value="inactive">غير نشط</option>
                 <option value="archived">مؤرشف</option>
               </select>
+            </div>
+
+            {/* Section 6: Additional Notes */}
+            <div className="form-group">
+              <label className="form-label">ملاحظات</label>
+              <textarea
+                name="notes"
+                className="form-textarea"
+                value={formData.notes || ""}
+                onChange={handleChange}
+                rows="3"
+              ></textarea>
             </div>
           </div>
           <div className="modal-footer">

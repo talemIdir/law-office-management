@@ -329,6 +329,7 @@ function CaseModal({ caseData, onClose, onSave }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* Section 1: Basic Case Information */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label required">رقم القضية</label>
@@ -341,6 +342,44 @@ function CaseModal({ caseData, onClose, onSave }) {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label className="form-label required">تاريخ التكليف</label>
+                <input
+                  type="date"
+                  name="startDate"
+                  className="form-control"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label required">عنوان القضية</label>
+              <input
+                type="text"
+                name="title"
+                className="form-control"
+                value={formData.title}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">وصف القضية</label>
+              <textarea
+                name="description"
+                className="form-textarea"
+                value={formData.description || ""}
+                onChange={handleChange}
+                rows="3"
+              ></textarea>
+            </div>
+
+            {/* Section 2: Client Information */}
+            <div className="form-row">
               <div className="form-group" style={{ position: 'relative' }} ref={clientDropdownRef}>
                 <label className="form-label required">الموكل</label>
                 <input
@@ -391,31 +430,27 @@ function CaseModal({ caseData, onClose, onSave }) {
                   </div>
                 )}
               </div>
+              <div className="form-group">
+                <label className="form-label required">صفة الموكل</label>
+                <select
+                  name="clientRole"
+                  className="form-select"
+                  value={formData.clientRole}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="plaintiff">مدعي</option>
+                  <option value="defendant">مدعى عليه</option>
+                  <option value="intervening_party">مدخل في الخصام</option>
+                  <option value="respondent_after_expertise">مرجع بعد الخبرة</option>
+                  <option value="appellant_after_expertise">مرجع عليه بعد الخبرة</option>
+                  <option value="appellant">الطاعن</option>
+                  <option value="respondent">المطعون ضده</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label required">عنوان القضية</label>
-              <input
-                type="text"
-                name="title"
-                className="form-control"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">وصف القضية</label>
-              <textarea
-                name="description"
-                className="form-textarea"
-                value={formData.description || ""}
-                onChange={handleChange}
-                rows="3"
-              ></textarea>
-            </div>
-
+            {/* Section 3: Case Type and Priority */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label required">نوع القضية</label>
@@ -441,24 +476,20 @@ function CaseModal({ caseData, onClose, onSave }) {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label required">صفة الموكل</label>
+                <label className="form-label">الأولوية</label>
                 <select
-                  name="clientRole"
+                  name="priority"
                   className="form-select"
-                  value={formData.clientRole}
+                  value={formData.priority}
                   onChange={handleChange}
-                  required
                 >
-                  <option value="plaintiff">مدعي</option>
-                  <option value="defendant">مدعى عليه</option>
-                  <option value="intervening_party">مدخل في الخصام</option>
-                  <option value="respondent_after_expertise">مرجع بعد الخبرة</option>
-                  <option value="appellant_after_expertise">مرجع عليه بعد الخبرة</option>
-                  <option value="appellant">الطاعن</option>
-                  <option value="respondent">المطعون ضده</option>
+                  <option value="normal">عادي</option>
+                  <option value="urgent">قضاء استعجالي</option>
                 </select>
               </div>
             </div>
+
+            {/* Section 4: Jurisdiction Information */}
 
             <div className="form-group">
               <label className="form-label">نوع القضاء</label>
@@ -655,6 +686,7 @@ function CaseModal({ caseData, onClose, onSave }) {
               </div>
             )}
 
+            {/* Section 5: Parties Information */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">الخصم</label>
@@ -678,66 +710,53 @@ function CaseModal({ caseData, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">الحالة</label>
-                <select
-                  name="status"
-                  className="form-select"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="first_instance">
-                    على مستوى الدرجة الأولى
-                  </option>
-                  <option value="in_settlement">في إطار التسوية</option>
-                  <option value="closed">مغلقة</option>
-                  <option value="in_appeal">في الاستئناف</option>
-                  <option value="extraordinary_appeal">طعن غير عادي</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">الأولوية</label>
-                <select
-                  name="priority"
-                  className="form-select"
-                  value={formData.priority}
-                  onChange={handleChange}
-                >
-                  <option value="normal">عادي</option>
-                  <option value="urgent">قضاء استعجالي</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label className="form-label">القاضي</label>
+              <input
+                type="text"
+                name="judge"
+                className="form-control"
+                value={formData.judge}
+                onChange={handleChange}
+              />
             </div>
 
-            <div className="form-row">
+            {/* Section 6: Case Status */}
+            <div className="form-group">
+              <label className="form-label">الحالة</label>
+              <select
+                name="status"
+                className="form-select"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="first_instance">
+                  على مستوى الدرجة الأولى
+                </option>
+                <option value="in_settlement">في إطار التسوية</option>
+                <option value="closed">مغلقة</option>
+                <option value="in_appeal">في الاستئناف</option>
+                <option value="extraordinary_appeal">طعن غير عادي</option>
+              </select>
+            </div>
+
+            {/* Section 7: Financial Information */}
+            {user?.role === "admin" && (
               <div className="form-group">
-                <label className="form-label required">تاريخ التكليف</label>
+                <label className="form-label required">الأتعاب المتفق عليها (دج)</label>
                 <input
-                  type="date"
-                  name="startDate"
+                  type="number"
+                  name="amount"
                   className="form-control"
-                  value={formData.startDate}
+                  value={formData.amount}
                   onChange={handleChange}
+                  step="0.01"
                   required
                 />
               </div>
-              {user?.role === "admin" && (
-                <div className="form-group">
-                  <label className="form-label required">الأتعاب المتفق عليها (دج)</label>
-                  <input
-                    type="number"
-                    name="amount"
-                    className="form-control"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    step="0.01"
-                    required
-                  />
-                </div>
-              )}
-            </div>
+            )}
 
+            {/* Section 8: Additional Notes */}
             <div className="form-group">
               <label className="form-label">ملاحظات</label>
               <textarea
