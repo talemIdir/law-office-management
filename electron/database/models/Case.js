@@ -46,10 +46,25 @@ const Case = sequelize.define(
       ),
       comment: "نوع القضاء: عادي، إداري، تجاري",
     },
+    ordinaryJurisdictionType: {
+      type: DataTypes.ENUM("judicial_council", "supreme_court"),
+      allowNull: true,
+      comment: "نوع القضاء العادي: مجلس قضائي أو محكمة عليا",
+    },
     judicialCouncilId: {
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: "معرف المجلس القضائي (للقضاء العادي)",
+    },
+    supremeCourtId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "معرف المحكمة العليا",
+    },
+    supremeChamberId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "معرف غرفة المحكمة العليا",
     },
     administrativeAppealCourtId: {
       type: DataTypes.INTEGER,

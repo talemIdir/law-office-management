@@ -22,6 +22,7 @@ function CaseModal({ caseData, onClose, onSave }) {
     []
   );
   const [commercialCourts, setCommercialCourts] = useState([]);
+  const [supremeChambers, setSupremeChambers] = useState([]);
   const [courts, setCourts] = useState([]);
   const [formData, setFormData] = useState({
     caseNumber: "",
@@ -29,7 +30,10 @@ function CaseModal({ caseData, onClose, onSave }) {
     description: "",
     caseType: "civil",
     jurisdictionType: "",
+    ordinaryJurisdictionType: "",
     judicialCouncilId: "",
+    supremeCourtId: "",
+    supremeChamberId: "",
     administrativeAppealCourtId: "",
     courtId: "",
     courtName: "",
@@ -57,6 +61,7 @@ function CaseModal({ caseData, onClose, onSave }) {
     }
   }, [
     formData.jurisdictionType,
+    formData.ordinaryJurisdictionType,
     formData.judicialCouncilId,
     formData.administrativeAppealCourtId,
   ]);
@@ -77,6 +82,14 @@ function CaseModal({ caseData, onClose, onSave }) {
     );
     if (councilsResult.success) {
       setJudicialCouncils(councilsResult.data);
+    }
+
+    // Load Supreme Court chambers
+    const supremeChambersResult = await ipcRenderer.invoke(
+      "jurisdiction:getSupremeChambers"
+    );
+    if (supremeChambersResult.success) {
+      setSupremeChambers(supremeChambersResult.data);
     }
 
     // Load administrative appeal courts
@@ -144,8 +157,24 @@ function CaseModal({ caseData, onClose, onSave }) {
       setFormData({
         ...formData,
         jurisdictionType: value,
+        ordinaryJurisdictionType: "",
         judicialCouncilId: "",
+        supremeCourtId: "",
+        supremeChamberId: "",
         administrativeAppealCourtId: "",
+        courtId: "",
+        courtName: "",
+      });
+      setCourts([]);
+    }
+    // If ordinary jurisdiction type changes, reset related fields
+    else if (name === "ordinaryJurisdictionType") {
+      setFormData({
+        ...formData,
+        ordinaryJurisdictionType: value,
+        judicialCouncilId: "",
+        supremeCourtId: "",
+        supremeChamberId: "",
         courtId: "",
         courtName: "",
       });
@@ -170,6 +199,14 @@ function CaseModal({ caseData, onClose, onSave }) {
         ...formData,
         courtId: value,
         courtName: selectedCourt ? selectedCourt.name : "",
+      });
+    }
+    // If Supreme Chamber is selected, set supremeCourtId
+    else if (name === "supremeChamberId") {
+      setFormData({
+        ...formData,
+        supremeChamberId: value,
+        supremeCourtId: value ? 1 : "", // There's only one Supreme Court with ID 1
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -309,45 +346,82 @@ function CaseModal({ caseData, onClose, onSave }) {
             </div>
 
             {formData.jurisdictionType === "ordinary" && (
-              <div className="form-row">
+              <>
                 <div className="form-group">
-                  <label className="form-label">المجلس القضائي</label>
+                  <label className="form-label">نوع المحكمة</label>
                   <select
-                    name="judicialCouncilId"
+                    name="ordinaryJurisdictionType"
                     className="form-select"
-                    value={formData.judicialCouncilId}
+                    value={formData.ordinaryJurisdictionType}
                     onChange={handleChange}
                   >
-                    <option value="">اختر المجلس القضائي</option>
-                    {judicialCouncils.map((council) => (
-                      <option key={council.id} value={council.id}>
-                        {council.name}
-                      </option>
-                    ))}
+                    <option value="">اختر نوع المحكمة</option>
+                    <option value="judicial_council">المجلس القضائي</option>
+                    <option value="supreme_court">المحكمة العليا</option>
                   </select>
                 </div>
-                {formData.judicialCouncilId && (
+
+                {formData.ordinaryJurisdictionType === "judicial_council" && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">المجلس القضائي</label>
+                      <select
+                        name="judicialCouncilId"
+                        className="form-select"
+                        value={formData.judicialCouncilId}
+                        onChange={handleChange}
+                      >
+                        <option value="">اختر المجلس القضائي</option>
+                        {judicialCouncils.map((council) => (
+                          <option key={council.id} value={council.id}>
+                            {council.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {formData.judicialCouncilId && (
+                      <div className="form-group">
+                        <label className="form-label">المحكمة</label>
+                        <select
+                          name="courtId"
+                          className="form-select"
+                          value={formData.courtId}
+                          onChange={handleChange}
+                        >
+                          <option value="">اختر المحكمة</option>
+                          {courts.map((court, index) => (
+                            <option
+                              key={`ordinary-court-${court.id || index}`}
+                              value={court.id}
+                            >
+                              {court.name} {court.isBranch ? "(فرع)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formData.ordinaryJurisdictionType === "supreme_court" && (
                   <div className="form-group">
-                    <label className="form-label">المحكمة</label>
+                    <label className="form-label">غرفة المحكمة العليا</label>
                     <select
-                      name="courtId"
+                      name="supremeChamberId"
                       className="form-select"
-                      value={formData.courtId}
+                      value={formData.supremeChamberId}
                       onChange={handleChange}
                     >
-                      <option value="">اختر المحكمة</option>
-                      {courts.map((court, index) => (
-                        <option
-                          key={`ordinary-court-${court.id || index}`}
-                          value={court.id}
-                        >
-                          {court.name} {court.isBranch ? "(فرع)" : ""}
+                      <option value="">اختر الغرفة</option>
+                      {supremeChambers.map((chamber) => (
+                        <option key={chamber.id} value={chamber.id}>
+                          {chamber.name}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {formData.jurisdictionType === "administrative" && (

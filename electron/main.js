@@ -595,6 +595,19 @@ ipcMain.handle("jurisdiction:getAllCourts", async () => {
   return await jurisdictionalService.getAllCourts();
 });
 
+// Supreme Court handlers
+ipcMain.handle("jurisdiction:getSupremeCourt", async () => {
+  return await jurisdictionalService.getSupremeCourt();
+});
+
+ipcMain.handle("jurisdiction:getSupremeChambers", async () => {
+  return await jurisdictionalService.getSupremeChambers();
+});
+
+ipcMain.handle("jurisdiction:getSupremeChamberById", async (event, id) => {
+  return await jurisdictionalService.getSupremeChamberById(id);
+});
+
 // File dialog handler for selecting documents
 ipcMain.handle("dialog:selectFile", async () => {
   try {

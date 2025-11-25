@@ -3,6 +3,8 @@ import FirstDegreeCourt from '../models/FirstDegreeCourt.js';
 import AdministrativeAppealCourt from '../models/AdministrativeAppealCourt.js';
 import AdministrativeCourt from '../models/AdministrativeCourt.js';
 import SpecializedCommercialCourt from '../models/SpecializedCommercialCourt.js';
+import SupremeCourt from '../models/SupremeCourt.js';
+import SupremeChamber from '../models/SupremeChamber.js';
 import {
   serializeJudicialCouncil,
   serializeFirstDegreeCourt,
@@ -346,6 +348,97 @@ class JurisdictionalService {
         success: false,
         error: error.message,
         message: 'Failed to fetch all courts'
+      };
+    }
+  }
+
+  /**
+   * Get the Supreme Court
+   * @returns {Promise<Object>} Success response with Supreme Court data
+   */
+  async getSupremeCourt() {
+    try {
+      const supremeCourt = await SupremeCourt.findOne({
+        include: [{
+          model: SupremeChamber,
+          as: 'chambers',
+          order: [['name', 'ASC']]
+        }]
+      });
+
+      if (!supremeCourt) {
+        throw new Error('Supreme Court not found');
+      }
+
+      return {
+        success: true,
+        data: supremeCourt.toJSON(),
+        message: 'Supreme Court fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching Supreme Court:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch Supreme Court'
+      };
+    }
+  }
+
+  /**
+   * Get all Supreme Court chambers
+   * @returns {Promise<Object>} Success response with chambers data
+   */
+  async getSupremeChambers() {
+    try {
+      const chambers = await SupremeChamber.findAll({
+        order: [['name', 'ASC']]
+      });
+
+      return {
+        success: true,
+        data: chambers.map(c => c.toJSON()),
+        count: chambers.length,
+        message: 'Supreme Court chambers fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching Supreme Court chambers:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch Supreme Court chambers'
+      };
+    }
+  }
+
+  /**
+   * Get a Supreme Court chamber by ID
+   * @param {number} id - Chamber ID
+   * @returns {Promise<Object>} Success response with chamber data
+   */
+  async getSupremeChamberById(id) {
+    try {
+      if (!id) {
+        throw new Error('Chamber ID is required');
+      }
+
+      const chamber = await SupremeChamber.findByPk(id);
+
+      if (!chamber) {
+        throw new Error('Chamber not found');
+      }
+
+      return {
+        success: true,
+        data: chamber.toJSON(),
+        message: 'Chamber fetched successfully'
+      };
+    } catch (error) {
+      console.error('Error fetching chamber:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch chamber'
       };
     }
   }

@@ -132,3 +132,16 @@ export const getExpenseCategoryLabel = (category) => {
   };
   return labels[category] || category;
 };
+
+export const getSupremeChamberLabel = (chamberType) => {
+  const labels = {
+    civil: "الغرفة المدنية",
+    real_estate: "الغرفة العقارية",
+    family: "غرفة شؤون الأسرة والمواريث",
+    commercial: "الغرفة التجارية والبحرية",
+    social: "الغرفة الاجتماعية",
+    criminal: "الغرفة الجنائية",
+    misdemeanor: "غرفة الجنح والمخالفات",
+  };
+  return labels[chamberType] || chamberType;
+};

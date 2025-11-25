@@ -4,10 +4,12 @@ import FirstDegreeCourt from './models/FirstDegreeCourt.js';
 import AdministrativeAppealCourt from './models/AdministrativeAppealCourt.js';
 import AdministrativeCourt from './models/AdministrativeCourt.js';
 import SpecializedCommercialCourt from './models/SpecializedCommercialCourt.js';
+import SupremeCourt from './models/SupremeCourt.js';
+import SupremeChamber from './models/SupremeChamber.js';
 
 /**
  * Seeds the database with Algerian jurisdictional data
- * This includes: Judicial Councils, First Degree Courts, Administrative Courts, and Commercial Courts
+ * This includes: Judicial Councils, First Degree Courts, Supreme Court, Administrative Courts, and Commercial Courts
  */
 async function seedJurisdictionalData() {
   try {
@@ -15,19 +17,42 @@ async function seedJurisdictionalData() {
 
     // Check if data already exists
     const councilCount = await JudicialCouncil.count();
-    if (councilCount > 0) {
+    const supremeCourtCount = await SupremeCourt.count();
+
+    if (councilCount > 0 && supremeCourtCount > 0) {
       console.log('Jurisdictional data already exists. Skipping seed.');
       return;
     }
 
     // Seed Ordinary Judiciary (القضاء العادي)
-    await seedOrdinaryJudiciary();
+    if (councilCount === 0) {
+      await seedOrdinaryJudiciary();
+    } else {
+      console.log('✓ Judicial Councils already seeded, skipping...');
+    }
+
+    // Seed Supreme Court (المحكمة العليا)
+    if (supremeCourtCount === 0) {
+      await seedSupremeCourt();
+    } else {
+      console.log('✓ Supreme Court already seeded, skipping...');
+    }
 
     // Seed Administrative Judiciary (القضاء الإداري)
-    await seedAdministrativeJudiciary();
+    const adminAppealCount = await AdministrativeAppealCourt.count();
+    if (adminAppealCount === 0) {
+      await seedAdministrativeJudiciary();
+    } else {
+      console.log('✓ Administrative Courts already seeded, skipping...');
+    }
 
     // Seed Commercial Judiciary (القضاء التجاري)
-    await seedCommercialJudiciary();
+    const commercialCount = await SpecializedCommercialCourt.count();
+    if (commercialCount === 0) {
+      await seedCommercialJudiciary();
+    } else {
+      console.log('✓ Commercial Courts already seeded, skipping...');
+    }
 
     console.log('✓ Jurisdictional data seeding completed successfully!');
   } catch (error) {
@@ -262,6 +287,75 @@ async function seedCommercialJudiciary() {
 
   await SpecializedCommercialCourt.bulkCreate(commercialCourtsData);
   console.log(`✓ Seeded ${commercialCourtsData.length} Specialized Commercial Courts`);
+}
+
+/**
+ * Seeds Supreme Court and its chambers
+ */
+async function seedSupremeCourt() {
+  console.log('Seeding Supreme Court...');
+
+  // Create the Supreme Court
+  const supremeCourt = await SupremeCourt.create({
+    id: 1,
+    name: 'المحكمة العليا',
+    phone: '021 60 29 29 / 021 60 48 48',
+    email: 'contact@cs.mj.dz',
+    website: 'https://www.cs.mj.dz',
+    address: 'شارع محمد عبده، حسين داي، الجزائر',
+    receptionDays: 'من الأحد إلى الخميس'
+  });
+
+  console.log('✓ Created Supreme Court');
+
+  // Create the chambers of the Supreme Court
+  const chambers = [
+    {
+      name: 'الغرفة المدنية',
+      chamberType: 'civil',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون المدنية'
+    },
+    {
+      name: 'الغرفة العقارية',
+      chamberType: 'real_estate',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون العقارية'
+    },
+    {
+      name: 'غرفة شؤون الأسرة والمواريث',
+      chamberType: 'family',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون المتعلقة بشؤون الأسرة والمواريث'
+    },
+    {
+      name: 'الغرفة التجارية والبحرية',
+      chamberType: 'commercial',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون التجارية والبحرية'
+    },
+    {
+      name: 'الغرفة الاجتماعية',
+      chamberType: 'social',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون الاجتماعية'
+    },
+    {
+      name: 'الغرفة الجنائية',
+      chamberType: 'criminal',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون الجنائية'
+    },
+    {
+      name: 'غرفة الجنح والمخالفات',
+      chamberType: 'misdemeanor',
+      supremeCourtId: supremeCourt.id,
+      description: 'تختص بالنظر في الطعون المتعلقة بالجنح والمخالفات'
+    }
+  ];
+
+  await SupremeChamber.bulkCreate(chambers);
+  console.log(`✓ Seeded ${chambers.length} Supreme Court Chambers`);
 }
 
 export { seedJurisdictionalData };

@@ -12,6 +12,8 @@ import FirstDegreeCourt from "./models/FirstDegreeCourt.js";
 import AdministrativeAppealCourt from "./models/AdministrativeAppealCourt.js";
 import AdministrativeCourt from "./models/AdministrativeCourt.js";
 import SpecializedCommercialCourt from "./models/SpecializedCommercialCourt.js";
+import SupremeCourt from "./models/SupremeCourt.js";
+import SupremeChamber from "./models/SupremeChamber.js";
 
 // Define all model relationships
 function setupAssociations() {
@@ -123,6 +125,17 @@ function setupAssociations() {
   AdministrativeCourt.belongsTo(AdministrativeAppealCourt, {
     foreignKey: "appealCourtId",
     as: "appealCourt",
+  });
+
+  // SupremeCourt - SupremeChamber (One-to-Many)
+  SupremeCourt.hasMany(SupremeChamber, {
+    foreignKey: "supremeCourtId",
+    as: "chambers",
+    onDelete: "CASCADE",
+  });
+  SupremeChamber.belongsTo(SupremeCourt, {
+    foreignKey: "supremeCourtId",
+    as: "supremeCourt",
   });
 }
 
