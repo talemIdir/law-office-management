@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { courtSessionAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -6,6 +6,9 @@ import DataTable from "../components/DataTable";
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
+  const [showCaseDropdown, setShowCaseDropdown] = useState(false);
+  const caseDropdownRef = useRef(null);
 
   // Format date for datetime-local input
   const formatDateForInput = (dateString) => {
@@ -39,6 +42,30 @@ function CourtSessionModal({ session, onClose, onSave }) {
     loadCases();
   }, []);
 
+  useEffect(() => {
+    // Set initial search term when editing a session
+    if (session && session.caseId && cases.length > 0) {
+      const selectedCase = cases.find(c => c.id === session.caseId);
+      if (selectedCase) {
+        setCaseSearchTerm(`${selectedCase.caseNumber} - ${selectedCase.title}`);
+      }
+    }
+  }, [session, cases]);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (caseDropdownRef.current && !caseDropdownRef.current.contains(event.target)) {
+        setShowCaseDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const loadCases = async () => {
     const result = await caseAPI.getAll({
       where: { status: ["first_instance", "in_settlement", "in_appeal"] },
@@ -46,6 +73,34 @@ function CourtSessionModal({ session, onClose, onSave }) {
     if (result.success) {
       setCases(result.data);
     }
+  };
+
+  const filteredCases = useMemo(() => {
+    if (!caseSearchTerm) return cases.slice(0, 10); // Show first 10 cases when empty
+
+    const searchLower = caseSearchTerm.toLowerCase();
+    return cases.filter(caseItem => {
+      const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+      return displayName.toLowerCase().includes(searchLower);
+    }).slice(0, 10); // Show max 10 results
+  }, [cases, caseSearchTerm]);
+
+  const handleCaseSearch = (e) => {
+    const value = e.target.value;
+    setCaseSearchTerm(value);
+    setShowCaseDropdown(true);
+
+    // Clear caseId if search term is cleared
+    if (!value) {
+      setFormData({ ...formData, caseId: "" });
+    }
+  };
+
+  const handleCaseSelect = (caseItem) => {
+    const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+    setCaseSearchTerm(displayName);
+    setFormData({ ...formData, caseId: caseItem.id });
+    setShowCaseDropdown(false);
   };
 
   const handleSubmit = async (e) => {
@@ -70,22 +125,53 @@ function CourtSessionModal({ session, onClose, onSave }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            <div className="form-group">
+            <div className="form-group" style={{ position: 'relative' }} ref={caseDropdownRef}>
               <label className="form-label required">القضية</label>
-              <select
-                name="caseId"
-                className="form-select"
-                value={formData.caseId}
-                onChange={handleChange}
+              <input
+                type="text"
+                className="form-control"
+                value={caseSearchTerm}
+                onChange={handleCaseSearch}
+                onFocus={() => setShowCaseDropdown(true)}
+                placeholder="ابحث عن القضية..."
                 required
-              >
-                <option value="">اختر القضية</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.caseNumber} - {c.title}
-                  </option>
-                ))}
-              </select>
+                autoComplete="off"
+              />
+              {showCaseDropdown && filteredCases.length > 0 && (
+                <div
+                  className="case-dropdown"
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {filteredCases.map((caseItem) => (
+                    <div
+                      key={caseItem.id}
+                      className="case-dropdown-item"
+                      onClick={() => handleCaseSelect(caseItem)}
+                      style={{
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f0f0f0'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                    >
+                      {caseItem.caseNumber} - {caseItem.title}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="form-group">

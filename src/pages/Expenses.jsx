@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { expenseAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -11,6 +11,9 @@ import {
 
 function ExpenseModal({ expense, onClose, onSave }) {
   const [cases, setCases] = useState([]);
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
+  const [showCaseDropdown, setShowCaseDropdown] = useState(false);
+  const caseDropdownRef = useRef(null);
   const [formData, setFormData] = useState({
     expenseDate: "",
     category: "other",
@@ -27,9 +30,60 @@ function ExpenseModal({ expense, onClose, onSave }) {
     loadCases();
   }, []);
 
+  useEffect(() => {
+    // Set initial case search term
+    if (expense && expense.caseId && cases.length > 0) {
+      const selectedCase = cases.find(c => c.id === expense.caseId);
+      if (selectedCase) {
+        setCaseSearchTerm(`${selectedCase.caseNumber} - ${selectedCase.title}`);
+      }
+    }
+  }, [expense, cases]);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (caseDropdownRef.current && !caseDropdownRef.current.contains(event.target)) {
+        setShowCaseDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const loadCases = async () => {
     const result = await caseAPI.getAll();
     if (result.success) setCases(result.data);
+  };
+
+  const filteredCases = useMemo(() => {
+    if (!caseSearchTerm) return cases.slice(0, 10);
+
+    const searchLower = caseSearchTerm.toLowerCase();
+    return cases.filter(caseItem => {
+      const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+      return displayName.toLowerCase().includes(searchLower);
+    }).slice(0, 10);
+  }, [cases, caseSearchTerm]);
+
+  const handleCaseSearch = (e) => {
+    const value = e.target.value;
+    setCaseSearchTerm(value);
+    setShowCaseDropdown(true);
+
+    if (!value) {
+      setFormData({ ...formData, caseId: "" });
+    }
+  };
+
+  const handleCaseSelect = (caseItem) => {
+    const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+    setCaseSearchTerm(displayName);
+    setFormData({ ...formData, caseId: caseItem.id });
+    setShowCaseDropdown(false);
   };
 
   const handleSubmit = async (e) => {
@@ -130,21 +184,52 @@ function ExpenseModal({ expense, onClose, onSave }) {
             </div>
 
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }} ref={caseDropdownRef}>
                 <label className="form-label">القضية المرتبطة</label>
-                <select
-                  name="caseId"
-                  className="form-select"
-                  value={formData.caseId}
-                  onChange={handleChange}
-                >
-                  <option value="">لا يوجد</option>
-                  {cases.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.caseNumber} - {c.title}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={caseSearchTerm}
+                  onChange={handleCaseSearch}
+                  onFocus={() => setShowCaseDropdown(true)}
+                  placeholder="ابحث عن القضية... (اختياري)"
+                  autoComplete="off"
+                />
+                {showCaseDropdown && filteredCases.length > 0 && (
+                  <div
+                    className="case-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {filteredCases.map((caseItem) => (
+                      <div
+                        key={caseItem.id}
+                        className="case-dropdown-item"
+                        onClick={() => handleCaseSelect(caseItem)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      >
+                        {caseItem.caseNumber} - {caseItem.title}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">المرجع</label>

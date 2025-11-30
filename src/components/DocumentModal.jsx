@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   clientAPI,
   caseAPI,
@@ -17,6 +17,12 @@ function DocumentModal({ document, onClose, onSave, preSelectedClientId, preSele
   const [cases, setCases] = useState([]);
   const [filteredCases, setFilteredCases] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [showCaseDropdown, setShowCaseDropdown] = useState(false);
+  const clientDropdownRef = useRef(null);
+  const caseDropdownRef = useRef(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -35,6 +41,48 @@ function DocumentModal({ document, onClose, onSave, preSelectedClientId, preSele
   }, []);
 
   useEffect(() => {
+    // Set initial search terms when editing or pre-selected
+    if (clients.length > 0 && (document?.clientId || preSelectedClientId)) {
+      const clientId = document?.clientId || preSelectedClientId;
+      const selectedClient = clients.find(c => c.id === clientId);
+      if (selectedClient) {
+        const displayName = selectedClient.type === "company"
+          ? selectedClient.companyName
+          : `${selectedClient.firstName} ${selectedClient.lastName}`;
+        setClientSearchTerm(displayName);
+      }
+    }
+  }, [document, preSelectedClientId, clients]);
+
+  useEffect(() => {
+    // Set initial case search term
+    if (cases.length > 0 && (document?.caseId || preSelectedCaseId)) {
+      const caseId = document?.caseId || preSelectedCaseId;
+      const selectedCase = cases.find(c => c.id === caseId);
+      if (selectedCase) {
+        setCaseSearchTerm(`${selectedCase.caseNumber} - ${selectedCase.title}`);
+      }
+    }
+  }, [document, preSelectedCaseId, cases]);
+
+  useEffect(() => {
+    // Close dropdowns when clicking outside
+    const handleClickOutside = (event) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
+        setShowClientDropdown(false);
+      }
+      if (caseDropdownRef.current && !caseDropdownRef.current.contains(event.target)) {
+        setShowCaseDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
     // Filter cases when clientId changes
     if (formData.clientId) {
       const clientCases = cases.filter(
@@ -48,11 +96,13 @@ function DocumentModal({ document, onClose, onSave, preSelectedClientId, preSele
       );
       if (!currentCaseValid && formData.caseId) {
         setFormData({ ...formData, caseId: "" });
+        setCaseSearchTerm("");
       }
     } else {
       setFilteredCases([]);
       if (formData.caseId) {
         setFormData({ ...formData, caseId: "" });
+        setCaseSearchTerm("");
       }
     }
   }, [formData.clientId, cases]);
@@ -64,6 +114,66 @@ function DocumentModal({ document, onClose, onSave, preSelectedClientId, preSele
     ]);
     if (clientsResult.success) setClients(clientsResult.data);
     if (casesResult.success) setCases(casesResult.data);
+  };
+
+  const filteredClientsForSearch = useMemo(() => {
+    if (!clientSearchTerm) return clients.slice(0, 10);
+
+    const searchLower = clientSearchTerm.toLowerCase();
+    return clients.filter(client => {
+      const displayName = client.type === "company"
+        ? client.companyName
+        : `${client.firstName} ${client.lastName}`;
+      return displayName.toLowerCase().includes(searchLower);
+    }).slice(0, 10);
+  }, [clients, clientSearchTerm]);
+
+  const filteredCasesForSearch = useMemo(() => {
+    const casesToSearch = formData.clientId ? filteredCases : cases;
+
+    if (!caseSearchTerm) return casesToSearch.slice(0, 10);
+
+    const searchLower = caseSearchTerm.toLowerCase();
+    return casesToSearch.filter(caseItem => {
+      const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+      return displayName.toLowerCase().includes(searchLower);
+    }).slice(0, 10);
+  }, [cases, filteredCases, caseSearchTerm, formData.clientId]);
+
+  const handleClientSearch = (e) => {
+    const value = e.target.value;
+    setClientSearchTerm(value);
+    setShowClientDropdown(true);
+
+    if (!value) {
+      setFormData({ ...formData, clientId: "" });
+    }
+  };
+
+  const handleClientSelect = (client) => {
+    const displayName = client.type === "company"
+      ? client.companyName
+      : `${client.firstName} ${client.lastName}`;
+    setClientSearchTerm(displayName);
+    setFormData({ ...formData, clientId: client.id });
+    setShowClientDropdown(false);
+  };
+
+  const handleCaseSearch = (e) => {
+    const value = e.target.value;
+    setCaseSearchTerm(value);
+    setShowCaseDropdown(true);
+
+    if (!value) {
+      setFormData({ ...formData, caseId: "" });
+    }
+  };
+
+  const handleCaseSelect = (caseItem) => {
+    const displayName = `${caseItem.caseNumber} - ${caseItem.title}`;
+    setCaseSearchTerm(displayName);
+    setFormData({ ...formData, caseId: caseItem.id });
+    setShowCaseDropdown(false);
   };
 
   const handleSelectFile = async () => {
@@ -199,43 +309,103 @@ function DocumentModal({ document, onClose, onSave, preSelectedClientId, preSele
             </div>
 
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }} ref={clientDropdownRef}>
                 <label className="form-label">{preSelectedClientId ? "الموكل (محدد مسبقاً)" : "الموكل"}</label>
-                <select
-                  name="clientId"
-                  className="form-select"
-                  value={formData.clientId}
-                  onChange={handleChange}
+                <input
+                  type="text"
+                  className="form-control"
+                  value={clientSearchTerm}
+                  onChange={handleClientSearch}
+                  onFocus={() => !preSelectedClientId && setShowClientDropdown(true)}
+                  placeholder="ابحث عن الموكل..."
                   disabled={!!preSelectedClientId}
-                >
-                  <option value="">اختر الموكل</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.type === "company"
-                        ? client.companyName
-                        : `${client.firstName} ${client.lastName}`}
-                    </option>
-                  ))}
-                </select>
+                  autoComplete="off"
+                />
+                {showClientDropdown && !preSelectedClientId && filteredClientsForSearch.length > 0 && (
+                  <div
+                    className="client-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {filteredClientsForSearch.map((client) => (
+                      <div
+                        key={client.id}
+                        className="client-dropdown-item"
+                        onClick={() => handleClientSelect(client)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      >
+                        {client.type === "company"
+                          ? client.companyName
+                          : `${client.firstName} ${client.lastName}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }} ref={caseDropdownRef}>
                 <label className="form-label">{preSelectedCaseId ? "القضية (محددة مسبقاً)" : "القضية"}</label>
-                <select
-                  name="caseId"
-                  className="form-select"
-                  value={formData.caseId}
-                  onChange={handleChange}
+                <input
+                  type="text"
+                  className="form-control"
+                  value={caseSearchTerm}
+                  onChange={handleCaseSearch}
+                  onFocus={() => !preSelectedCaseId && formData.clientId && setShowCaseDropdown(true)}
+                  placeholder={formData.clientId ? "ابحث عن القضية..." : "اختر الموكل أولاً"}
                   disabled={!formData.clientId || !!preSelectedCaseId}
-                >
-                  <option value="">
-                    {formData.clientId ? "اختر القضية" : "اختر الموكل أولاً"}
-                  </option>
-                  {filteredCases.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.caseNumber} - {c.title}
-                    </option>
-                  ))}
-                </select>
+                  autoComplete="off"
+                />
+                {showCaseDropdown && !preSelectedCaseId && formData.clientId && filteredCasesForSearch.length > 0 && (
+                  <div
+                    className="case-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {filteredCasesForSearch.map((caseItem) => (
+                      <div
+                        key={caseItem.id}
+                        className="case-dropdown-item"
+                        onClick={() => handleCaseSelect(caseItem)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      >
+                        {caseItem.caseNumber} - {caseItem.title}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
