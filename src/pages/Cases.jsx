@@ -509,14 +509,14 @@ function CaseModal({ caseData, onClose, onSave }) {
             {formData.jurisdictionType === "ordinary" && (
               <>
                 <div className="form-group">
-                  <label className="form-label">نوع المحكمة</label>
+                  <label className="form-label">الجهة القضائية</label>
                   <select
                     name="ordinaryJurisdictionType"
                     className="form-select"
                     value={formData.ordinaryJurisdictionType}
                     onChange={handleChange}
                   >
-                    <option value="">اختر نوع المحكمة</option>
+                    <option value="">اختر الجهة القضائية</option>
                     <option value="judicial_council">المجلس القضائي</option>
                     <option value="supreme_court">المحكمة العليا</option>
                   </select>
@@ -588,14 +588,14 @@ function CaseModal({ caseData, onClose, onSave }) {
             {formData.jurisdictionType === "administrative" && (
               <>
                 <div className="form-group">
-                  <label className="form-label">نوع المحكمة</label>
+                  <label className="form-label">الجهة القضائية</label>
                   <select
                     name="administrativeJurisdictionType"
                     className="form-select"
                     value={formData.administrativeJurisdictionType}
                     onChange={handleChange}
                   >
-                    <option value="">اختر نوع المحكمة</option>
+                    <option value="">اختر الجهة القضائية</option>
                     <option value="appeal_court">محكمة الاستئناف الإدارية</option>
                     <option value="state_council">مجلس الدولة</option>
                   </select>

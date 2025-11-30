@@ -844,7 +844,7 @@ function ViewCase() {
                       {caseData.jurisdictionType === "ordinary" && caseData.ordinaryJurisdictionType === "judicial_council" && (
                         <>
                           <div className="detail-item">
-                            <span className="detail-label">نوع المحكمة:</span>
+                            <span className="detail-label">الجهة القضائية:</span>
                             <span className="detail-value">المجلس القضائي</span>
                           </div>
                           {caseData.courtName && (
@@ -866,7 +866,7 @@ function ViewCase() {
                       {caseData.jurisdictionType === "ordinary" && caseData.ordinaryJurisdictionType === "supreme_court" && (
                         <>
                           <div className="detail-item">
-                            <span className="detail-label">نوع المحكمة:</span>
+                            <span className="detail-label">الجهة القضائية:</span>
                             <span className="detail-value">المحكمة العليا</span>
                           </div>
                           {caseData.supremeChamberId && (
@@ -890,7 +890,7 @@ function ViewCase() {
                       {caseData.jurisdictionType === "administrative" && caseData.administrativeJurisdictionType === "appeal_court" && (
                         <>
                           <div className="detail-item">
-                            <span className="detail-label">نوع المحكمة:</span>
+                            <span className="detail-label">الجهة القضائية:</span>
                             <span className="detail-value">محكمة الاستئناف الإدارية</span>
                           </div>
                           {caseData.courtName && (
@@ -912,7 +912,7 @@ function ViewCase() {
                       {caseData.jurisdictionType === "administrative" && caseData.administrativeJurisdictionType === "state_council" && (
                         <>
                           <div className="detail-item">
-                            <span className="detail-label">نوع المحكمة:</span>
+                            <span className="detail-label">الجهة القضائية:</span>
                             <span className="detail-value">مجلس الدولة</span>
                           </div>
                           {caseData.stateCouncilChamberId && (

@@ -311,7 +311,7 @@ const CaseReportDocument = ({ caseData, client, courtSessions, payments, officeL
             <Text style={styles.tableCol2}>{caseData.court || "-"}</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCol1}>نوع المحكمة</Text>
+            <Text style={styles.tableCol1}>الجهة القضائية</Text>
             <Text style={styles.tableCol2}>{caseData.courtType || "-"}</Text>
           </View>
           <View style={styles.tableRow}>
