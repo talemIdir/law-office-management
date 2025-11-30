@@ -25,19 +25,29 @@ function CourtSessionModal({ session, onClose, onSave }) {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  const [formData, setFormData] = useState({
-    sessionDate: "",
-    court: "",
-    courtRoom: "",
-    judge: "",
-    attendees: "",
-    outcome: "",
-    notes: "",
-    status: "في التقرير",
-    caseId: "",
-    ...session,
-    // Format the sessionDate after spreading session data
-    sessionDate: session?.sessionDate ? formatDateForInput(session.sessionDate) : "",
+  const [formData, setFormData] = useState(() => {
+    const defaults = {
+      sessionDate: "",
+      court: "",
+      courtRoom: "",
+      judge: "",
+      attendees: "",
+      outcome: "",
+      notes: "",
+      status: "في التقرير",
+      caseId: "",
+    };
+
+    if (session) {
+      return {
+        ...defaults,
+        ...session,
+        // Format the sessionDate after spreading session data
+        sessionDate: session.sessionDate ? formatDateForInput(session.sessionDate) : "",
+      };
+    }
+
+    return defaults;
   });
 
   useEffect(() => {

@@ -4,8 +4,9 @@ import { pdf } from '@react-pdf/renderer';
 // Helper function to format amounts for display
 const formatAmount = (amount) => {
   if (!amount && amount !== 0) return '';
-  // Format with thousand separators
-  return new Intl.NumberFormat('fr-DZ').format(amount) + ' دج';
+  // Format with space as thousand separator and 2 decimal places
+  const formatted = Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return formatted + ' دج';
 };
 
 /**

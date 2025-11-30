@@ -16,23 +16,33 @@ function AppointmentModal({ appointment, onClose, onSave }) {
   const [showCaseDropdown, setShowCaseDropdown] = useState(false);
   const clientDropdownRef = useRef(null);
   const caseDropdownRef = useRef(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    appointmentDate: "",
-    duration: "60",
-    location: "",
-    appointmentType: "meeting",
-    status: "scheduled",
-    reminderSent: false,
-    notes: "",
-    clientId: "",
-    caseId: "",
-    ...appointment,
-    // Ensure null values are converted to empty strings for select fields
-    clientId: appointment?.clientId || "",
-    caseId: appointment?.caseId || "",
-    location: appointment?.location || "",
-    notes: appointment?.notes || "",
+  const [formData, setFormData] = useState(() => {
+    const defaults = {
+      title: "",
+      appointmentDate: "",
+      duration: "60",
+      location: "",
+      appointmentType: "meeting",
+      status: "scheduled",
+      reminderSent: false,
+      notes: "",
+      clientId: "",
+      caseId: "",
+    };
+
+    if (appointment) {
+      return {
+        ...defaults,
+        ...appointment,
+        // Ensure null values are converted to empty strings for select fields
+        clientId: appointment.clientId || "",
+        caseId: appointment.caseId || "",
+        location: appointment.location || "",
+        notes: appointment.notes || "",
+      };
+    }
+
+    return defaults;
   });
 
   useEffect(() => {
