@@ -10,6 +10,8 @@ import {
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import { exportToExcel, exportToPDF, formatDocumentsForExcel, formatDocumentsForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function DocumentModal({ document: documentProp, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -543,6 +545,52 @@ function DocumentsPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatDocumentsForExcel(filteredByType);
+      exportToExcel(dataToExport, 'قائمة_المستندات', 'المستندات');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatDocumentsForPDF(filteredByType);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'العنوان': '20%',
+        'النوع': '12%',
+        'الموكل': '18%',
+        'القضية': '18%',
+        'تاريخ الإضافة': '15%',
+        'اسم الملف': '17%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة المستندات"
+          subtitle={`عدد المستندات: ${filteredByType.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_المستندات');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const handleOpenFile = async (filePath) => {
     if (!filePath) {
       showError("لا يوجد ملف مرتبط بهذا المستند");
@@ -673,9 +721,25 @@ function DocumentsPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المستندات</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة مستند جديد
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة مستند جديد
+          </button>
+        </div>
       </div>
 
       <div className="card">

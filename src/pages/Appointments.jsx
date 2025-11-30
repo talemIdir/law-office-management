@@ -4,6 +4,8 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import { getStatusLabel, getAppointmentTypeLabel } from "../utils/labels";
+import { exportToExcel, exportToPDF, formatAppointmentsForExcel, formatAppointmentsForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function AppointmentModal({ appointment, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -479,6 +481,53 @@ function AppointmentsPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatAppointmentsForExcel(filteredAppointments);
+      exportToExcel(dataToExport, 'قائمة_المواعيد', 'المواعيد');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatAppointmentsForPDF(filteredAppointments);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'العنوان': '18%',
+        'الموكل': '16%',
+        'التاريخ': '12%',
+        'الوقت': '9%',
+        'المدة (دقيقة)': '9%',
+        'المكان': '20%',
+        'الحالة': '16%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة المواعيد"
+          subtitle={`عدد المواعيد: ${filteredAppointments.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_المواعيد');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
     if (!client) return "-";
@@ -644,9 +693,25 @@ function AppointmentsPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المواعيد</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة موعد جديد
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة موعد جديد
+          </button>
+        </div>
       </div>
 
       <div className="card">

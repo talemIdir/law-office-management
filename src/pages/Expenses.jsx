@@ -8,6 +8,8 @@ import {
   getExpenseCategoryLabel,
   getPaymentMethodLabel,
 } from "../utils/labels";
+import { exportToExcel, exportToPDF, formatExpensesForExcel, formatExpensesForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function ExpenseModal({ expense, onClose, onSave }) {
   const [cases, setCases] = useState([]);
@@ -376,6 +378,52 @@ function ExpensesPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatExpensesForExcel(filteredByCategory);
+      exportToExcel(dataToExport, 'قائمة_المصروفات', 'المصروفات');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatExpensesForPDF(filteredByCategory);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'التاريخ': '13%',
+        'الفئة': '15%',
+        'الوصف': '25%',
+        'المبلغ': '13%',
+        'طريقة الدفع': '13%',
+        'القضية': '21%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة المصروفات"
+          subtitle={`عدد المصروفات: ${filteredByCategory.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_المصروفات');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const globalFilterFn = (expense, searchTerm) => {
     return (
       expense.description.includes(searchTerm) ||
@@ -490,9 +538,25 @@ function ExpensesPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة المصروفات</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة مصروف جديد
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة مصروف جديد
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}

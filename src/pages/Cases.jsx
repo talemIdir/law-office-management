@@ -13,6 +13,8 @@ import {
   getPriorityLabel,
   getJurisdictionTypeLabel,
 } from "../utils/labels";
+import { exportToExcel, exportToPDF, formatCasesForExcel, formatCasesForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function CaseModal({ caseData, onClose, onSave }) {
   const { user } = useAuth();
@@ -866,6 +868,53 @@ function CasesPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatCasesForExcel(filteredCases);
+      exportToExcel(dataToExport, 'قائمة_القضايا', 'القضايا');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatCasesForPDF(filteredCases);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'رقم القضية': '12%',
+        'العنوان': '18%',
+        'نوع القضية': '12%',
+        'المحكمة': '15%',
+        'الموكل': '15%',
+        'الطرف المقابل': '15%',
+        'الحالة': '13%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة القضايا"
+          subtitle={`عدد القضايا: ${filteredCases.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_القضايا');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const handleAddPayment = (caseData) => {
     setSelectedCaseForPayment(caseData);
     setShowPaymentModal(true);
@@ -1066,9 +1115,25 @@ function CasesPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة القضايا</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة قضية جديدة
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة قضية جديدة
+          </button>
+        </div>
       </div>
 
       <div className="card">

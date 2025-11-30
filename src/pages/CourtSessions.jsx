@@ -3,6 +3,8 @@ import { courtSessionAPI, caseAPI } from "../utils/api";
 import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
+import { exportToExcel, exportToPDF, formatCourtSessionsForExcel, formatCourtSessionsForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
@@ -377,6 +379,52 @@ function CourtSessionsPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatCourtSessionsForExcel(filteredSessions);
+      exportToExcel(dataToExport, 'قائمة_الجلسات', 'الجلسات');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatCourtSessionsForPDF(filteredSessions);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'القضية': '20%',
+        'التاريخ والوقت': '18%',
+        'المحكمة': '18%',
+        'القاضي': '15%',
+        'النوع': '12%',
+        'الحالة': '17%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة الجلسات"
+          subtitle={`عدد الجلسات: ${filteredSessions.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_الجلسات');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const formatDateTime = (date) => {
     return new Date(date).toLocaleString("ar-DZ", {
       year: "numeric",
@@ -529,9 +577,25 @@ function CourtSessionsPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الجلسات</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة جلسة جديدة
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة جلسة جديدة
+          </button>
+        </div>
       </div>
 
       <div className="card">

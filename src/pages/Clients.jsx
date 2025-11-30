@@ -6,6 +6,8 @@ import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import AdvancedFilter from "../components/AdvancedFilter";
 import { getStatusLabel, getClientTypeLabel } from "../utils/labels";
+import { exportToExcel, exportToPDF, formatClientsForExcel, formatClientsForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function ClientModal({ client, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -337,6 +339,52 @@ function ClientsPage() {
     setShowModal(true);
   };
 
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = formatClientsForExcel(filteredClients);
+      exportToExcel(dataToExport, 'قائمة_الموكلين', 'الموكلين');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const formattedData = formatClientsForPDF(filteredClients);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'اسم الشركة': '20%',
+        'الاسم الكامل': '20%',
+        'الرقم الوطني': '15%',
+        'الهاتف': '15%',
+        'البريد الإلكتروني': '18%',
+        'المدينة': '12%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة الموكلين"
+          subtitle={`عدد الموكلين: ${filteredClients.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_الموكلين');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const filteredClients = useMemo(() => {
     let filtered = [...clients];
 
@@ -484,9 +532,25 @@ function ClientsPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الموكلين</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة موكل جديد
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            title="تصدير إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            title="تصدير إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة موكل جديد
+          </button>
+        </div>
       </div>
 
       <div className="card">

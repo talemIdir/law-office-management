@@ -10,6 +10,8 @@ import { showSuccess, showError } from "../utils/toast";
 import { useConfirm } from "../components/ConfirmDialog";
 import DataTable from "../components/DataTable";
 import { generateInvoicePDF } from "../utils/pdf/index.jsx";
+import { exportToExcel, exportToPDF, formatInvoicesForExcel, formatInvoicesForPDF } from "../utils/exportUtils";
+import PDFListDocument from "../components/PDFListDocument";
 
 function InvoiceModal({ invoice, onClose, onSave }) {
   const [clients, setClients] = useState([]);
@@ -430,6 +432,52 @@ function InvoicesPage() {
     setShowInvoiceModal(true);
   };
 
+  const handleExportListExcel = () => {
+    try {
+      const dataToExport = formatInvoicesForExcel(filteredInvoices);
+      exportToExcel(dataToExport, 'قائمة_الفواتير', 'الفواتير');
+      showSuccess('تم تصدير البيانات إلى Excel بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى Excel');
+    }
+  };
+
+  const handleExportListPDF = async () => {
+    try {
+      const formattedData = formatInvoicesForPDF(filteredInvoices);
+
+      // Define custom column widths for better display
+      const columnWidths = {
+        'رقم الفاتورة': '15%',
+        'الموكل': '20%',
+        'القضية': '20%',
+        'التاريخ': '15%',
+        'المبلغ': '15%',
+        'الحالة': '15%',
+      };
+
+      const columns = formattedData.length > 0 ? Object.keys(formattedData[0]).map(key => ({
+        key,
+        label: key,
+        width: columnWidths[key] || `${100 / Object.keys(formattedData[0]).length}%`
+      })) : [];
+
+      const pdfDoc = (
+        <PDFListDocument
+          title="قائمة الفواتير"
+          subtitle={`عدد الفواتير: ${filteredInvoices.length}`}
+          columns={columns}
+          data={formattedData}
+        />
+      );
+
+      await exportToPDF(pdfDoc, 'قائمة_الفواتير');
+      showSuccess('تم تصدير البيانات إلى PDF بنجاح');
+    } catch (error) {
+      showError('فشل تصدير البيانات إلى PDF');
+    }
+  };
+
   const handleExportPDF = async (invoice) => {
     try {
       const client = clients.find((c) => c.id === invoice.clientId);
@@ -614,9 +662,25 @@ function InvoicesPage() {
     <div className="page-content">
       <div className="page-header">
         <h1 className="page-title">إدارة الفواتير</h1>
-        <button className="btn btn-primary" onClick={handleAdd}>
-          ➕ إضافة فاتورة جديدة
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-success"
+            onClick={handleExportListExcel}
+            title="تصدير القائمة إلى Excel"
+          >
+            📊 Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportListPDF}
+            title="تصدير القائمة إلى PDF"
+          >
+            📄 PDF
+          </button>
+          <button className="btn btn-primary" onClick={handleAdd}>
+            ➕ إضافة فاتورة جديدة
+          </button>
+        </div>
       </div>
 
       <div className="card">
