@@ -103,4 +103,30 @@ async function initDatabase() {
   }
 }
 
-export { sequelize, initDatabase };
+/**
+ * Get the data directory path
+ * In development: uses project root
+ * In production: uses custom data directory (if set) or app data directory
+ */
+function getDataDirectory() {
+  if (process.env.NODE_ENV === "development") {
+    return process.cwd();
+  }
+
+  // Try to use custom data directory first
+  const customDataPath = getCustomDataPath();
+  if (customDataPath) {
+    return customDataPath;
+  }
+
+  // Fallback to app data directory
+  try {
+    const userDataPath = app.getPath("userData");
+    return userDataPath;
+  } catch (error) {
+    console.warn("Could not access app data directory:", error);
+    return process.cwd();
+  }
+}
+
+export { sequelize, initDatabase, getDataDirectory };

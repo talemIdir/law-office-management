@@ -19,6 +19,7 @@ import {
   sequelize,
   Op,
 } from "./database/index.js";
+import { getDataDirectory } from "./database/config.js";
 import {
   clientService,
   caseService,
@@ -665,17 +666,17 @@ ipcMain.handle(
         return name.replace(/[\/\\:*?"<>|]/g, "_");
       };
 
-      // Get the app's user data path
-      const userDataPath = app.getPath("userData");
+      // Get the data directory path (uses custom data path if set, otherwise app data)
+      const dataPath = getDataDirectory();
 
       // Sanitize client name and case number for folder names
       const sanitizedClientName = sanitizeFolderName(clientName);
       const sanitizedCaseNumber = sanitizeFolderName(caseNumber);
       const sanitizedDocTitle = sanitizeFolderName(documentTitle);
 
-      // Create documents folder structure: documents/clientName/caseNumber/
+      // Create documents folder structure: data/documents/clientName/caseNumber/
       const documentsDir = path.join(
-        userDataPath,
+        dataPath,
         "documents",
         sanitizedClientName,
         sanitizedCaseNumber
