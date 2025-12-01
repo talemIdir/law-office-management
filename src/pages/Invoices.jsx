@@ -438,7 +438,8 @@ function InvoicesPage() {
       exportToExcel(dataToExport, 'قائمة_الفواتير', 'الفواتير');
       showSuccess('تم تصدير البيانات إلى Excel بنجاح');
     } catch (error) {
-      showError('فشل تصدير البيانات إلى Excel');
+      console.error('Excel export error:', error);
+      showError('فشل تصدير البيانات إلى Excel: ' + error.message);
     }
   };
 
@@ -474,7 +475,8 @@ function InvoicesPage() {
       await exportToPDF(pdfDoc, 'قائمة_الفواتير');
       showSuccess('تم تصدير البيانات إلى PDF بنجاح');
     } catch (error) {
-      showError('فشل تصدير البيانات إلى PDF');
+      console.error('PDF export error:', error);
+      showError('فشل تصدير البيانات إلى PDF: ' + error.message);
     }
   };
 
@@ -558,6 +560,22 @@ function InvoicesPage() {
       (invoice.description && invoice.description.includes(searchTerm))
     );
   };
+
+  const filteredInvoices = useMemo(() => {
+    let filtered = [...invoices];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(invoice => globalFilterFn(invoice, searchTerm));
+    }
+
+    // Apply status filter
+    if (filterStatus && filterStatus !== 'all') {
+      filtered = filtered.filter(invoice => invoice.status === filterStatus);
+    }
+
+    return filtered;
+  }, [invoices, searchTerm, filterStatus]);
 
   const columns = useMemo(
     () => [
