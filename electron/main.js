@@ -369,8 +369,34 @@ ipcMain.handle("invoice:getWithPayments", async (event, id) => {
 });
 
 // Dashboard statistics
-ipcMain.handle("dashboard:getStats", async () => {
+ipcMain.handle("dashboard:getStats", async (event, timePeriod = 'week') => {
   try {
+    // Calculate date range based on time period
+    const now = new Date();
+    let startDate;
+
+    switch (timePeriod) {
+      case 'week':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'all':
+      default:
+        startDate = null; // No date filter for 'all'
+        break;
+    }
+
+    // Build where clauses for date filtering
+    const dateFilter = startDate ? { createdAt: { [Op.gte]: startDate } } : {};
+    const caseDateFilter = startDate ? { startDate: { [Op.gte]: startDate } } : {};
+    const invoiceDateFilter = startDate ? { invoiceDate: { [Op.gte]: startDate } } : {};
+    const paymentDateFilter = startDate ? { paymentDate: { [Op.gte]: startDate } } : {};
+
     const [
       totalClients,
       activeClients,
@@ -380,17 +406,17 @@ ipcMain.handle("dashboard:getStats", async () => {
       totalInvoices,
       totalRevenue,
     ] = await Promise.all([
-      Client.count(),
-      Client.count({ where: { status: "active" } }),
-      Case.count(),
-      Case.count({ where: { status: ["open", "in_progress"] } }),
+      Client.count({ where: dateFilter }),
+      Client.count({ where: { status: "active", ...dateFilter } }),
+      Case.count({ where: caseDateFilter }),
+      Case.count({ where: { status: ["open", "in_progress"], ...caseDateFilter } }),
       CourtSession.count({
         where: {
           sessionDate: { [Op.gte]: new Date() },
         },
       }),
-      Invoice.count(),
-      Payment.sum("amount") || 0,
+      Invoice.count({ where: invoiceDateFilter }),
+      Payment.sum("amount", { where: paymentDateFilter }) || 0,
     ]);
 
     return {

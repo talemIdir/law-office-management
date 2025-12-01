@@ -73,9 +73,9 @@ export const getInvoiceWithPayments = async (id) => {
   return await ipcRenderer.invoke("invoice:getWithPayments", id);
 };
 
-export const getDashboardStats = async () => {
+export const getDashboardStats = async (timePeriod = 'week') => {
   if (!ipcRenderer) return { success: false, error: "Electron not available" };
-  return await ipcRenderer.invoke("dashboard:getStats");
+  return await ipcRenderer.invoke("dashboard:getStats", timePeriod);
 };
 
 export const getUpcomingCourtSessions = async (limit = 10) => {

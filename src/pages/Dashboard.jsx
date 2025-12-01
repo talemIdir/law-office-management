@@ -18,17 +18,18 @@ function Dashboard() {
   const [allAppointments, setAllAppointments] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState('week');
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [timePeriod]);
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
       const [statsRes, allSessionsRes, allAppointmentsRes, clientsRes] =
         await Promise.all([
-          getDashboardStats(),
+          getDashboardStats(timePeriod),
           courtSessionAPI.getAll(),
           appointmentAPI.getAll(),
           clientAPI.getAll(),
@@ -65,27 +66,90 @@ function Dashboard() {
     );
   }
 
+  const getTimePeriodLabel = (period) => {
+    const labels = {
+      week: 'هذا الأسبوع',
+      month: 'هذا الشهر',
+      year: 'هذا العام',
+      all: 'كل الوقت'
+    };
+    return labels[period] || labels.week;
+  };
+
   return (
     <div className="page-content">
       <div className="page-header">
-        <h1 className="page-title">لوحة التحكم</h1>
-        <p style={{ color: "#666", margin: 0 }}>
-          {new Date().toLocaleDateString("ar-DZ", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+        <div>
+          <h1 className="page-title">لوحة التحكم</h1>
+          <p style={{ color: "#666", margin: 0 }}>
+            {new Date().toLocaleDateString("ar-DZ", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <span style={{ color: '#666', fontSize: '0.9rem', marginLeft: '10px' }}>
+            الفترة الزمنية:
+          </span>
+          <button
+            className={`btn ${timePeriod === 'week' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setTimePeriod('week')}
+            style={{ minWidth: '100px' }}
+          >
+            📅 أسبوع
+          </button>
+          <button
+            className={`btn ${timePeriod === 'month' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setTimePeriod('month')}
+            style={{ minWidth: '100px' }}
+          >
+            📆 شهر
+          </button>
+          <button
+            className={`btn ${timePeriod === 'year' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setTimePeriod('year')}
+            style={{ minWidth: '100px' }}
+          >
+            📊 سنة
+          </button>
+          <button
+            className={`btn ${timePeriod === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setTimePeriod('all')}
+            style={{ minWidth: '100px' }}
+          >
+            🕐 الكل
+          </button>
+        </div>
       </div>
 
       {stats && (
         <>
+          {/* Time Period Indicator */}
+          <div style={{
+            backgroundColor: '#f8f9fa',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            border: '1px solid #dee2e6'
+          }}>
+            <span style={{ fontSize: '1.1rem' }}>📊</span>
+            <span style={{ color: '#495057', fontWeight: '500' }}>
+              عرض البيانات: {getTimePeriodLabel(timePeriod)}
+            </span>
+          </div>
+
           {/* Statistics Cards */}
           <div className="dashboard-stats-grid">
             <div className="stat-card">
               <div className="stat-card-header">
-                <span className="stat-card-title">إجمالي الموكلين</span>
+                <span className="stat-card-title">الموكلين {timePeriod === 'all' ? '' : 'الجدد'}</span>
                 <span className="stat-card-icon">👥</span>
               </div>
               <div className="stat-card-value">{stats.totalClients}</div>
@@ -96,7 +160,7 @@ function Dashboard() {
 
             <div className="stat-card info">
               <div className="stat-card-header">
-                <span className="stat-card-title">القضايا النشطة</span>
+                <span className="stat-card-title">القضايا {timePeriod === 'all' ? 'النشطة' : 'الجديدة'}</span>
                 <span className="stat-card-icon">⚖️</span>
               </div>
               <div className="stat-card-value">{stats.activeCases}</div>

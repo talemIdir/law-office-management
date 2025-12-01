@@ -92,6 +92,19 @@ const pastDate = (daysAgo) => {
   return date;
 };
 
+// Helper function to generate random date within the past year
+const randomDateThisYear = () => {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  return randomDate(startOfYear, now);
+};
+
+// Helper function to generate random date within a specific range in days
+const randomPastDate = (minDaysAgo, maxDaysAgo) => {
+  const daysAgo = randomInt(minDaysAgo, maxDaysAgo);
+  return pastDate(daysAgo);
+};
+
 // Sample data arrays for generating large datasets
 const firstNames = [
   "محمد", "أحمد", "فاطمة", "عائشة", "علي", "حسن", "خديجة", "زينب", "عمر", "يوسف",
@@ -230,11 +243,12 @@ async function seedDatabase() {
     console.log("👥 Creating 1000 clients (this may take a moment)...");
     const clientsData = [];
 
-    // Generate 750 individual clients
+    // Generate 750 individual clients distributed throughout the year
     for (let i = 0; i < 750; i++) {
       const firstName = randomItem(firstNames);
       const lastName = randomItem(lastNames);
       const wilaya = randomItem(algerianWilayas);
+      const createdAt = randomDateThisYear();
       clientsData.push({
         type: "individual",
         firstName: firstName,
@@ -247,13 +261,16 @@ async function seedDatabase() {
         wilaya: wilaya,
         notes: Math.random() > 0.7 ? `عميل تجريبي رقم ${i + 1}` : null,
         status: Math.random() > 0.15 ? "active" : "inactive",
+        createdAt: createdAt,
+        updatedAt: createdAt,
       });
     }
 
-    // Generate 250 company clients
+    // Generate 250 company clients distributed throughout the year
     for (let i = 0; i < 250; i++) {
       const wilaya = randomItem(algerianWilayas);
       const companyName = `${randomItem(companyNames)} ${randomItem(["ش.ذ.م.م", "ذ.م.م", "س.ب.ا"])} - ${i + 1}`;
+      const createdAt = randomDateThisYear();
       clientsData.push({
         type: "company",
         companyName: companyName,
@@ -266,10 +283,14 @@ async function seedDatabase() {
         wilaya: wilaya,
         notes: Math.random() > 0.6 ? `شركة تجريبية رقم ${i + 1}` : null,
         status: Math.random() > 0.1 ? "active" : "inactive",
+        createdAt: createdAt,
+        updatedAt: createdAt,
       });
     }
 
-    const clients = await Client.bulkCreate(clientsData);
+    const clients = await Client.bulkCreate(clientsData, {
+      updateOnDuplicate: ['createdAt', 'updatedAt']
+    });
     console.log(`   ✓ Created ${clients.length} clients\n`);
 
     // Generate 2000 cases
@@ -282,7 +303,7 @@ async function seedDatabase() {
       const caseType = randomItem(caseTypes);
       const status = randomItem(caseStatuses);
       const priority = randomItem(priorities);
-      const startDaysAgo = randomInt(1, 1095); // Random date within last 3 years
+      const startDate = randomDateThisYear();
       const isClosed = status === "closed";
 
       casesData.push({
@@ -307,8 +328,8 @@ async function seedDatabase() {
         clientRole: randomItem(clientRoles),
         status: status,
         priority: priority,
-        startDate: pastDate(startDaysAgo),
-        endDate: isClosed ? pastDate(randomInt(1, startDaysAgo - 30)) : null,
+        startDate: startDate,
+        endDate: isClosed && startDate < new Date() ? randomDate(startDate, new Date()) : null,
         amount: randomInt(50000, 5000000),
         notes: Math.random() > 0.5 ? `ملاحظات القضية رقم ${i + 1}` : null,
         clientId: client.id,
@@ -348,10 +369,11 @@ async function seedDatabase() {
 
     for (let i = 0; i < 1500; i++) {
       const caseItem = randomItem(cases);
+      const invoiceDate = randomDateThisYear();
 
       invoicesData.push({
         invoiceNumber: `INV-${currentYear - randomInt(0, 2)}-${String(i + 1).padStart(5, '0')}`,
-        invoiceDate: pastDate(randomInt(1, 730)),
+        invoiceDate: invoiceDate,
         description: `أتعاب قانونية للقضية ${caseItem.caseNumber}\n${randomItem([
           "تحضير المذكرات والدراسة الأولية",
           "حضور الجلسات والمرافعة",
@@ -376,9 +398,10 @@ async function seedDatabase() {
     for (let i = 0; i < 4000; i++) {
       const caseItem = randomItem(cases);
       const method = randomItem(paymentMethods);
+      const paymentDate = randomDateThisYear();
 
       paymentsData.push({
-        paymentDate: pastDate(randomInt(1, 730)),
+        paymentDate: paymentDate,
         amount: randomInt(10000, 500000),
         paymentMethod: method,
         reference: method === "cash" ? null : `${method === "check" ? "CHK" : "TRF"}-${String(randomInt(10000000, 99999999))}`,
@@ -426,6 +449,7 @@ async function seedDatabase() {
       const caseItem = randomItem(cases);
       const category = randomItem(expenseCategories);
       const method = randomItem(paymentMethods);
+      const expenseDate = randomDateThisYear();
 
       expensesData.push({
         description: `${randomItem([
@@ -439,7 +463,7 @@ async function seedDatabase() {
           "رسوم تسجيل"
         ])} - ${i + 1}`,
         amount: randomInt(1000, 100000),
-        expenseDate: pastDate(randomInt(1, 730)),
+        expenseDate: expenseDate,
         category: category,
         paymentMethod: method,
         reference: method === "cash" ? null : `EXP-${String(randomInt(100000, 999999))}`,
