@@ -118,6 +118,7 @@ function ReportsPage() {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
     const filteredCases = cases.filter((c) => {
       const caseDate = new Date(c.startDate || c.createdAt);
@@ -147,6 +148,7 @@ function ReportsPage() {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
     const filteredClients = clients.filter((c) => {
       const clientDate = new Date(c.createdAt);

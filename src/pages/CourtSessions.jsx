@@ -6,6 +6,184 @@ import DataTable from "../components/DataTable";
 import { exportToExcel, exportToPDF, formatCourtSessionsForExcel, formatCourtSessionsForPDF } from "../utils/exportUtils";
 import PDFListDocument from "../components/PDFListDocument";
 
+function ViewSessionModal({ session, onClose }) {
+  if (!session) return null;
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleString("ar-DZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getCourtInfo = (caseData) => {
+    if (!caseData) return [];
+
+    const courtInfo = [];
+
+    if (caseData.jurisdictionType === 'ordinary') {
+      if (caseData.ordinaryJurisdictionType === 'judicial_council') {
+        if (caseData.judicialCouncil) {
+          courtInfo.push({ label: 'المجلس القضائي', value: caseData.judicialCouncil.name });
+        }
+        if (caseData.courtName) {
+          courtInfo.push({ label: 'المحكمة', value: caseData.courtName });
+        }
+      } else if (caseData.ordinaryJurisdictionType === 'supreme_court') {
+        courtInfo.push({ label: 'الجهة القضائية', value: 'المحكمة العليا' });
+        if (caseData.supremeChamber) {
+          courtInfo.push({ label: 'الغرفة', value: caseData.supremeChamber.name });
+        }
+      }
+    } else if (caseData.jurisdictionType === 'administrative') {
+      if (caseData.administrativeJurisdictionType === 'appeal_court') {
+        if (caseData.administrativeAppealCourt) {
+          courtInfo.push({ label: 'محكمة الاستئناف الإدارية', value: caseData.administrativeAppealCourt.name });
+        }
+        if (caseData.courtName) {
+          courtInfo.push({ label: 'المحكمة الإدارية', value: caseData.courtName });
+        }
+      } else if (caseData.administrativeJurisdictionType === 'state_council') {
+        courtInfo.push({ label: 'الجهة القضائية', value: 'مجلس الدولة' });
+        if (caseData.stateCouncilChamber) {
+          courtInfo.push({ label: 'الغرفة', value: caseData.stateCouncilChamber.name });
+        }
+      }
+    } else if (caseData.jurisdictionType === 'commercial') {
+      if (caseData.courtName) {
+        courtInfo.push({ label: 'المحكمة التجارية', value: caseData.courtName });
+      }
+    }
+
+    return courtInfo;
+  };
+
+  const courtInfo = getCourtInfo(session.case);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+        <div className="modal-header">
+          <h3 className="modal-title">تفاصيل الجلسة</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {/* Session Information */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: 'bold',
+              marginBottom: '12px',
+              paddingBottom: '8px',
+              borderBottom: '2px solid #e5e7eb'
+            }}>
+              معلومات الجلسة
+            </h4>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <div style={{ display: 'flex', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                <strong style={{ minWidth: '150px', color: '#374151' }}>القضية:</strong>
+                <span>{session.case?.caseNumber} - {session.case?.title}</span>
+              </div>
+              <div style={{ display: 'flex', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                <strong style={{ minWidth: '150px', color: '#374151' }}>التاريخ والوقت:</strong>
+                <span>{formatDateTime(session.sessionDate)}</span>
+              </div>
+              <div style={{ display: 'flex', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                <strong style={{ minWidth: '150px', color: '#374151' }}>القاعة:</strong>
+                <span>{session.courtRoom || "-"}</span>
+              </div>
+              <div style={{ display: 'flex', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                <strong style={{ minWidth: '150px', color: '#374151' }}>قاضي الجلسة:</strong>
+                <span>{session.judge || "-"}</span>
+              </div>
+              <div style={{ display: 'flex', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                <strong style={{ minWidth: '150px', color: '#374151' }}>الحالة:</strong>
+                <span className={`badge ${
+                  session.status === "في التقرير" ? "badge-info" :
+                  session.status === "في المرافعة" ? "badge-primary" :
+                  session.status === "لجواب الخصم" || session.status === "لجوابنا" ? "badge-warning" :
+                  session.status === "في المداولة" ? "badge-info" :
+                  session.status === "مؤجلة" ? "badge-secondary" : "badge-success"
+                }`}>
+                  {session.status}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Court Information */}
+          {courtInfo.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                paddingBottom: '8px',
+                borderBottom: '2px solid #e5e7eb'
+              }}>
+                معلومات المحكمة
+              </h4>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {courtInfo.map((info, index) => (
+                  <div key={index} style={{ display: 'flex', padding: '8px', backgroundColor: '#f0f9ff', borderRadius: '4px' }}>
+                    <strong style={{ minWidth: '150px', color: '#0369a1' }}>{info.label}:</strong>
+                    <span>{info.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Additional Details */}
+          {(session.attendees || session.outcome || session.notes) && (
+            <div>
+              <h4 style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                paddingBottom: '8px',
+                borderBottom: '2px solid #e5e7eb'
+              }}>
+                تفاصيل إضافية
+              </h4>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {session.attendees && (
+                  <div style={{ padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                    <strong style={{ display: 'block', marginBottom: '4px', color: '#374151' }}>الحاضرون:</strong>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{session.attendees}</p>
+                  </div>
+                )}
+                {session.outcome && (
+                  <div style={{ padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                    <strong style={{ display: 'block', marginBottom: '4px', color: '#374151' }}>نتيجة الجلسة:</strong>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{session.outcome}</p>
+                  </div>
+                )}
+                {session.notes && (
+                  <div style={{ padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                    <strong style={{ display: 'block', marginBottom: '4px', color: '#374151' }}>ملاحظات:</strong>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{session.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-outline" onClick={onClose}>
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CourtSessionModal({ session, onClose, onSave }) {
   const [cases, setCases] = useState([]);
   const [caseSearchTerm, setCaseSearchTerm] = useState("");
@@ -355,7 +533,9 @@ function CourtSessionsPage() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [viewSession, setViewSession] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -431,6 +611,11 @@ function CourtSessionsPage() {
         showError("خطأ: " + result.error);
       }
     }
+  };
+
+  const handleView = (session) => {
+    setViewSession(session);
+    setShowViewModal(true);
   };
 
   const handleEdit = (session) => {
@@ -651,6 +836,12 @@ function CourtSessionsPage() {
         cell: ({ row }) => (
           <div className="action-buttons">
             <button
+              className="btn btn-sm btn-info"
+              onClick={() => handleView(row.original)}
+            >
+              👁️ عرض
+            </button>
+            <button
               className="btn btn-sm btn-primary"
               onClick={() => handleEdit(row.original)}
             >
@@ -779,6 +970,16 @@ function CourtSessionsPage() {
           }
         />
       </div>
+
+      {showViewModal && (
+        <ViewSessionModal
+          session={viewSession}
+          onClose={() => {
+            setShowViewModal(false);
+            setViewSession(null);
+          }}
+        />
+      )}
 
       {showModal && (
         <CourtSessionModal
