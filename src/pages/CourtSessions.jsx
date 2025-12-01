@@ -28,7 +28,6 @@ function CourtSessionModal({ session, onClose, onSave }) {
   const [formData, setFormData] = useState(() => {
     const defaults = {
       sessionDate: "",
-      court: "",
       courtRoom: "",
       judge: "",
       attendees: "",
@@ -184,6 +183,73 @@ function CourtSessionModal({ session, onClose, onSave }) {
                   ))}
                 </div>
               )}
+              {formData.caseId && cases.find(c => c.id === formData.caseId) && (
+                <div style={{
+                  marginTop: '8px',
+                  padding: '12px',
+                  backgroundColor: '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '6px',
+                  fontSize: '13px'
+                }}>
+                  {(() => {
+                    const selectedCase = cases.find(c => c.id === formData.caseId);
+                    const courtInfo = [];
+
+                    // Display court information based on jurisdiction type
+                    if (selectedCase.jurisdictionType === 'ordinary') {
+                      if (selectedCase.ordinaryJurisdictionType === 'judicial_council') {
+                        if (selectedCase.judicialCouncil) {
+                          courtInfo.push(`المجلس القضائي: ${selectedCase.judicialCouncil.name}`);
+                        }
+                        if (selectedCase.courtName) {
+                          courtInfo.push(`المحكمة: ${selectedCase.courtName}`);
+                        }
+                      } else if (selectedCase.ordinaryJurisdictionType === 'supreme_court') {
+                        courtInfo.push('المحكمة العليا');
+                        if (selectedCase.supremeChamber) {
+                          courtInfo.push(`الغرفة: ${selectedCase.supremeChamber.name}`);
+                        }
+                      }
+                    } else if (selectedCase.jurisdictionType === 'administrative') {
+                      if (selectedCase.administrativeJurisdictionType === 'appeal_court') {
+                        if (selectedCase.administrativeAppealCourt) {
+                          courtInfo.push(`محكمة الاستئناف الإدارية: ${selectedCase.administrativeAppealCourt.name}`);
+                        }
+                        if (selectedCase.courtName) {
+                          courtInfo.push(`المحكمة الإدارية: ${selectedCase.courtName}`);
+                        }
+                      } else if (selectedCase.administrativeJurisdictionType === 'state_council') {
+                        courtInfo.push('مجلس الدولة');
+                        if (selectedCase.stateCouncilChamber) {
+                          courtInfo.push(`الغرفة: ${selectedCase.stateCouncilChamber.name}`);
+                        }
+                      }
+                    } else if (selectedCase.jurisdictionType === 'commercial') {
+                      if (selectedCase.courtName) {
+                        courtInfo.push(`المحكمة التجارية: ${selectedCase.courtName}`);
+                      }
+                    }
+
+                    return courtInfo.length > 0 ? (
+                      <div>
+                        <strong style={{ display: 'block', marginBottom: '6px', color: '#0369a1' }}>
+                          معلومات المحكمة:
+                        </strong>
+                        {courtInfo.map((info, index) => (
+                          <div key={index} style={{ paddingLeft: '12px', marginBottom: '2px' }}>
+                            • {info}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#64748b' }}>
+                        لا توجد معلومات عن المحكمة في هذه القضية
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -198,27 +264,15 @@ function CourtSessionModal({ session, onClose, onSave }) {
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">الجهة القضائية</label>
-                <input
-                  type="text"
-                  name="court"
-                  className="form-control"
-                  value={formData.court}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">قاعة الجلسة</label>
-                <input
-                  type="text"
-                  name="courtRoom"
-                  className="form-control"
-                  value={formData.courtRoom}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">قاعة الجلسة</label>
+              <input
+                type="text"
+                name="courtRoom"
+                className="form-control"
+                value={formData.courtRoom}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="form-group">
@@ -506,10 +560,52 @@ function CourtSessionsPage() {
         enableSorting: true,
       },
       {
-        accessorKey: "court",
-        header: "الجهة القضائية",
-        cell: ({ row }) => row.original.court || "-",
-        enableSorting: true,
+        accessorKey: "courtInfo",
+        header: "المحكمة",
+        cell: ({ row }) => {
+          const caseData = row.original.case;
+          if (!caseData) return "-";
+
+          const courtInfo = [];
+
+          // Build court information based on jurisdiction type
+          if (caseData.jurisdictionType === 'ordinary') {
+            if (caseData.ordinaryJurisdictionType === 'judicial_council') {
+              if (caseData.judicialCouncil) {
+                courtInfo.push(caseData.judicialCouncil.name);
+              }
+              if (caseData.courtName) {
+                courtInfo.push(caseData.courtName);
+              }
+            } else if (caseData.ordinaryJurisdictionType === 'supreme_court') {
+              courtInfo.push('المحكمة العليا');
+              if (caseData.supremeChamber) {
+                courtInfo.push(caseData.supremeChamber.name);
+              }
+            }
+          } else if (caseData.jurisdictionType === 'administrative') {
+            if (caseData.administrativeJurisdictionType === 'appeal_court') {
+              if (caseData.administrativeAppealCourt) {
+                courtInfo.push(caseData.administrativeAppealCourt.name);
+              }
+              if (caseData.courtName) {
+                courtInfo.push(caseData.courtName);
+              }
+            } else if (caseData.administrativeJurisdictionType === 'state_council') {
+              courtInfo.push('مجلس الدولة');
+              if (caseData.stateCouncilChamber) {
+                courtInfo.push(caseData.stateCouncilChamber.name);
+              }
+            }
+          } else if (caseData.jurisdictionType === 'commercial') {
+            if (caseData.courtName) {
+              courtInfo.push(caseData.courtName);
+            }
+          }
+
+          return courtInfo.length > 0 ? courtInfo.join(' - ') : "-";
+        },
+        enableSorting: false,
       },
       {
         accessorKey: "courtRoom",
