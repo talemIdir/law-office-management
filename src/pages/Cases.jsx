@@ -30,33 +30,56 @@ function CaseModal({ caseData, onClose, onSave }) {
   const [supremeChambers, setSupremeChambers] = useState([]);
   const [stateCouncilChambers, setStateCouncilChambers] = useState([]);
   const [courts, setCourts] = useState([]);
-  const [formData, setFormData] = useState({
-    caseNumber: "",
-    title: "",
-    description: "",
-    caseType: "civil",
-    jurisdictionType: "",
-    ordinaryJurisdictionType: "",
-    administrativeJurisdictionType: "",
-    judicialCouncilId: "",
-    supremeCourtId: "",
-    supremeChamberId: "",
-    stateCouncilId: "",
-    stateCouncilChamberId: "",
-    administrativeAppealCourtId: "",
-    courtId: "",
-    courtName: "",
-    judge: "",
-    opposingParty: "",
-    opposingLawyer: "",
-    clientRole: "plaintiff",
-    status: "first_instance",
-    priority: "normal",
-    startDate: "",
-    amount: "",
-    notes: "",
-    clientId: "",
-    ...caseData,
+  const [formData, setFormData] = useState(() => {
+    const defaults = {
+      caseNumber: "",
+      title: "",
+      description: "",
+      caseType: "civil",
+      jurisdictionType: "",
+      ordinaryJurisdictionType: "",
+      administrativeJurisdictionType: "",
+      judicialCouncilId: "",
+      supremeCourtId: "",
+      supremeChamberId: "",
+      stateCouncilId: "",
+      stateCouncilChamberId: "",
+      administrativeAppealCourtId: "",
+      courtId: "",
+      courtName: "",
+      judge: "",
+      opposingParty: "",
+      opposingLawyer: "",
+      clientRole: "plaintiff",
+      status: "first_instance",
+      priority: "normal",
+      startDate: "",
+      amount: "",
+      notes: "",
+      clientId: "",
+    };
+
+    if (caseData) {
+      return {
+        ...defaults,
+        ...caseData,
+        // Ensure null values are converted to empty strings for select fields
+        jurisdictionType: caseData.jurisdictionType || "",
+        ordinaryJurisdictionType: caseData.ordinaryJurisdictionType || "",
+        administrativeJurisdictionType: caseData.administrativeJurisdictionType || "",
+        judicialCouncilId: caseData.judicialCouncilId || "",
+        supremeCourtId: caseData.supremeCourtId || "",
+        supremeChamberId: caseData.supremeChamberId || "",
+        stateCouncilId: caseData.stateCouncilId || "",
+        stateCouncilChamberId: caseData.stateCouncilChamberId || "",
+        administrativeAppealCourtId: caseData.administrativeAppealCourtId || "",
+        courtId: caseData.courtId || "",
+        courtName: caseData.courtName || "",
+        clientId: caseData.clientId || "",
+      };
+    }
+
+    return defaults;
   });
 
   useEffect(() => {
