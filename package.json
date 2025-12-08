@@ -2,15 +2,16 @@
   "name": "law-office-management",
   "version": "1.0.0",
   "description": "نظام إدارة مكتب المحاماة - Algerian Law Office Management System",
-  "main": "electron/main.js",
-  "type": "module",
+  "main": "electron/loader.cjs",
   "scripts": {
     "start": "electron-forge start",
-    "dev": "concurrently \"vite\" \"electron electron/main.js\"",
+    "dev": "concurrently \"vite\" \"electron .\"",
     "build": "vite build",
     "preview": "vite preview",
     "electron:build": "electron-builder",
     "package": "electron-forge package",
+    "rebuild": "electron-rebuild -f -w sqlite3,bcrypt",
+    "postinstall": "electron-rebuild -f -w sqlite3,bcrypt",
     "build-win": "npm run build && npm run electron:build",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "db:seed": "node electron/database/seed.js",
@@ -28,7 +29,7 @@
   "dependencies": {
     "@react-pdf/renderer": "^4.3.1",
     "@tanstack/react-table": "^8.20.5",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "electron-squirrel-startup": "^1.0.1",
@@ -45,19 +46,20 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.8.3",
-    "@electron-forge/maker-deb": "^7.8.3",
-    "@electron-forge/maker-rpm": "^7.8.3",
-    "@electron-forge/maker-squirrel": "^7.8.3",
-    "@electron-forge/maker-zip": "^7.8.3",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.8.3",
-    "@electron-forge/plugin-fuses": "^7.8.3",
-    "@electron-forge/plugin-vite": "^7.8.3",
-    "@electron/fuses": "^1.8.0",
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-rpm": "^7.2.0",
+    "@electron-forge/maker-squirrel": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
+    "@electron-forge/plugin-fuses": "^7.2.0",
+    "@electron-forge/plugin-vite": "^7.2.0",
+    "@electron/fuses": "^1.6.0",
+    "@electron/rebuild": "^4.0.1",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^8.2.2",
-    "electron": "^31.0.1",
+    "electron": "^22.3.27",
     "electron-builder": "^24.13.3",
     "vite": "^5.3.1",
     "wait-on": "^9.0.3"
@@ -89,7 +91,12 @@
     ],
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
       ],
       "icon": "build/app.jpg"
     },
@@ -102,7 +109,13 @@
       "createDesktopShortcut": false,
       "createStartMenuShortcut": false,
       "warningsAsErrors": false,
-      "differentialPackage": false
+      "differentialPackage": false,
+      "installerLanguages": [
+        "en",
+        "ar"
+      ],
+      "installerHeader": "build/app.jpg",
+      "multiLanguageInstaller": true
     }
   }
 }
