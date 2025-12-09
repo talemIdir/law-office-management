@@ -8,7 +8,7 @@ export default {
       "./build/app.jpg"
     ],
     asar: {
-      unpack: "*.{node,dll}",
+      unpack: "*.{node,dll,ttf}",
     },
     // Prune devDependencies but keep all production dependencies
     prune: true,
@@ -21,12 +21,13 @@ export default {
       /^\/build/,
       /^\/release/,
       /^\/out/,
-      /^\/src/, // Source files (already compiled to .vite)
+      /^\/src/, // Source files (already compiled to dist)
       /^\/public/,
       /^\/vite\..*\.mjs/,
       /^\/forge\.config\.js/,
       /^\/INSTALLER_SETUP\.md/,
       /^\/nul$/,
+      /^\/node_modules\/\.cache/,
     ],
   },
   rebuildConfig: {},
@@ -55,11 +56,8 @@ export default {
     {
       name: "@electron-forge/plugin-vite",
       config: {
-        // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
-        // If you are familiar with Vite configuration, it will look really familiar.
         build: [
           {
-            // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
             entry: "electron/main.js",
             config: "vite.main.config.mjs",
             target: "main",
@@ -86,8 +84,8 @@ export default {
       [FuseV1Options.EnableCookieEncryption]: true,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
-      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-      [FuseV1Options.OnlyLoadAppFromAsar]: true,
+      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: false,
+      [FuseV1Options.OnlyLoadAppFromAsar]: false,
     }),
   ],
 };

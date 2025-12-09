@@ -71,15 +71,15 @@ function createWindow() {
     backgroundColor: "#f5f5f5",
   });
 
-  // Load the app using Vite plugin constants
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  // Load the app
+  if (process.env.NODE_ENV === "development") {
+    mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
+    // Use loadURL with file protocol for better path resolution
+    mainWindow.loadURL(
+      `file://${path.join(__dirname, "../dist/index.html").replace(/\\/g, "/")}`
     );
-    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.once("ready-to-show", () => {
@@ -834,6 +834,20 @@ ipcMain.handle("license:startTrial", async () => {
   }
 });
 
-// Note: license:activate and license:getMachineId handlers are registered in setupLicenseHandlers() in licenseWindow.js
+ipcMain.handle("license:activate", async (event, licenseKey, customerName, customerEmail) => {
+  try {
+    return await licenseService.activateLicense(licenseKey, customerName, customerEmail);
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("license:getMachineId", async () => {
+  try {
+    return { success: true, machineId: licenseService.getMachineId() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
 
 console.log("Electron main process started");

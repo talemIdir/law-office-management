@@ -1,16 +1,13 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { resolve } from "path";
 import { builtinModules } from "module";
 
 // https://vitejs.dev/config
 export default defineConfig({
-  plugins: [react()],
   build: {
     lib: {
       entry: "electron/main.js",
-      formats: ["es"], // Force ES module format
-      fileName: () => "main.js",
+      formats: ["cjs"], // Use CommonJS for Electron 22 compatibility
+      fileName: () => "main.cjs",
     },
     rollupOptions: {
       // Externalize all node built-ins and all dependencies
@@ -19,19 +16,24 @@ export default defineConfig({
         ...builtinModules,
         ...builtinModules.map((m) => `node:${m}`),
         "sequelize",
+        "sqlite3",
+        "bcrypt",
         "pg",
         "pg-hstore",
         "bcryptjs",
         "dotenv",
         "electron-squirrel-startup",
+        "electron-store",
+        "node-machine-id",
+        "crypto-js",
       ],
       output: {
-        format: "es", // Explicitly set ES format
-        entryFileNames: "[name].js",
+        format: "cjs", // Use CommonJS format
+        entryFileNames: "[name].cjs",
       },
     },
   },
   optimizeDeps: {
-    exclude: ["sequelize", "pg", "pg-hstore"],
+    exclude: ["sequelize", "sqlite3", "bcrypt", "pg", "pg-hstore"],
   },
 });

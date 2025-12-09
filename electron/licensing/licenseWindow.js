@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow, ipcMain, app } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let licenseWindow = null;
+let handlersRegistered = false;
 
 /**
  * Create the license activation window
@@ -33,8 +34,18 @@ export function createLicenseWindow(licenseService) {
   });
 
   // Load the license activation HTML
-  const licenseHtmlPath = path.join(__dirname, 'licenseActivation.html');
-  licenseWindow.loadFile(licenseHtmlPath);
+  // Determine the correct path based on environment
+  const isDev = !app.isPackaged;
+
+  if (isDev) {
+    // In development, the HTML is in the source electron/licensing folder
+    const devPath = path.join(app.getAppPath(), 'electron', 'licensing', 'licenseActivation.html');
+    licenseWindow.loadFile(devPath);
+  } else {
+    // In production, the HTML is in the app.asar or app folder
+    const prodPath = path.join(app.getAppPath(), 'electron', 'licensing', 'licenseActivation.html');
+    licenseWindow.loadFile(prodPath);
+  }
 
   licenseWindow.once('ready-to-show', () => {
     licenseWindow.show();
@@ -44,8 +55,11 @@ export function createLicenseWindow(licenseService) {
     licenseWindow = null;
   });
 
-  // Setup IPC handlers for license window
-  setupLicenseHandlers(licenseService);
+  // Setup IPC handlers for license window (only once)
+  if (!handlersRegistered) {
+    setupLicenseHandlers(licenseService);
+    handlersRegistered = true;
+  }
 
   return licenseWindow;
 }
